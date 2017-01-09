@@ -22,5 +22,21 @@
       "./functors",
       "finstr_func"
     ]
+  },
+  "run_parameters": {
+    "generators": {
+      "vanilla": [
+        "./functors",
+        "spec_vanilla_run_gen"
+      ],
+      "finstr": [
+        "./functors",
+        "spec_finstr_run_gen"
+      ]
+    },
+    "submitter": [
+      "./functors",
+      "slurm_submitter"
+    ]
   }
 }

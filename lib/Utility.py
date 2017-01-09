@@ -38,7 +38,11 @@ def load_functor(func_tuple):
     return functor
 
 
-def shell(command, silent=True):
+def shell(command, silent=True, dry=False):
+    if dry:
+        log.get_logger().log('SHELL CALL: ' + command, level='debug')
+        return ''
+
     try:
         out = subprocess.check_output(command, shell=True)
         return out

@@ -1,5 +1,5 @@
 import Utility as util
-
+import Logging as log
 import json
 
 
@@ -17,7 +17,9 @@ class Configuration:
         self.benchmarks = []
         self.flavors = []
         self.top_level_directories = []
-        self.flavor_build_functors = {}  # [directory, module_name]
+        self.builder_functors = {}  # flavor => [directory, module_name]
+        self.generator_functors = {}  # flavor => [directory, module_name]
+        self.submitter = None  # => [directory, module_name]
 
     def set_directories(self, dirs):
         self.top_level_directories = dirs
@@ -38,12 +40,30 @@ class Configuration:
         return self.flavors
 
     def set_flavor_func(self, flavor, func_tuple):
-        abs_path = util.get_absolute_path(func_tuple[0])
-        store_tuple = [abs_path, func_tuple[1]]
-        self.flavor_build_functors[flavor] = store_tuple
+        store_tuple = self.absolutify_tuple(func_tuple)
+        self.builder_functors[flavor] = store_tuple
 
     def get_flavor_func(self, flavor):
-        return self.flavor_build_functors[flavor]
+        return self.builder_functors[flavor]
+
+    def set_flavor_run_generator(self, flavor, generator_tuple):
+        store_tuple = self.absolutify_tuple(generator_tuple)
+        self.generator_functors[flavor] = store_tuple
+
+    def get_flavor_run_generator(self, flavor):
+        return self.generator_functors[flavor]
+
+    def set_submitter(self, submitter_tuple):
+        store_tuple = self.absolutify_tuple(submitter_tuple)
+        self.submitter = store_tuple
+
+    def get_submitter(self):
+        return self.submitter[1]  # XXX Makes sense?
+
+    def absolutify_tuple(self, tuple):
+        abs_path = util.get_absolute_path(tuple[0])
+        store_tuple = [abs_path, tuple[1]]
+        return store_tuple
 
 
 class ConfigurationLoader:
@@ -73,6 +93,14 @@ class ConfigurationLoader:
         # XXX We may need to change that canonicalization here, as we expect to have tuples.
         for flavor in config.get_flavors():
             config.set_flavor_func(flavor, util.json_to_canonic(tree['flavor_tuples'][flavor]))
+        run_parameters = tree['run_parameters']
+        for flavor in config.get_flavors():
+            generator = util.json_to_canonic(run_parameters['generators'][flavor])
+            config.set_flavor_run_generator(flavor, generator)
+        config.set_submitter(run_parameters['submitter'])
+
+        log.get_logger().log('Constructed config from JSON')
+
         return config
 
     def get_runner(self):

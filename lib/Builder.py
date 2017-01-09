@@ -56,5 +56,13 @@ class Builder:
                     logging.get_logger().log(e.message, level='warn')
 
     def generate_run_configurations(self):
+        run_configs = []
+        kwargs = {'util': util}
         # TODO Next up in line: Generate run configurations!
-        pass
+        for flavor in self.config.get_flavors():
+            for benchmark in self.config.get_benchmarks():
+                run_generator = util.load_functor(self.config.get_flavor_run_generator(flavor))
+                # This is always active mode. We need to generate scripts and return the filename.
+                rc = run_generator.generate(benchmark, **kwargs)
+                run_configs.append(rc)
+        return run_configs
