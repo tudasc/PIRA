@@ -19,5 +19,6 @@ def run(path_to_config):
             runner = config_loader.get_runner()
 
             # runner.submit(run_config)
+            log.get_logger().dump_tape()
     except Exception as e:
         log.get_logger().dump_tape()

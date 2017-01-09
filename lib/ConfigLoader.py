@@ -1,6 +1,8 @@
 import Utility as util
 
 import json
+
+
 #
 # TODO Add a possibility to add kwargs in the requirements for the functor
 #
@@ -10,11 +12,12 @@ class Configuration:
     """
     A configuration for the Runner.
     """
+
     def __init__(self):
         self.benchmarks = []
         self.flavors = []
         self.top_level_directories = []
-        self.flavor_build_functors = {} # [directory, module_name]
+        self.flavor_build_functors = {}  # [directory, module_name]
 
     def set_directories(self, dirs):
         self.top_level_directories = dirs
@@ -48,6 +51,7 @@ class ConfigurationLoader:
     Loads a provided configuration file. May be static in the future.
 
     """
+
     def __init__(self):
         self.config_cache = {}
 

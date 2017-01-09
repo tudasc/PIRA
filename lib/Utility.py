@@ -27,6 +27,7 @@ def get_cwd():
 
 
 def change_cwd(path):
+    log.get_logger().log('cd\'ing to ' + path)
     os.chdir(path)
 
 
@@ -43,7 +44,7 @@ def shell(command, silent=True):
         return out
 
     except subprocess.CalledProcessError as e:
-        log.get_logger().log('Caught Exception ' + e.message, level='error')
+        log.get_logger().log('Utility.shell: Caught Exception ' + e.message, level='error')
         raise Exception('Running command ' + command + ' did not succeed')
 
 

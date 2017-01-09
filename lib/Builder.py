@@ -24,7 +24,8 @@ class Builder:
 
         except Exception as e:
             logging.get_logger().log('Caught exception ' + e.message, level='info')
-            raise Exception()
+            if self.error:
+                raise Exception('Severe Problem in Builder.build')
 
     def set_up(self):
         directory_good = util.check_provided_directory(self.directory)
@@ -52,7 +53,7 @@ class Builder:
                     util.shell(command)
 
                 except Exception as e:
-                    logging.get_logger().log(e.message, level='info')
+                    logging.get_logger().log(e.message, level='warn')
 
     def generate_run_configurations(self):
         pass

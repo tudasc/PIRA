@@ -11,8 +11,7 @@ class Logger:
         if self.state[level]:
             self.print_level(level, msg)
 
-        msg_str = '[' + level + ']' + str(msg)
-        self.record(msg_str)
+        self.record(level, msg)
 
     def set_state(self, state_id, val='True'):
         self.state[state_id] = val
@@ -46,8 +45,9 @@ class Logger:
         msg_str = '[Error] ' + str(msg)
         print(msg_str)
 
-    def record(self, msg):
-        self.tape.append(msg)
+    def record(self, level, msg):
+        msg_str = '[' + level + '] ' + str(msg)
+        self.tape.append(msg_str)
 
     def dump_tape(self):
         for msg in self.tape:
