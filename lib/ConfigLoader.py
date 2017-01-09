@@ -58,7 +58,8 @@ class Configuration:
         self.submitter = store_tuple
 
     def get_submitter(self):
-        return self.submitter[1]  # XXX Makes sense?
+        submitter = util.load_functor(self.submitter)
+        return submitter
 
     def absolutify_tuple(self, tuple):
         abs_path = util.get_absolute_path(tuple[0])
@@ -102,6 +103,3 @@ class ConfigurationLoader:
         log.get_logger().log('Constructed config from JSON')
 
         return config
-
-    def get_runner(self):
-        pass

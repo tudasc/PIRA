@@ -1,6 +1,7 @@
 from ConfigLoader import ConfigurationLoader as CL
 from Builder import Builder as B
 import Logging as log
+import Utility as util
 
 
 def run(path_to_config):
@@ -16,9 +17,13 @@ def run(path_to_config):
 
             run_configs = builder.generate_run_configurations()
 
-            runner = config_loader.get_runner()
+            runner = configuration.get_submitter()
 
-            # runner.submit(run_configs)
+            # TODO Make these configuration options configurable (cli and .json)
+            runs_per_job = 10
+            kwargs = {'util': util, 'runs_per_job': runs_per_job, 'dependent': True}
+            runner.dispatch(run_configs, **kwargs)
+
             log.get_logger().dump_tape()
 
     except StandardError as se:

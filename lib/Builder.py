@@ -58,7 +58,6 @@ class Builder:
     def generate_run_configurations(self):
         run_configs = []
         kwargs = {'util': util}
-        # TODO Next up in line: Generate run configurations!
         for flavor in self.config.get_flavors():
             for benchmark in self.config.get_benchmarks():
                 run_generator = util.load_functor(self.config.get_flavor_run_generator(flavor))
