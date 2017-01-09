@@ -1,0 +1,24 @@
+{
+  "top_level_directories": [
+    "./test"
+  ],
+  "benchmarks": [
+    "403.gcc",
+    "429.mcf",
+    "433.milc"
+  ],
+  "flavors": [
+    "vanilla",
+    "finstr"
+  ],
+  "flavor_tuples": {
+    "vanilla": [
+      "./functors",
+      "spec_vanilla"
+    ],
+    "finstr": [
+      "./functors",
+      "spec_finstr"
+    ]
+  }
+}

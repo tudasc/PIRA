@@ -1,20 +1,23 @@
 from ConfigLoader import ConfigurationLoader as CL
 from Builder import Builder as B
+import Logging as log
 
 
-# TODO Test this :)
-def run():
-    # TODO Implement me
-    configuration = CL.load('/path/to/config')
-    top_level_directories = configuration.get_directories()
+def run(path_to_config):
+    try:
+        config_loader = CL()
+        configuration = config_loader.load(path_to_config)
+        top_level_directories = configuration.get_directories()
 
-    for directory in top_level_directories:
-        builder = B(directory, configuration)
+        for directory in top_level_directories:
+            builder = B(directory, configuration)
 
-        builder.build()
+            builder.build()
 
-        run_config = builder.generate_run_configurations()
+            run_config = builder.generate_run_configurations()
 
-        runner = CL.get_runner()
+            runner = config_loader.get_runner()
 
-        runner.submit(run_config)
+            # runner.submit(run_config)
+    except Exception as e:
+        log.get_logger().dump_tape()

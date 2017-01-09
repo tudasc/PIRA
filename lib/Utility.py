@@ -1,4 +1,7 @@
 import sys
+import os
+import subprocess
+import Logging as log
 
 
 def read_file(file_name):
@@ -9,21 +12,55 @@ def read_file(file_name):
 
 
 def check_provided_directory(path):
-    # TODO Implement me
-    pass
+    if os.path.isdir(path):
+        return True
+
+    return False
+
+
+def get_absolute_path(path):
+    return os.path.abspath(path)
+
+
+def get_cwd():
+    return os.getcwd()
 
 
 def change_cwd(path):
-    # TODO Implement me
-    pass
+    os.chdir(path)
 
 
 def load_functor(func_tuple):
     append_to_sys_path(func_tuple)
-    # Adding fromList argument loads exactly the module.
+    # Adding 'fromList' argument loads exactly the module.
     functor = __import__(func_tuple[1], fromlist=[''])
     return functor
 
 
+def shell(command, silent=True):
+    try:
+        out = subprocess.check_output(command, shell=True)
+        return out
+
+    except subprocess.CalledProcessError as e:
+        log.get_logger().log('Caught Exception ' + e.message, level='error')
+        raise Exception('Running command ' + command + ' did not succeed')
+
+
 def append_to_sys_path(func_tuple):
     sys.path.append(func_tuple[0])
+
+
+def json_to_canonic(json_elem):
+    if isinstance(json_elem, list):
+        new_list = []
+        for entry in json_elem:
+            new_list.append(json_to_canonic(entry))
+        return new_list
+
+    if isinstance(json_elem, str):
+        new_str = str(json_elem)
+        return new_str
+
+    else:
+        return str(json_elem)
