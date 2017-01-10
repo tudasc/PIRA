@@ -35,6 +35,7 @@
     "submitter": [
       "./functors",
       "slurm_submitter"
-    ]
+    ],
+    "num_reps": 1
   }
 }

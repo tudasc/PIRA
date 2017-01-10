@@ -20,6 +20,7 @@ class Configuration:
         self.builder_functors = {}  # flavor => [directory, module_name]
         self.generator_functors = {}  # flavor => [directory, module_name]
         self.submitter = None  # => [directory, module_name]
+        self.num_runs_per_job = 0
 
     def set_directories(self, dirs):
         self.top_level_directories = dirs
@@ -61,6 +62,12 @@ class Configuration:
         submitter = util.load_functor(self.submitter)
         return submitter
 
+    def set_num_runs_per_job(self, n):
+        self.num_runs_per_job = n
+
+    def get_num_runs_per_job(self):
+        return self.num_runs_per_job
+
     def absolutify_tuple(self, tuple):
         abs_path = util.get_absolute_path(tuple[0])
         store_tuple = [abs_path, tuple[1]]
@@ -99,6 +106,7 @@ class ConfigurationLoader:
             generator = util.json_to_canonic(run_parameters['generators'][flavor])
             config.set_flavor_run_generator(flavor, generator)
         config.set_submitter(run_parameters['submitter'])
+        config.set_num_runs_per_job(int(run_parameters['num_reps']))
 
         log.get_logger().log('Constructed config from JSON')
 

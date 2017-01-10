@@ -20,7 +20,7 @@ def run(path_to_config):
             runner = configuration.get_submitter()
 
             # TODO Make these configuration options configurable (cli and .json)
-            runs_per_job = 10
+            runs_per_job = configuration.get_num_runs_per_job()
             kwargs = {'util': util, 'runs_per_job': runs_per_job, 'dependent': True}
             runner.dispatch(run_configs, **kwargs)
 
