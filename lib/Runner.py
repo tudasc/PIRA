@@ -11,6 +11,7 @@ def run(path_to_config, tld):
             config_loader = CL(tld)
         else:
             config_loader = CL()
+
         configuration = config_loader.load(path_to_config)
         top_level_directories = configuration.get_directories()
 

@@ -9,6 +9,11 @@
     "vanilla",
     "finstr"
   ],
+  "directory_pattern": {
+    "style": "dot",
+    "prefix": "spec_cpu",
+    "pattern": ["prefix", "benchmark"]
+  },
   "flavor_tuples": {
     "vanilla": [
       "./examples/spec_cpu_2k6",

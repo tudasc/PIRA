@@ -15,28 +15,32 @@ class Builder:
 
     def build(self):
         try:
-            self.set_up()
-
             for benchmark in self.config.get_benchmarks():
+                self.set_up(benchmark)
                 self.build_detail(benchmark)
-
-            self.tear_down()
+                self.tear_down(benchmark)
 
         except Exception as e:
             logging.get_logger().log('Caught exception ' + e.message, level='info')
             if self.error:
                 raise Exception('Severe Problem in Builder.build')
 
-    def set_up(self):
+    def set_up(self, benchmark):
         directory_good = util.check_provided_directory(self.directory)
         if directory_good:
-            self.old_cwd = util.get_cwd()
-            util.change_cwd(self.directory)
+            complete_path = self.directory + '/' + self.config.get_benchmark_to_directory_mapping()[benchmark]
+            directory_good = util.check_provided_directory(complete_path)
+            if directory_good:
+                self.old_cwd = util.get_cwd()
+                util.change_cwd(complete_path)
+            else:
+                self.error = True
+                raise Exception('Exceptional directory ' + complete_path)
         else:
             self.error = True
-            raise Exception('Could not change to directory ' + self.directory)
+            raise Exception('Exceptional directory ' + self.directory)
 
-    def tear_down(self):
+    def tear_down(self, benchmark):
         util.change_cwd(self.old_cwd)
 
     def build_detail(self, benchmark):
