@@ -11,7 +11,7 @@ class Builder:
         self.directory = dir_key
         self.config = configuration
         self.old_cwd = ''
-        self.error = None
+        self.error = False
 
     def build(self):
         try:
@@ -34,7 +34,7 @@ class Builder:
             util.change_cwd(self.directory)
         else:
             self.error = True
-            raise Exception('Could not change to directory')
+            raise Exception('Could not change to directory ' + self.directory)
 
     def tear_down(self):
         util.change_cwd(self.old_cwd)
@@ -42,18 +42,22 @@ class Builder:
     def build_detail(self, benchmark):
         kwargs = {'compiler': 'gcc'}
 
-        for flavor in self.config.get_flavors():
-            build_functor = util.load_functor(self.config.get_flavor_func(flavor))
-            if build_functor.get_method()['active']:
-                build_functor.active(benchmark, **kwargs)
+        try:
+            for flavor in self.config.get_flavors():
+                build_functor = util.load_functor(self.config.get_flavor_func(flavor))
+                if build_functor.get_method()['active']:
+                    build_functor.active(benchmark, **kwargs)
 
-            else:
-                try:
-                    command = build_functor.passive(benchmark, **kwargs)
-                    util.shell(command)
+                else:
+                    try:
+                        command = build_functor.passive(benchmark, **kwargs)
+                        util.shell(command)
 
-                except Exception as e:
-                    logging.get_logger().log(e.message, level='warn')
+                    except Exception as e:
+                        logging.get_logger().log(e.message, level='warn')
+        except Exception as e:
+					self.error = True
+					logging.get_logger().log(e.message, level='error')
 
     def generate_run_configurations(self):
         """

@@ -77,11 +77,17 @@ class Configuration:
 class ConfigurationLoader:
     """
     Loads a provided configuration file. May be static in the future.
+		If constructed given a directory, it does not load the top-level directory from the configuration
+		file, but uses the passed directory as the only top-level directory.
 
     """
 
-    def __init__(self):
+    def __init__(self, file_path=None):
         self.config_cache = {}
+        self.read_top_level_from_file = True
+        if file_path is not None:
+            self.read_top_level_from_file = False
+        self.file_path=file_path
 
     def load(self, config_file):
         if config_file in self.config_cache:
@@ -95,7 +101,11 @@ class ConfigurationLoader:
 
     def construct_from_json(self, tree):
         config = Configuration()
-        config.set_directories(util.json_to_canonic(tree['top_level_directories']))
+        if self.read_top_level_from_file:
+            config.set_directories(util.json_to_canonic(tree['top_level_directories']))
+        else:
+            config.set_directories([self.file_path])
+
         config.set_benchmarks(util.json_to_canonic(tree['benchmarks']))
         config.set_flavors(util.json_to_canonic(tree['flavors']))
         # XXX We may need to change that canonicalization here, as we expect to have tuples.
