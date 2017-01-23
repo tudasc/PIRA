@@ -1,6 +1,6 @@
 {
   "top_level_directories": [
-    "./test"
+    ""
   ],
   "benchmarks": [
     "403.gcc",
