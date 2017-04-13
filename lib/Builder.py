@@ -56,6 +56,11 @@ class Builder:
                     logging.get_logger().log(e.message, level='warn')
 
     def generate_run_configurations(self):
+        """
+        Generates scripts which are to be submitted to the batch system.
+        These are stored in the format ((Benchmark, Flavor), Script_File_Name).
+        :return: List of script files
+        """
         run_configs = []
         kwargs = {'util': util}
         for flavor in self.config.get_flavors():
@@ -63,5 +68,5 @@ class Builder:
                 run_generator = util.load_functor(self.config.get_flavor_run_generator(flavor))
                 # This is always active mode. We need to generate scripts and return the filename.
                 rc = run_generator.generate(benchmark, **kwargs)
-                run_configs.append(rc)
+                run_configs.append(((benchmark, flavor),rc))
         return run_configs
