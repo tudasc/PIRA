@@ -1,4 +1,5 @@
 from ConfigLoader import ConfigurationLoader as CL
+from ConfigLoaderNew import ConfigurationLoader as Conf
 from Builder import Builder as B
 import Logging as log
 import Utility as util
@@ -6,8 +7,10 @@ import Utility as util
 
 def run(path_to_config):
     try:
-        config_loader = CL()
-        configuration = config_loader.load(path_to_config)
+        #config_loader = CL()
+        config_loader = Conf()
+        #configuration = config_loader.load(path_to_config)
+        configuration = config_loader.load_conf(path_to_config)
         top_level_directories = configuration.get_directories()
 
         for directory in top_level_directories:
