@@ -26,8 +26,8 @@ class ConfigurationNew:
     """
     def __init__(self):
         self.directories = []
-        self.builds = [[]]
-        self.items = [[]]
+        self.builds = {}
+        self.items = {}
         self.prefix = []
         self.flavors = []
         self.instrument_analysis = []
@@ -47,41 +47,42 @@ class ConfigurationNew:
     def set_glob_submitter(self,glob_submitter):
         self.global_submitter = glob_submitter
 
-    def set_prefix(self,prefix,count):
-        self.builds[count][PREFIX] = prefix
-            #self.builds[0][1] = prefix
+    def set_prefix(self,prefix,dir):
+        self.builds[dir].update({'prefix':prefix})
 
-    def set_items(self,items,count):
-        self.builds[count][ITEMS] = items
-        #self.items = items
+    def set_items(self,items,dir):
+        self.builds[dir].update({'items':items})
 
-    def set_flavours(self,flavours,count):
-        self.builds[count][FLAVORS] = flavours
+    def set_flavours(self,flavours,dir):
+        self.builds[dir].update({'flavours':flavours})
 
     def initialize_list(self,length):
         self.builds = [['']*NO_ELEMENTS_BUILD for i in range(length)]
         self.items = [['']*NO_ELEMENTS_ITEMS for i in range(length)]
 
-    def set_item_instrument_analysis(self,inst_analysis,count):
-        #self.instrument_analysis = self.instrument_analysis.append(inst_analysis)
-        self.instrument_analysis.append(inst_analysis)
-        self.items[count][INSTRUMENT_ANALYSIS] = self.instrument_analysis
+    def initialize_build_dict(self,dir):
+        for dirs in dir:
+            self.builds.update({dirs:{}})
+            self.items.update({dirs:{}})
 
-    def set_item_builders(self,builders,count):
-        self.builders.append(builders)
-        self.items[count][BUILDERS] = self.builders
+    def initialize_item_dict(self,dir,items):
+        for item in items:
+            self.items[dir].update({item:{}})
 
-    def set_item_args(self,args,count):
-        self.args.append(args)
-        self.items[count][ARGS] = self.args
+    def set_item_instrument_analysis(self,inst_analysis,dir,item):
+        self.items[dir][item].update({'instrument_analysis':inst_analysis})
 
-    def set_item_runner(self,runner,count):
-        self.runner.append(runner)
-        self.items[count][RUNNER] = self.runner
+    def set_item_builders(self,builders,dir,item):
+        self.items[dir][item].update({'builders':builders})
 
-    def set_item_submitter(self,submitter,count):
-        self.submitter.append(submitter)
-        self.items[count][SUBMITTER] = self.submitter
+    def set_item_args(self,args,dir,item):
+        self.items[dir][item].update({'args':args})
+
+    def set_item_runner(self,runner,dir,item):
+        self.items[dir][item].update({'runner':runner})
+
+    def set_item_submitter(self,submitter,dir,item):
+        self.items[dir][item].update({'submitter':submitter})
 
 
 class ConfigurationLoader:
@@ -106,32 +107,25 @@ class ConfigurationLoader:
     def construct_from_json(self,json_tree):
         conf = ConfigurationNew()
         conf.set_build_directories(util.json_to_canonic(json_tree['description']['directories']))
-        conf.initialize_list(len(conf.directories))
+        conf.initialize_build_dict(conf.directories)
         conf.set_glob_flavors(util.json_to_canonic(json_tree['description']['glob-flavors']))
         conf.set_glob_submitter(util.json_to_canonic(json_tree['description']['glob-submitter']))
-        count = 0
         for build_dirs in conf.directories:
-            conf.set_prefix(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['prefix']),count)
-            conf.set_items(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['items']),count)
-            conf.set_flavours(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors'][build_dirs]),count)
-            for items in conf.builds[count][1]:
+            conf.set_prefix(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['prefix']),build_dirs)
+            conf.set_items(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['items']),build_dirs)
+            conf.initialize_item_dict(build_dirs,conf.builds[build_dirs]['items'])
+            conf.set_flavours(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors'][build_dirs]),build_dirs)
+            for items in conf.builds[build_dirs]['items']:
                 conf.set_item_instrument_analysis(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors']
-                                                       ['instrument-analysis'][items]),count)
+                                                       ['instrument-analysis'][items]),build_dirs,items)
                 conf.set_item_builders(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors']
-                                                                       ['builders'][items]),count)
+                                                                       ['builders'][items]),build_dirs,items)
                 conf.set_item_args(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors']
-                                                   ['run'][items]['args']),count)
+                                                   ['run'][items]['args']),build_dirs,items)
                 conf.set_item_runner(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors']
-                                                          ['run'][items]['runner']),count)
+                                                          ['run'][items]['runner']),build_dirs,items)
                 conf.set_item_submitter(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors']
-                                                          ['run'][items]['submitter']),count)
-
-            count += 1
-            conf.instrument_analysis = []
-            conf.builders = []
-            conf.args = []
-            conf.runner = []
-            conf.submitter = []
+                                                          ['run'][items]['submitter']),build_dirs,items)
         return conf
 
 
