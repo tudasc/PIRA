@@ -36,7 +36,7 @@ class ConfigurationNew:
         self.runner = []
         self.submitter = []
         self.global_flavors = []
-        self.global_submitter = []
+        self.global_submitter = {}
 
     def set_build_directories(self, dirs):
         self.directories = dirs
@@ -44,8 +44,8 @@ class ConfigurationNew:
     def set_glob_flavors(self,glob_flavors):
         self.global_flavors = glob_flavors
 
-    def set_glob_submitter(self,glob_submitter):
-        self.global_submitter = glob_submitter
+    def set_glob_submitter(self,glob_submitter,glob_flavor):
+        self.global_submitter.update({glob_flavor:glob_submitter})
 
     def set_prefix(self,prefix,dir):
         self.builds[dir].update({'prefix':prefix})
@@ -109,7 +109,8 @@ class ConfigurationLoader:
         conf.set_build_directories(util.json_to_canonic(json_tree['description']['directories']))
         conf.initialize_build_dict(conf.directories)
         conf.set_glob_flavors(util.json_to_canonic(json_tree['description']['glob-flavors']))
-        conf.set_glob_submitter(util.json_to_canonic(json_tree['description']['glob-submitter']))
+        for glob_flav in conf.global_flavors:
+            conf.set_glob_submitter(util.json_to_canonic(json_tree['description']['glob-submitter'][glob_flav]),glob_flav)
         for build_dirs in conf.directories:
             conf.set_prefix(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['prefix']),build_dirs)
             conf.set_items(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['items']),build_dirs)
