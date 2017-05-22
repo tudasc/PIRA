@@ -17,8 +17,11 @@ class Builder:
         try:
             self.set_up()
 
-            for benchmark in self.config.get_benchmarks():
-                self.build_detail(benchmark)
+
+            '''for benchmark in self.config.get_benchmarks():'''
+            for build in self.config.get_builds():
+                for benchmark in self.config.builds[build]['items']:
+                    self.build_detail(build,benchmark)
 
             self.tear_down()
 
@@ -39,10 +42,17 @@ class Builder:
     def tear_down(self):
         util.change_cwd(self.old_cwd)
 
-    def build_detail(self, benchmark):
+    def build_detail(self, build,benchmark):
         kwargs = {'compiler': 'gcc'}
 
-        for flavor in self.config.get_flavors():
+        if self.config.builds[build]['flavours']:
+            self.build_flavours(self.config.builds[build]['flavours'],benchmark,kwargs)
+
+        else:
+            self.build_flavours(self.config.global_flavors,benchmark,kwargs)
+
+    def build_flavours(self,flavors,benchmark,kwargs):
+        for flavor in flavors:
             build_functor = util.load_functor(self.config.get_flavor_func(flavor))
             if build_functor.get_method()['active']:
                 build_functor.active(benchmark, **kwargs)

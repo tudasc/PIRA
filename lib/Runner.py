@@ -7,13 +7,11 @@ import Utility as util
 
 def run(path_to_config):
     try:
-        #config_loader = CL()
         config_loader = Conf()
-        #configuration = config_loader.load(path_to_config)
         configuration = config_loader.load_conf(path_to_config)
-        top_level_directories = configuration.get_directories()
+        #top_level_directories = configuration.get_directories()
 
-        for directory in top_level_directories:
+        for directory in configuration.directories:
             builder = B(directory, configuration)
 
             builder.build()

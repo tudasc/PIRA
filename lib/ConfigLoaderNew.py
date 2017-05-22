@@ -84,6 +84,9 @@ class ConfigurationNew:
     def set_item_submitter(self,submitter,dir,item):
         self.items[dir][item].update({'submitter':submitter})
 
+    def get_builds(self):
+        return self.builds.keys()
+
 
 class ConfigurationLoader:
 

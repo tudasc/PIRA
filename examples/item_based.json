@@ -1,78 +1,37 @@
 {
   "description":{
     "directories":[
-      "one",
-      "two"
+      "/home/sachin/MasterThesis/GameOfLife"
     ],
     "builds": {
-        "one": {
+        "/home/sachin/MasterThesis/GameOfLife": {
           "prefix": "xx_",
           "items": [
-            "item1",
-            "item2"
+            "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
           ],
           "flavors": {
-            "one": [
+            "/home/sachin/MasterThesis/GameOfLife": [
               "local-flav1",
               "local-flav2"
             ],
             "instrument-analysis": {
-              "item1": "/path/to/py/functor",
-              "item2": "/path/to/py/functor"
+              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
             },
             "builders": {
-              "item1": "/path/to/py/functor",
-              "item2": "/path/to/different/functor"
+              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
             },
             "run": {
-              "item1": {
+              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": {
                 "args": [
                   "123",
                   "abs"
                 ],
-                "runner": "path/to/py/func",
-                "submitter": ""
-              },
-              "item2": {
-                "args": [
-                  "123",
-                  "abs"
-                ],
-                "runner": "path/to/py/func",
+                "runner": "/home/sachin/MasterThesis/GameOfLife/serial_non_template",
                 "submitter": ""
               }
-
-            }
-          }
-        },
-      "two": {
-        "prefix": "xx_",
-        "items": [
-          "item1"
-        ],
-        "flavors": {
-          "two": [
-            "local-flav1",
-            "local-flav2"
-          ],
-          "instrument-analysis": {
-            "item1": "/path/to/py/functor"
-          },
-          "builders": {
-            "item1": "/path/to/py/functor"
-          },
-          "run": {
-            "item1": {
-              "args": [
-                "123",
-                "abs"
-              ],
-              "runner": "path/to/py/func",
-              "submitter": ""
             }
           }
         }
-      }
       },
       "glob-flavors":[
         "flav1",
