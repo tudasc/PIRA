@@ -11,14 +11,13 @@
           ],
           "flavors": {
             "/home/sachin/MasterThesis/GameOfLife": [
-              "local-flav1",
-              "local-flav2"
+              "local-flav1"
             ],
             "instrument-analysis": {
               "/home/sachin/MasterThesis/GameOfLife/serial_non_template": "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
             },
             "builders": {
-              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
+              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": "/home/sachin/IdeaProjects/master/benchpress/functors"
             },
             "run": {
               "/home/sachin/MasterThesis/GameOfLife/serial_non_template": {
@@ -34,8 +33,6 @@
         }
       },
       "glob-flavors":[
-        "flav1",
-        "flav2"
       ],
       "glob-submitter":{
         "flav1":"/path/to/py/functor",

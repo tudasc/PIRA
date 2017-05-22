@@ -31,10 +31,10 @@ def change_cwd(path):
     os.chdir(path)
 
 
-def load_functor(func_tuple):
-    append_to_sys_path(func_tuple)
+def load_functor(dir,module):
+    append_to_sys_path(dir)
     # Adding 'fromList' argument loads exactly the module.
-    functor = __import__(func_tuple[1], fromlist=[''])
+    functor = __import__(module, fromlist=[''])
     return functor
 
 
@@ -53,7 +53,7 @@ def shell(command, silent=True, dry=False):
 
 
 def append_to_sys_path(func_tuple):
-    sys.path.append(func_tuple[0])
+    sys.path.append(func_tuple)
 
 
 def json_to_canonic(json_elem):

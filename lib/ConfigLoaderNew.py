@@ -87,6 +87,9 @@ class ConfigurationNew:
     def get_builds(self):
         return self.builds.keys()
 
+    def get_flavor_func(self,build,item):
+        return self.items[build][item]['builders']
+
 
 class ConfigurationLoader:
 
