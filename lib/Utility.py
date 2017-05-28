@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import Logging as log
+import Utility as util
 
 
 def read_file(file_name):
@@ -31,7 +32,7 @@ def change_cwd(path):
     os.chdir(path)
 
 
-def load_functor(dir,module):
+def load_functor(dir, module):
     append_to_sys_path(dir)
     # Adding 'fromList' argument loads exactly the module.
     functor = __import__(module, fromlist=[''])

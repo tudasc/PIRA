@@ -50,7 +50,7 @@ class Builder:
             self.build_flavours(self.config.builds[build]['flavours'],build,benchmark,kwargs)
 
         else:
-            self.build_flavours(self.config.global_flavors,benchmark,kwargs)
+            self.build_flavours(self.config.global_flavors,build,benchmark,kwargs)
 
     def build_flavours(self,flavors,build,benchmark,kwargs):
         for flavor in flavors:
@@ -61,7 +61,10 @@ class Builder:
             else:
                 try:
                     command = build_functor.passive(benchmark, **kwargs)
+                    util.change_cwd(benchmark)
                     util.shell(command)
+                    #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
+                    #util.shell(command)
 
                 except Exception as e:
                     logging.get_logger().log(e.message, level='warn')

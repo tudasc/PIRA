@@ -5,7 +5,7 @@
     ],
     "builds": {
         "/home/sachin/MasterThesis/GameOfLife": {
-          "prefix": "xx_",
+          "prefix": "",
           "items": [
             "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
           ],
@@ -25,7 +25,7 @@
                   "123",
                   "abs"
                 ],
-                "runner": "/home/sachin/MasterThesis/GameOfLife/serial_non_template",
+                "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
                 "submitter": ""
               }
             }

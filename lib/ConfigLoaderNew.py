@@ -90,6 +90,9 @@ class ConfigurationNew:
     def get_flavor_func(self,build,item):
         return self.items[build][item]['builders']
 
+    def get_runner_func(self,build,item):
+        return self.items[build][item]['runner']
+
 
 class ConfigurationLoader:
 
