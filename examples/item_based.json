@@ -1,29 +1,31 @@
 {
   "description":{
     "directories":[
-      "/home/sachin/MasterThesis/GameOfLife"
+      "/home/sachin/MasterThesis"
     ],
     "builds": {
-        "/home/sachin/MasterThesis/GameOfLife": {
+        "/home/sachin/MasterThesis": {
           "prefix": "",
           "items": [
-            "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
+            "/home/sachin/MasterThesis/lulesh2.0.3"
           ],
           "flavors": {
-            "/home/sachin/MasterThesis/GameOfLife": [
+            "/home/sachin/MasterThesis": [
               "local-flav1"
             ],
             "instrument-analysis": {
-              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": "/home/sachin/MasterThesis/GameOfLife/serial_non_template"
+              "/home/sachin/MasterThesis/lulesh2.0.3": [
+                "/home/sachin/IdeaProjects/master/benchpress/functors",
+                "/home/sachin/MasterThesis/lulesh2.0.3/lulesh_scorep_dir/",
+                "/home/sachin/CLionProjects/pgoe/"
+                ]
             },
             "builders": {
-              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": "/home/sachin/IdeaProjects/master/benchpress/functors"
+              "/home/sachin/MasterThesis/lulesh2.0.3": "/home/sachin/IdeaProjects/master/benchpress/functors"
             },
             "run": {
-              "/home/sachin/MasterThesis/GameOfLife/serial_non_template": {
+              "/home/sachin/MasterThesis/lulesh2.0.3": {
                 "args": [
-                  "123",
-                  "abs"
                 ],
                 "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
                 "submitter": ""

@@ -1,9 +1,12 @@
 from ConfigLoader import ConfigurationLoader as CL
 from ConfigLoaderNew import ConfigurationLoader as Conf
 from Builder import Builder as B
+from Analyzer import Analyzer as A
 import Logging as log
 import Utility as util
 import Logging as logging
+from lib.db import database as db
+import lib.tables as tables
 
 
 def runner(flavors,build,benchmark,kwargs,config):
@@ -39,7 +42,28 @@ def run(path_to_config):
     try:
         config_loader = Conf()
         configuration = config_loader.load_conf(path_to_config)
+
+        '''
+        Initialize Database
+        '''
+        database = db("db_file1")
+        cur = database.create_cursor(database.conn)
+
+        '''
+        Create tables
+        '''
+        database.create_table(cur,tables.sql_create_application_table)
+        database.create_table(cur,tables.sql_create_builds_table)
+        database.create_table(cur,tables.sql_create_items_table)
+        database.create_table(cur,tables.sql_create_experiment_table)
         #top_level_directories = configuration.get_directories()
+
+        '''
+        insert to application table
+        '''
+        if ((configuration.global_flavors.__len__() == 0) and (configuration.global_submitter.__len__() == 0)):
+            application = ("GameofLife",'','')
+            database.insert_data_application(cur,application)
 
         for directory in configuration.directories:
             builder = B(directory, configuration)
@@ -48,6 +72,10 @@ def run(path_to_config):
             if configuration.builds[directory]['flavours']:
                 for benchmark in configuration.builds[directory]['items']:
                     run_detail(configuration,directory,benchmark)
+                    analyser = A(configuration,directory,benchmark)
+                    analyser.analyse_detail(configuration,directory,benchmark)
+
+        #write analysis phase
 
             #run_configs = builder.generate_run_configurations()
 

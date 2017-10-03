@@ -93,6 +93,16 @@ class ConfigurationNew:
     def get_runner_func(self,build,item):
         return self.items[build][item]['runner']
 
+    def get_analyse_func(self,build,item):
+        #print self.items[build][item]['instrument_analysis']
+        return self.items[build][item]['instrument_analysis'][0]
+
+    def get_analyser_exp_dir(self,build,item):
+        return self.items[build][item]['instrument_analysis'][1]
+
+    def get_analyser_dir(self,build,item):
+        return self.items[build][item]['instrument_analysis'][2]
+
 
 class ConfigurationLoader:
 

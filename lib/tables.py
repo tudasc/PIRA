@@ -2,8 +2,8 @@ import sqlite3 as db
 
 sql_create_application_table = """ CREATE TABLE IF NOT EXISTS Application (
                                         App_Name text PRIMARY KEY,
-                                        Global_Flavor text NOT NULL,
-                                        Global_Submitter text NOT NULL
+                                        Global_Flavor text,
+                                        Global_Submitter text
                                     ); """
 
 sql_create_builds_table = """ CREATE TABLE IF NOT EXISTS Builds (
