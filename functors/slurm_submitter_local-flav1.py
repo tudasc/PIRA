@@ -1,4 +1,5 @@
 
+
 slurm_binary = 'sbatch'
 slurm_queye = 'squeue --format="%i %j"'
 
@@ -10,7 +11,7 @@ def dispatch(list_of_tuples, **kwargs):
 
     for run_tuple in list_of_tuples:
         file_name = run_tuple[1]
-        job_id = initial_dependency(util, run_tuple[0])
+        #job_id = initial_dependency(util, run_tuple[0])
 
         for i in xrange(0, rpj):
             if dependent:

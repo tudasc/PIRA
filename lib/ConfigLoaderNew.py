@@ -103,6 +103,15 @@ class ConfigurationNew:
     def get_analyser_dir(self,build,item):
         return self.items[build][item]['instrument_analysis'][2]
 
+    def get_is_submitter(self,build,item):
+        if(self.items[build][item]['submitter'] != ''):
+            return 1;
+        else:
+            return 0;
+
+    def get_submitter_func(self,build,item):
+        return self.items[build][item]['submitter']
+
 
 class ConfigurationLoader:
 

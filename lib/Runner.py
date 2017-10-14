@@ -26,17 +26,31 @@ def runner(flavors,build,benchmark,kwargs,config):
             except Exception as e:
                 logging.get_logger().log(e.message, level='warn')
 
-def submitter():
-    pass
+def submitter(flavors,build,benchmark,kwargs,config):
+    print('In submitter');
+    for flavor in flavors:
+        submitter_functor = util.load_functor(config.get_runner_func(build,benchmark),'slurm_submitter_'+flavor)
+        tup = [(flavor,'/home/sm49xeji/job.sh')]
+        kwargs={"util":util,"runs_per_job":1,"dependent":0}
+        submitter_functor.dispatch(tup,**kwargs)
+        print(submitter_functor)
+        exit(0)
+
 
 def run_detail(config,build,benchmark):
     kwargs = {'compiler': ''}
 
     if config.builds[build]['flavours']:
-        runner(config.builds[build]['flavours'],build,benchmark,kwargs,config)
+        if config.get_is_submitter(build,benchmark):
+            submitter(config.builds[build]['flavours'],build,benchmark,kwargs,config);
+        else:
+            runner(config.builds[build]['flavours'],build,benchmark,kwargs,config)
 
     else:
-        runner(config.global_flavors,build,benchmark,kwargs,config)
+        if config.get_is_submitter(build,benchmark):
+            submitter(config.builds[build]['flavours'],build,benchmark,kwargs,config);
+        else:
+            runner(config.global_flavors,build,benchmark,kwargs,config)
 
 def run(path_to_config):
     try:
