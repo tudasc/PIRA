@@ -48,6 +48,10 @@ def shell(command, silent=True, dry=False):
         return out
 
     except subprocess.CalledProcessError as e:
+        if e.returncode == 1:
+            if command.find('grep '):
+                return ''
+
         log.get_logger().log('Utility.shell: Caught Exception ' + e.message, level='error')
         raise Exception('Running command ' + command + ' did not succeed')
 
