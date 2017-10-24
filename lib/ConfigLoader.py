@@ -73,15 +73,27 @@ class Configuration:
         store_tuple = [abs_path, tuple[1]]
         return store_tuple
 
+    def set_benchmark_to_directory_mapping(self, mapping):
+        self.benchmark_to_directory_mapping = mapping
+
+    def get_benchmark_to_directory_mapping(self):
+        return self.benchmark_to_directory_mapping
+
 
 class ConfigurationLoader:
     """
     Loads a provided configuration file. May be static in the future.
+		If constructed given a directory, it does not load the top-level directory from the configuration
+		file, but uses the passed directory as the only top-level directory.
 
     """
 
-    def __init__(self):
+    def __init__(self, file_path=None):
         self.config_cache = {}
+        self.read_top_level_from_file = True
+        if file_path is not None:
+            self.read_top_level_from_file = False
+        self.file_path=file_path
 
     def load(self, config_file):
         if config_file in self.config_cache:
@@ -95,9 +107,17 @@ class ConfigurationLoader:
 
     def construct_from_json(self, tree):
         config = Configuration()
-        config.set_directories(util.json_to_canonic(tree['top_level_directories']))
+        if self.read_top_level_from_file:
+            config.set_directories(util.json_to_canonic(tree['top_level_directories']))
+        else:
+            config.set_directories([self.file_path])
+
         config.set_benchmarks(util.json_to_canonic(tree['benchmarks']))
         config.set_flavors(util.json_to_canonic(tree['flavors']))
+
+        # TODO construct a map for benchmark => directory
+        config.set_benchmark_to_directory_mapping(self.construct_benchmark_directory_mapping(tree, config))
+
         # XXX We may need to change that canonicalization here, as we expect to have tuples.
         for flavor in config.get_flavors():
             config.set_flavor_func(flavor, util.json_to_canonic(tree['flavor_tuples'][flavor]))
@@ -111,3 +131,16 @@ class ConfigurationLoader:
         log.get_logger().log('Constructed config from JSON')
 
         return config
+
+    def construct_benchmark_directory_mapping(self, tree, config):
+        tree_elem = tree["directory_pattern"]
+        style = util.json_to_canonic(tree_elem["style"])
+        mapping = {}
+        # TODO Respect the actual pattern from the config file
+        if style == 'dot':
+            prefix = util.json_to_canonic(tree_elem["prefix"])
+            for benchmark in config.get_benchmarks():
+                mapping[benchmark] = prefix + '.' + benchmark
+
+        return mapping
+

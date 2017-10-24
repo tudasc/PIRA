@@ -3,7 +3,8 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-    return 'make ' + benchmark + '.' + kwargs['compiler'] + '.vanilla'
+    cc= kwargs['compiler'] 
+    return 'COMPILER=' +cc + ' COMPILERNAME=' + cc + ' FLAVOR=vanilla make ' + benchmark + '.' +cc+ '.vanilla'
 
 
 def active(benchmark, **kwargs):

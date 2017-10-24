@@ -3,32 +3,35 @@
     "./test"
   ],
   "benchmarks": [
-    "403.gcc",
-    "429.mcf",
-    "433.milc"
+    "403.gcc"
   ],
   "flavors": [
     "vanilla",
     "finstr"
   ],
+  "directory_pattern": {
+    "style": "dot",
+    "prefix": "spec_cpu",
+    "pattern": ["prefix", "benchmark"]
+  },
   "flavor_tuples": {
     "vanilla": [
-      "./functors",
+      "./examples/spec_cpu_2k6",
       "spec_vanilla"
     ],
     "finstr": [
-      "./functors",
+      "./examples/spec_cpu_2k6",
       "spec_finstr"
     ]
   },
   "run_parameters": {
     "generators": {
       "vanilla": [
-        "./functors",
+        "./examples/spec_cpu_2k6",
         "spec_vanilla_run_gen"
       ],
       "finstr": [
-        "./functors",
+        "./examples/spec_cpu_2k6",
         "spec_finstr_run_gen"
       ]
     },
