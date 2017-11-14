@@ -54,20 +54,33 @@ class Builder:
 
     def build_flavours(self,flavors,build,benchmark,kwargs):
         for flavor in flavors:
-            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),flavor)
-            if build_functor.get_method()['active']:
-                build_functor.active(benchmark, **kwargs)
+            #if(self.config.stop_iteration[build+benchmark+flavor] == False):
+                build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),flavor)
+                #print("Build Functor:"+build_functor)
+                if build_functor.get_method()['active']:
+                    build_functor.active(benchmark, **kwargs)
 
-            else:
-                try:
-                    command = build_functor.passive(benchmark, **kwargs)
-                    util.change_cwd(benchmark)
-                    util.shell(command)
-                    #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
-                    #util.shell(command)
+                else:
+                    try:
+                        command = build_functor.passive(benchmark, **kwargs)
+                        print("Command:"+command)
+                        util.change_cwd(benchmark)
+                        print("Benchmark name:"+benchmark)
+                        analyser_dir = self.config.get_analyser_dir(build,benchmark)
+                        benchmark_name = self.config.get_benchmark_name(benchmark)
+                        instr_file = analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt'
+                        '''
+                        if util.check_file(instr_file):
+                            util.set_env('SCOREP_FILTERING_FILE',instr_file)
+                        '''
+                        util.shell(command+' clean')
 
-                except Exception as e:
-                    logging.get_logger().log(e.message, level='warn')
+                        util.shell(command)
+                        #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
+                        #util.shell(command)
+
+                    except Exception as e:
+                        logging.get_logger().log(e.message, level='warn')
 
     def generate_run_configurations(self):
         """

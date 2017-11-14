@@ -16,7 +16,7 @@
             "instrument-analysis": {
               "/home/sachin/MasterThesis/lulesh2.0.3": [
                 "/home/sachin/IdeaProjects/master/benchpress/functors",
-                "/home/sachin/MasterThesis/lulesh2.0.3/lulesh_scorep_dir/",
+                "/home/sachin/MasterThesis/lulesh2.0.3/lulesh/",
                 "/home/sachin/CLionProjects/pgoe/"
                 ]
             },
@@ -28,7 +28,7 @@
                 "args": [
                 ],
                 "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
-                "submitter": "/home/sachin/IdeaProjects/master/benchpress/functors"
+                "submitter":""
               }
             }
           }

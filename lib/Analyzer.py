@@ -25,22 +25,59 @@ class Analyzer:
                     isdirectory_good = util.check_provided_directory(analyser_dir)
                     if isdirectory_good:
                         util.change_cwd(analyser_dir)
-                        util.shell(command+' '+exp_dir+'profile.cubex')
+                        benchmark_name = config.get_benchmark_name(benchmark)
+                        instr_files = analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt'
+                        prev_instr_file = analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'previous.txt'
+                        if(util.check_file(instr_files)):
+                            util.rename(instr_files,prev_instr_file)
+                            util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg '+exp_dir+flavor+'-'+benchmark_name[0]+'.cubex')
+                        else:
+                            util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg ')
+
+                        #Apply c++filt to demangle function names
+                        util.shell('cat '+analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt '+
+                                   '| c++filt > '+analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'temp.txt')
+                        util.rename(analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'temp.txt',
+                                    analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt')
+                        '''
+                        if(util.check_file(analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt')):
+                            util.append_scorep_footer(instr_files)
+                            util.append_scorep_header(instr_files)
+                        '''
+                        if((util.check_file(instr_files)) and (util.check_file(prev_instr_file))):
+                            if(util.diff_inst_files(analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt',
+                            analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'previous.txt')):
+                                config.stop_iteration[build+benchmark+flavor] = True;
+
                         self.tear_down(exp_dir)
-                    #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
-                    #util.shell(command)
 
                 except Exception as e:
                     logging.get_logger().log(e.message, level='error')
 
 
+    def analyse_slurm(self,flavors,build,benchmark,kwargs,config):
+        for flavor in flavors:
+            try:
+                analyse_functor = util.load_functor(config.get_analyse_slurm_func(build,benchmark),'analyse_slurm_submitter_'+flavor)
+                tup = [(flavor,'/home/sm49xeji/job_analyse.sh')]
+                kwargs={"util":util,"runs_per_job":1,"dependent":1}
+                analyse_functor.dispatch(tup,**kwargs)
+                print(analyse_functor)
+
+            except Exception as e:
+                logging.get_logger().log(e.message, level='error')
+
+
     def set_up(self):
        pass
+
     def tear_down(self,exp_dir):
         isdirectory_good = util.check_provided_directory(exp_dir)
         if isdirectory_good:
             try:
-                shutil.rmtree(exp_dir)
+                #shutil.rmtree(exp_dir)
+                str = util.generate_random_string()
+                util.rename(exp_dir,'/home/sachin/MasterThesis/lulesh2.0.3'+str)
                 util.change_cwd(self.old_cwd)
             except Exception as e:
                 logging.get_logger().log(e.message, level='error')
@@ -49,10 +86,16 @@ class Analyzer:
         kwargs = {'compiler': ''}
 
         if config.builds[build]['flavours']:
-            self.analyse(config.builds[build]['flavours'],build,benchmark,kwargs,config)
+            if config.get_is_submitter(build,benchmark):
+                self.analyse_slurm(config.builds[build]['flavours'],build,benchmark,kwargs,config)
+            else:
+                self.analyse(config.builds[build]['flavours'],build,benchmark,kwargs,config)
 
         else:
-            self.analyse(config.global_flavors,build,benchmark,kwargs,config)
+            if config.get_is_submitter(build,benchmark):
+                self.analyse_slurm(config.global_flavors,build,benchmark,kwargs,config)
+            else:
+                self.analyse(config.global_flavors,build,benchmark,kwargs,config)
 
     def run_analyzer(self,flavors,build,benchmark,kwargs):
         pass

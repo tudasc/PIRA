@@ -11,7 +11,7 @@ def dispatch(list_of_tuples, **kwargs):
 
     for run_tuple in list_of_tuples:
         file_name = run_tuple[1]
-        #job_id = initial_dependency(util, run_tuple[0])
+        job_id = initial_dependency(util, run_tuple[0])
 
         for i in xrange(0, rpj):
             if dependent:
@@ -35,7 +35,8 @@ def initial_dependency(util, benchmark_flavor):
         return -1
 
     ids.sort()
-    return ids.reverse()[0]
+    ids.reverse()
+    return ids[0]
 
 
 def submit_with_dependencies(util, run_script, job_id):

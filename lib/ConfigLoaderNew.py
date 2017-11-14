@@ -37,6 +37,8 @@ class ConfigurationNew:
         self.submitter = []
         self.global_flavors = []
         self.global_submitter = {}
+        self.stop_iteration = {};
+        self.is_first_iteration = {};
 
     def set_build_directories(self, dirs):
         self.directories = dirs
@@ -103,6 +105,10 @@ class ConfigurationNew:
     def get_analyser_dir(self,build,item):
         return self.items[build][item]['instrument_analysis'][2]
 
+    def get_analyse_slurm_func(self,build,item):
+        return self.items[build][item]['instrument_analysis'][0]
+
+
     def get_is_submitter(self,build,item):
         if(self.items[build][item]['submitter'] != ''):
             return 1;
@@ -112,6 +118,22 @@ class ConfigurationNew:
     def get_submitter_func(self,build,item):
         return self.items[build][item]['submitter']
 
+    def get_benchmark_name(self,benchmark):
+        return benchmark.split('/')[-1:]
+
+    def initialize_stopping_iterator(self):
+        for build in self.builds:
+            for item in self.builds[build]['items']:
+                print(self.builds[build]['flavours'])
+                for flavor in self.builds[build]['flavours']:
+                    self.stop_iteration[build+item+flavor] = False
+
+    def initialize_first_iteration(self):
+        for build in self.builds:
+            for item in self.builds[build]['items']:
+                print(self.builds[build]['flavours'])
+                for flavor in self.builds[build]['flavours']:
+                    self.is_first_iteration[build+item+flavor] = False
 
 class ConfigurationLoader:
 

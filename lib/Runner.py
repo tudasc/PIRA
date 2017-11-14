@@ -20,6 +20,13 @@ def runner(flavors,build,benchmark,kwargs,config):
                 command = build_functor.passive(benchmark, **kwargs)
                 util.change_cwd(benchmark)
                 util.shell(command)
+                exp_dir = config.get_analyser_exp_dir(build,benchmark)
+                isdirectory_good = util.check_provided_directory(exp_dir)
+                if(isdirectory_good):
+                    if(util.check_file(exp_dir+"profile.cubex")):
+                        benchmark_name = config.get_benchmark_name(benchmark)
+                        util.rename(exp_dir+"profile.cubex",exp_dir+flavor+'-'+benchmark_name[0]+".cubex")
+
                 #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
                 #util.shell(command)
 
@@ -34,7 +41,7 @@ def submitter(flavors,build,benchmark,kwargs,config):
         kwargs={"util":util,"runs_per_job":1,"dependent":0}
         submitter_functor.dispatch(tup,**kwargs)
         print(submitter_functor)
-        exit(0)
+        #exit(0)
 
 
 def run_detail(config,build,benchmark):
@@ -56,6 +63,8 @@ def run(path_to_config):
     try:
         config_loader = Conf()
         configuration = config_loader.load_conf(path_to_config)
+        configuration.initialize_stopping_iterator()
+        configuration.initialize_first_iteration()
 
         '''
         Initialize Database
@@ -75,31 +84,36 @@ def run(path_to_config):
         '''
         insert to application table
         '''
+
         if ((configuration.global_flavors.__len__() == 0) and (configuration.global_submitter.__len__() == 0)):
             application = ("GameofLife",'','')
             database.insert_data_application(cur,application)
 
-        for directory in configuration.directories:
-            builder = B(directory, configuration)
+        for build in configuration.builds:
+            for item in configuration.builds[build]['items']:
+                for flavor in configuration.builds[build]['flavours']:
+                    while configuration.stop_iteration[build+item+flavor] == False:
 
-            builder.build()
-            if configuration.builds[directory]['flavours']:
-                for benchmark in configuration.builds[directory]['items']:
-                    run_detail(configuration,directory,benchmark)
-                    analyser = A(configuration,directory,benchmark)
-                    analyser.analyse_detail(configuration,directory,benchmark)
+                        #Check if its the first iteration
+                        if configuration.builds[build]['flavours']:
+                            for benchmark in configuration.builds[build]['items']:
+                                #Only run the pgoe to get the functions name
+                                if(configuration.is_first_iteration[build+item+flavor] == False):
+                                    configuration.is_first_iteration[build+item+flavor]=True
+                                    analyser = A(configuration,build,benchmark)
+                                    analyser.analyse_detail(configuration,build,benchmark)
 
-        #write analysis phase
+                        builder = B(build, configuration)
+                        builder.build()
 
-            #run_configs = builder.generate_run_configurations()
+                        if configuration.builds[build]['flavours']:
+                            for benchmark in configuration.builds[build]['items']:
+                    #Run Phase
+                                run_detail(configuration,build,benchmark)
 
-            #run_dispatcher = configuration.get_submitter()
-
-            # TODO Make these configuration options configurable (cli and .json)
-            #runs_per_job = configuration.get_num_runs_per_job()
-            #kwargs = {'util': util, 'runs_per_job': runs_per_job, 'dependent': True}
-            #run_dispatcher.dispatch(run_configs, **kwargs)
-
+                    #Analysis Phase
+                                analyser = A(configuration,build,benchmark)
+                                analyser.analyse_detail(configuration,build,benchmark)
 
             log.get_logger().dump_tape()
 

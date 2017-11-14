@@ -3,7 +3,7 @@ def get_method():
 
 def passive(benchmark, **kwargs):
     #runcommand = {"'./lulesh2.0'+ ' -i10'"}
-    return './lulesh2.0'+ ' -i 1'+kwargs['compiler']
+    return './local-flav1'+ ' -i 10'+kwargs['compiler']
 
 
 

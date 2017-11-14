@@ -2,7 +2,10 @@ import sys
 import os
 import subprocess
 import Logging as log
+import filecmp
 import Utility as util
+from random import choice
+from string import ascii_uppercase
 
 
 def read_file(file_name):
@@ -18,10 +21,38 @@ def check_provided_directory(path):
 
     return False
 
+def check_file(path):
+    if(os.path.exists(path)):
+        return True
+    return False
+
+def rename(old,new):
+    os.rename(old,new)
+
+def append_scorep_footer(filename):
+    with open(filename, "a") as myfile:
+        myfile.write("SCOREP_REGION_NAMES_END")
+
+def append_scorep_header(filename):
+    line = "SCOREP_REGION_NAMES_BEGIN\nEXCLUDE *\nINCLUDE"
+    with open(filename, 'r+') as myfile:
+        content = myfile.read()
+        myfile.seek(0, 0)
+        myfile.write(line.rstrip('\r\n') + '\n' + content)
+
+def diff_inst_files(file1,file2):
+    if(filecmp.cmp(file1,file2)):
+        return True
+    return False
+
+def set_env(env_var,val):
+    os.environ[env_var] = val
 
 def get_absolute_path(path):
     return os.path.abspath(path)
 
+def generate_random_string():
+    return ''.join(choice(ascii_uppercase) for i in range(12))
 
 def get_cwd():
     return os.getcwd()
