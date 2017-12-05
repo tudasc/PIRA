@@ -26,27 +26,17 @@ class Analyzer:
                     if isdirectory_good:
                         util.change_cwd(analyser_dir)
                         benchmark_name = config.get_benchmark_name(benchmark)
-                        instr_files = analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt'
-                        prev_instr_file = analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'previous.txt'
+                        instr_files = analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt'
+                        prev_instr_file = analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt'
                         if(util.check_file(instr_files)):
                             util.rename(instr_files,prev_instr_file)
                             util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg '+exp_dir+flavor+'-'+benchmark_name[0]+'.cubex')
                         else:
                             util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg ')
 
-                        #Apply c++filt to demangle function names
-                        util.shell('cat '+analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt '+
-                                   '| c++filt > '+analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'temp.txt')
-                        util.rename(analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'temp.txt',
-                                    analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt')
-                        '''
-                        if(util.check_file(analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt')):
-                            util.append_scorep_footer(instr_files)
-                            util.append_scorep_header(instr_files)
-                        '''
                         if((util.check_file(instr_files)) and (util.check_file(prev_instr_file))):
-                            if(util.diff_inst_files(analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt',
-                            analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'previous.txt')):
+                            if(util.diff_inst_files(analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt',
+                            analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt')):
                                 config.stop_iteration[build+benchmark+flavor] = True;
 
                         self.tear_down(exp_dir)
@@ -75,9 +65,6 @@ class Analyzer:
         isdirectory_good = util.check_provided_directory(exp_dir)
         if isdirectory_good:
             try:
-                #shutil.rmtree(exp_dir)
-                str = util.generate_random_string()
-                util.rename(exp_dir,'/home/sachin/MasterThesis/lulesh2.0.3'+str)
                 util.change_cwd(self.old_cwd)
             except Exception as e:
                 logging.get_logger().log(e.message, level='error')

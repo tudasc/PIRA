@@ -65,19 +65,8 @@ class Builder:
                         command = build_functor.passive(benchmark, **kwargs)
                         print("Command:"+command)
                         util.change_cwd(benchmark)
-                        print("Benchmark name:"+benchmark)
-                        analyser_dir = self.config.get_analyser_dir(build,benchmark)
-                        benchmark_name = self.config.get_benchmark_name(benchmark)
-                        instr_file = analyser_dir+'out/'+flavor+'-'+benchmark_name[0]+'.txt'
-                        '''
-                        if util.check_file(instr_file):
-                            util.set_env('SCOREP_FILTERING_FILE',instr_file)
-                        '''
-                        util.shell(command+' clean')
-
+                        util.shell('make clean')
                         util.shell(command)
-                        #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
-                        #util.shell(command)
 
                     except Exception as e:
                         logging.get_logger().log(e.message, level='warn')

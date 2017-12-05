@@ -92,8 +92,8 @@ def run(path_to_config):
         for build in configuration.builds:
             for item in configuration.builds[build]['items']:
                 for flavor in configuration.builds[build]['flavours']:
-                    while configuration.stop_iteration[build+item+flavor] == False:
-
+                    #while configuration.stop_iteration[build+item+flavor] == False:
+                    for x in range(0, 5):
                         #Check if its the first iteration
                         if configuration.builds[build]['flavours']:
                             for benchmark in configuration.builds[build]['items']:
