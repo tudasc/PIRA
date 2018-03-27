@@ -9,7 +9,7 @@ from lib.db import database as db
 import lib.tables as tables
 
 
-def runner(flavors,build,benchmark,kwargs,config):
+def runner(flavors,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber):
     for flavor in flavors:
         build_functor = util.load_functor(config.get_runner_func(build,benchmark),'runner_'+flavor)
         if build_functor.get_method()['active']:
@@ -19,16 +19,26 @@ def runner(flavors,build,benchmark,kwargs,config):
             try:
                 command = build_functor.passive(benchmark, **kwargs)
                 util.change_cwd(benchmark)
-                util.shell(command)
                 exp_dir = config.get_analyser_exp_dir(build,benchmark)
+                benchmark_name = config.get_benchmark_name(benchmark)
+                if isNoInstrumentationRun == False:
+                    util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber))
+                    util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
+                    util.set_env('SCOREP_PROFILING_BASE_NAME',flavor+'-'+benchmark_name[0])
+                else:
+                    util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun')
+                    util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
+
+
+                '''
                 isdirectory_good = util.check_provided_directory(exp_dir)
                 if(isdirectory_good):
-                    if(util.check_file(exp_dir+"profile.cubex")):
-                        benchmark_name = config.get_benchmark_name(benchmark)
-                        util.rename(exp_dir+"profile.cubex",exp_dir+flavor+'-'+benchmark_name[0]+".cubex")
-
+                    #if(util.check_file(exp_dir+"profile.cubex")):
+                    benchmark_name = config.get_benchmark_name(benchmark)
+                    util.set_env('SCOREP_PROFILING_BASE_NAME',exp_dir+'\\'+flavor+'-'+benchmark_name[0])
+                '''
                 #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
-                #util.shell(command)
+                util.shell(command)
 
             except Exception as e:
                 logging.get_logger().log(e.message, level='warn')
@@ -44,20 +54,21 @@ def submitter(flavors,build,benchmark,kwargs,config):
         #exit(0)
 
 
-def run_detail(config,build,benchmark):
+def run_detail(config,build,benchmark,isNoInstrumentationRun,iterationNumber):
     kwargs = {'compiler': ''}
 
     if config.builds[build]['flavours']:
         if config.get_is_submitter(build,benchmark):
             submitter(config.builds[build]['flavours'],build,benchmark,kwargs,config);
         else:
-            runner(config.builds[build]['flavours'],build,benchmark,kwargs,config)
+            runner(config.builds[build]['flavours'],build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber)
 
     else:
         if config.get_is_submitter(build,benchmark):
             submitter(config.builds[build]['flavours'],build,benchmark,kwargs,config);
         else:
-            runner(config.global_flavors,build,benchmark,kwargs,config)
+            runner(config.global_flavors,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber)
+
 
 def run(path_to_config):
     try:
@@ -100,8 +111,17 @@ def run(path_to_config):
                                 #Only run the pgoe to get the functions name
                                 if(configuration.is_first_iteration[build+item+flavor] == False):
                                     configuration.is_first_iteration[build+item+flavor]=True
+
+                                    #Build and run without any instrumentation
+                                    BuildNoInstr = B(build,configuration)
+                                    BuildNoInstr.build_no_instr = True;
+                                    BuildNoInstr.build()
+
+                                    # Run - this binary does not contain any instrumentation.
+                                    for y in range(0,5):
+                                        run_detail(configuration,build,benchmark,True,y)
                                     analyser = A(configuration,build,benchmark)
-                                    analyser.analyse_detail(configuration,build,benchmark)
+                                    analyser.analyse_detail(configuration,build,benchmark,y)
 
                         builder = B(build, configuration)
                         builder.build()
@@ -109,11 +129,11 @@ def run(path_to_config):
                         if configuration.builds[build]['flavours']:
                             for benchmark in configuration.builds[build]['items']:
                     #Run Phase
-                                run_detail(configuration,build,benchmark)
+                                run_detail(configuration,build,benchmark,False,x)
 
                     #Analysis Phase
                                 analyser = A(configuration,build,benchmark)
-                                analyser.analyse_detail(configuration,build,benchmark)
+                                analyser.analyse_detail(configuration,build,benchmark,x)
 
             log.get_logger().dump_tape()
 

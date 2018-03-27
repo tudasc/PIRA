@@ -11,6 +11,7 @@ class Builder:
         self.directory = dir_key
         self.config = configuration
         self.old_cwd = ''
+        self.build_no_instr = False;
         self.error = None
 
     def build(self):
@@ -55,21 +56,25 @@ class Builder:
     def build_flavours(self,flavors,build,benchmark,kwargs):
         for flavor in flavors:
             #if(self.config.stop_iteration[build+benchmark+flavor] == False):
+            if(self.build_no_instr == True):
+                build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'no_instr_'+flavor)
+
+            else:
                 build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),flavor)
                 #print("Build Functor:"+build_functor)
-                if build_functor.get_method()['active']:
-                    build_functor.active(benchmark, **kwargs)
+            if build_functor.get_method()['active']:
+                build_functor.active(benchmark, **kwargs)
 
-                else:
-                    try:
-                        command = build_functor.passive(benchmark, **kwargs)
-                        print("Command:"+command)
-                        util.change_cwd(benchmark)
-                        util.shell('make clean')
-                        util.shell(command)
+            else:
+                try:
+                    command = build_functor.passive(benchmark, **kwargs)
+                    print("Command:"+command)
+                    util.change_cwd(benchmark)
+                    util.shell('make clean')
+                    util.shell(command)
 
-                    except Exception as e:
-                        logging.get_logger().log(e.message, level='warn')
+                except Exception as e:
+                    logging.get_logger().log(e.message, level='warn')
 
     def generate_run_configurations(self):
         """

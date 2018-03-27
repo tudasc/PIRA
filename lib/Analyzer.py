@@ -11,7 +11,7 @@ class Analyzer:
         self.old_cwd = build
         self.error = None
 
-    def analyse(self,flavors,build,benchmark,kwargs,config):
+    def analyse(self,flavors,build,benchmark,kwargs,config,iterationNumber):
         for flavor in flavors:
             analyse_functor = util.load_functor(config.get_analyse_func(build,benchmark),'analyse_'+flavor)
             if analyse_functor.get_method()['active']:
@@ -28,17 +28,20 @@ class Analyzer:
                         benchmark_name = config.get_benchmark_name(benchmark)
                         instr_files = analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt'
                         prev_instr_file = analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt'
+
                         if(util.check_file(instr_files)):
                             util.rename(instr_files,prev_instr_file)
-                            util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg '+exp_dir+flavor+'-'+benchmark_name[0]+'.cubex')
+                            util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg '+exp_dir+'-'+flavor+'-'+str(iterationNumber)+'/'+flavor+'-'+benchmark_name[0]+'.cubex')
                         else:
                             util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg ')
 
+                        '''
                         if((util.check_file(instr_files)) and (util.check_file(prev_instr_file))):
                             if(util.diff_inst_files(analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt',
                             analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt')):
                                 config.stop_iteration[build+benchmark+flavor] = True;
 
+                        '''
                         self.tear_down(exp_dir)
 
                 except Exception as e:
@@ -69,20 +72,20 @@ class Analyzer:
             except Exception as e:
                 logging.get_logger().log(e.message, level='error')
 
-    def analyse_detail(self, config,build,benchmark):
+    def analyse_detail(self, config,build,benchmark,iterationNumber):
         kwargs = {'compiler': ''}
 
         if config.builds[build]['flavours']:
             if config.get_is_submitter(build,benchmark):
                 self.analyse_slurm(config.builds[build]['flavours'],build,benchmark,kwargs,config)
             else:
-                self.analyse(config.builds[build]['flavours'],build,benchmark,kwargs,config)
+                self.analyse(config.builds[build]['flavours'],build,benchmark,kwargs,config,iterationNumber)
 
         else:
             if config.get_is_submitter(build,benchmark):
                 self.analyse_slurm(config.global_flavors,build,benchmark,kwargs,config)
             else:
-                self.analyse(config.global_flavors,build,benchmark,kwargs,config)
+                self.analyse(config.global_flavors,build,benchmark,kwargs,config,iterationNumber)
 
     def run_analyzer(self,flavors,build,benchmark,kwargs):
         pass
