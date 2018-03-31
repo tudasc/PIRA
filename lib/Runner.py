@@ -38,15 +38,30 @@ def runner(flavors,build,benchmark,kwargs,config,isNoInstrumentationRun,iteratio
                     util.set_env('SCOREP_PROFILING_BASE_NAME',exp_dir+'\\'+flavor+'-'+benchmark_name[0])
                 '''
                 #command = '/home/sachin/MasterThesis/GameOfLife/serial_non_template/gol'
-                util.shell(command)
+                runTime = util.shell(command)
+                print "Exection runt-time "+ runTime
+                #text_file = open("Output.txt", "w")
+                #text_file.write(outputstr)
+                #text_file.close()
 
             except Exception as e:
                 logging.get_logger().log(e.message, level='warn')
 
-def submitter(flavors,build,benchmark,kwargs,config):
+def submitter(flavors,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber):
     print('In submitter');
     for flavor in flavors:
         submitter_functor = util.load_functor(config.get_runner_func(build,benchmark),'slurm_submitter_'+flavor)
+        exp_dir = config.get_analyser_exp_dir(build,benchmark)
+        benchmark_name = config.get_benchmark_name(benchmark)
+        if isNoInstrumentationRun == False:
+            util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber))
+            util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
+            util.set_env('SCOREP_PROFILING_BASE_NAME',flavor+'-'+benchmark_name[0])
+        else:
+            util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun')
+            util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
+
+
         tup = [(flavor,'/home/sm49xeji/job.sh')]
         kwargs={"util":util,"runs_per_job":1,"dependent":0}
         submitter_functor.dispatch(tup,**kwargs)

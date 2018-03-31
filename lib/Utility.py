@@ -6,6 +6,7 @@ import filecmp
 import Utility as util
 from random import choice
 from string import ascii_uppercase
+from timeit import timeit
 
 
 def read_file(file_name):
@@ -76,8 +77,16 @@ def shell(command, silent=True, dry=False):
         return ''
 
     try:
+
+        t1 = os.times() # start time
+        #out = timeit(stmt = "subprocess.check_output("+command+", shell=True)", number = 1)
         out = subprocess.check_output(command, shell=True)
-        return out
+        t2 = os.times() # end time
+        cutime = t2[2]-t1[2]
+        cstime = t2[3]-t1[3]
+        runTime = cutime+cstime
+        print runTime
+        return runTime
 
     except subprocess.CalledProcessError as e:
         if e.returncode == 1:
