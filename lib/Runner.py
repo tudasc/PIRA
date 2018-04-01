@@ -122,7 +122,7 @@ def run(path_to_config):
                     for x in range(0, 5):
                         #Check if its the first iteration
                         if configuration.builds[build]['flavours']:
-                            for benchmark in configuration.builds[build]['items']:
+                            #for benchmark in configuration.builds[build]['items']:
                                 #Only run the pgoe to get the functions name
                                 if(configuration.is_first_iteration[build+item+flavor] == False):
                                     configuration.is_first_iteration[build+item+flavor]=True
@@ -134,21 +134,26 @@ def run(path_to_config):
 
                                     # Run - this binary does not contain any instrumentation.
                                     for y in range(0,5):
-                                        run_detail(configuration,build,benchmark,True,y)
-                                    analyser = A(configuration,build,benchmark)
-                                    analyser.analyse_detail(configuration,build,benchmark,y)
+                                        run_detail(configuration,build,item,True,y)
+                                    analyser_dir = configuration.get_analyser_dir(build,item)
+
+                                    #Remove anything in the output dir of the analysis tool
+                                    util.remove(analyser_dir+"/"+"out")
+
+                                    analyser = A(configuration,build,item)
+                                    analyser.analyse_detail(configuration,build,item,y)
 
                         builder = B(build, configuration)
                         builder.build()
 
-                        if configuration.builds[build]['flavours']:
-                            for benchmark in configuration.builds[build]['items']:
+                        #if configuration.builds[build]['flavours']:
+                        #    for benchmark in configuration.builds[build]['items']:
                     #Run Phase
-                                run_detail(configuration,build,benchmark,False,x)
+                        run_detail(configuration,build,item,False,x)
 
                     #Analysis Phase
-                                analyser = A(configuration,build,benchmark)
-                                analyser.analyse_detail(configuration,build,benchmark,x)
+                        analyser = A(configuration,build,item)
+                        analyser.analyse_detail(configuration,build,item,x)
 
             log.get_logger().dump_tape()
 

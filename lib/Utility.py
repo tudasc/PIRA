@@ -7,6 +7,7 @@ import Utility as util
 from random import choice
 from string import ascii_uppercase
 from timeit import timeit
+import shutil
 
 
 def read_file(file_name):
@@ -29,6 +30,13 @@ def check_file(path):
 
 def rename(old,new):
     os.rename(old,new)
+
+def remove(path):
+    for root, dirs, files in os.walk(path):
+        for f in files:
+            os.unlink(os.path.join(root, f))
+        for d in dirs:
+            shutil.rmtree(os.path.join(root, d))
 
 def append_scorep_footer(filename):
     with open(filename, "a") as myfile:

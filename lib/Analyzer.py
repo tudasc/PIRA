@@ -26,14 +26,14 @@ class Analyzer:
                     if isdirectory_good:
                         util.change_cwd(analyser_dir)
                         benchmark_name = config.get_benchmark_name(benchmark)
-                        instr_files = analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt'
-                        prev_instr_file = analyser_dir+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt'
+                        instr_files = analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt'
+                        prev_instr_file = analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt'
 
                         if(util.check_file(instr_files)):
                             util.rename(instr_files,prev_instr_file)
-                            util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg '+exp_dir+'-'+flavor+'-'+str(iterationNumber)+'/'+flavor+'-'+benchmark_name[0]+'.cubex')
+                            util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name[0]+'.ipcg '+exp_dir+'-'+flavor+'-'+str(iterationNumber)+'/'+flavor+'-'+benchmark_name[0]+'.cubex')
                         else:
-                            util.shell(command+' '+analyser_dir+flavor+'-'+benchmark_name[0]+'.ipcg ')
+                            util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name[0]+'.ipcg ')
 
                         '''
                         if((util.check_file(instr_files)) and (util.check_file(prev_instr_file))):
