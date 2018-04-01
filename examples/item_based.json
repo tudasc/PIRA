@@ -12,7 +12,8 @@
           ],
           "flavors": {
             "/home/sachin/MasterThesis": [
-              "local-flav1"
+              "local-flav1",
+              "vanilla"
             ],
             "instrument-analysis": {
               "/home/sachin/MasterThesis/lulesh2.0.3": [
