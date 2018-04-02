@@ -8,7 +8,7 @@ from lib.db import database as db
 import lib.tables as tables
 
 
-def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber):
+def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
         build_functor = util.load_functor(config.get_runner_func(build,benchmark),'runner_'+flavor)
         if build_functor.get_method()['active']:
             build_functor.active(benchmark, **kwargs)
@@ -20,20 +20,25 @@ def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iteration
                 exp_dir = config.get_analyser_exp_dir(build,benchmark)
                 benchmark_name = config.get_benchmark_name(benchmark)
                 if isNoInstrumentationRun == False:
+                    DBIntVal = 1
+                    DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)
                     util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber))
                     util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
                     util.set_env('SCOREP_PROFILING_BASE_NAME',flavor+'-'+benchmark_name[0])
                 else:
+                    DBIntVal = 0
+                    DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun'
                     util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun')
                     util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
 
                 runTime = util.shell(command)
-                print "Exection runt-time "+ runTime
-
+                #Insert into DB
+                experiment_data = (util.generate_random_string(),benchmark_name[0],iterationNumber,DBIntVal,DBCubeFilePath,str(runTime),itemID)
+                database.insert_data_experiment(cur,experiment_data)
             except Exception as e:
                 logging.get_logger().log(e.message, level='warn')
 
-def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber):
+def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
     print('In submitter');
     submitter_functor = util.load_functor(config.get_runner_func(build,benchmark),'slurm_submitter_'+flavor)
     exp_dir = config.get_analyser_exp_dir(build,benchmark)
@@ -53,15 +58,15 @@ def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterat
     print(submitter_functor)
 
 
-def run_detail(config,build,benchmark,flavor,isNoInstrumentationRun,iterationNumber):
+def run_detail(config,build,benchmark,flavor,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
     kwargs = {'compiler': ''}
 
     if config.get_is_submitter(build,benchmark):
-        submitter(flavor,build,benchmark,kwargs,config);
+        submitter(flavor,build,benchmark,kwargs,config,itemID,database,cur);
     else:
-        runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber)
+        runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur)
 
-def run_setup(configuration,build,item,flavor):
+def run_setup(configuration,build,item,flavor,itemID,database,cur):
     for x in range(0, 5):
         #if configuration.builds[build]['flavours']:
         #Only run the pgoe to get the functions name
@@ -75,7 +80,7 @@ def run_setup(configuration,build,item,flavor):
 
             # Run - this binary does not contain any instrumentation.
             for y in range(0,5):
-                run_detail(configuration,build,item,flavor,True,y)
+                run_detail(configuration,build,item,flavor,True,y,itemID,database,cur)
 
             analyser_dir = configuration.get_analyser_dir(build,item)
             #Remove anything in the output dir of the analysis tool
@@ -88,7 +93,7 @@ def run_setup(configuration,build,item,flavor):
         builder.build(configuration,build,item,flavor)
 
         #Run Phase
-        run_detail(configuration,build,item,flavor,False,x)
+        run_detail(configuration,build,item,flavor,False,x,itemID,database,cur)
 
         #Analysis Phase
         analyser = A(configuration,build,item)
@@ -104,7 +109,7 @@ def run(path_to_config):
         '''
         Initialize Database
         '''
-        database = db("db_file1")
+        database = db("BenchPressDB")
         cur = database.create_cursor(database.conn)
 
         '''
@@ -115,24 +120,40 @@ def run(path_to_config):
         database.create_table(cur,tables.sql_create_items_table)
         database.create_table(cur,tables.sql_create_experiment_table)
 
-        '''
-        insert to application table
-        '''
+        #insert to application table
 
+        '''
         if ((configuration.global_flavors.__len__() == 0) and (configuration.global_submitter.__len__() == 0)):
             application = ("GameofLife",'','')
             database.insert_data_application(cur,application)
-
+        '''
         for build in configuration.builds:
+            #if ((configuration.global_flavors.__len__() != 0) and (configuration.global_submitter.__len__() == 0)):
+            application = (util.generate_random_string(),build,'','')
+            database.insert_data_application(cur,application)
             for item in configuration.builds[build]['items']:
                 if configuration.builds[build]['flavours']:
                     for flavor in configuration.builds[build]['flavours']:
-                        run_setup(configuration,build,item,flavor)
+                        dbbuild = (util.generate_random_string(),build,'',flavor,build)
+                        database.insert_data_builds(cur,dbbuild)
+
+                        #Insert into DB the benchmark data
+                        itemID = util.generate_random_string()
+                        analyse_functor = configuration.get_analyse_func(build,item)+'/analyse_'+flavor
+                        build_functor = configuration.get_flavor_func(build,item)+'/'+flavor
+                        run_functor = configuration.get_runner_func(build,item)+'/runner_'+flavor
+                        benchmark_name = configuration.get_benchmark_name(item)
+                        submitter_functor = configuration.get_runner_func(build,item)+'/slurm_submitter_'+flavor
+                        exp_dir = configuration.get_analyser_exp_dir(build,item)
+                        itemDBData = (itemID,benchmark_name[0],analyse_functor,build_functor,'',run_functor,submitter_functor,exp_dir,build)
+                        database.insert_data_items(cur,itemDBData)
+
+                        run_setup(configuration,build,item,flavor,itemID,database,cur)
 
                 #If global flavor
                 else:
                     for flavor in configuration.global_flavors:
-                        run_setup(configuration,build,item,flavor)
+                        run_setup(configuration,build,item,flavor,itemID,database,cur)
 
             log.get_logger().dump_tape()
 

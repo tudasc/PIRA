@@ -1,42 +1,41 @@
 import sqlite3 as db
 
 sql_create_application_table = """ CREATE TABLE IF NOT EXISTS Application (
-                                        App_Name text PRIMARY KEY,
+                                        AppID text PRIMARY KEY,
+                                        App_Name text,
                                         Global_Flavor text,
                                         Global_Submitter text
                                     ); """
 
 sql_create_builds_table = """ CREATE TABLE IF NOT EXISTS Builds (
-                                        Build_Name text PRIMARY KEY,
+                                        BuildID text PRIMARY KEY,
+                                        Build_Name text NOT NULL,
                                         Prefix text NOT NULL,
                                         Flavors text NOT NULL,
-                                        App_Name text FOREIGN KEY 
+                                        AppName text NOT NULL,
+                                        FOREIGN KEY(AppName) REFERENCES Application(App_Name)
                                     ); """
 
 sql_create_items_table = """ CREATE TABLE IF NOT EXISTS Items (
-                                        Item_Name text PRIMARY KEY,
-                                        Inst_Analysis text NOT NULL,
-                                        Builders text NOT NULL,
+                                        ItemID text PRIMARY KEY,
+                                        Item_Name text NOT NULL,
+                                        Inst_Analysis_Functor_Path text NOT NULL,
+                                        Builders_Funtor_Path text NOT NULL,
                                         Run_Args text NOT NULL,
-                                        Runner text NOT NULL,
-                                        Submitter text NOT NULL,
-                                        Profile_Data text NOT NULL,
-                                        Build_Name text FOREIGN KEY
-                                    ); """
-
-sql_create_builds_table = """ CREATE TABLE IF NOT EXISTS Items (
-                                        Item_Name text PRIMARY KEY,
-                                        Inst_Analysis text NOT NULL,
-                                        Builders text NOT NULL,
-                                        Run_Args text NOT NULL,
-                                        Runner text NOT NULL,
-                                        Submitter text NOT NULL,
-                                        Profile_Data text NOT NULL,
-                                        Build_Name text FOREIGN KEY
+                                        Runner_Functor_Path text NOT NULL,
+                                        Submitter_Functor_Path text NOT NULL,
+                                        Exp_Data_Dir_Base_Path text NOT NULL,
+                                        BuildName text NOT NULL,
+                                        FOREIGN KEY(BuildName) REFERENCES Builds(Build_Name)
                                     ); """
 
 sql_create_experiment_table = """ CREATE TABLE IF NOT EXISTS Experiment (
-                                        Experiment_No INTEGER PRIMARY KEY,
-                                        Profile_Data text NOT NULL,
-                                        Item_Name text FOREIGN KEY 
+                                        Experiment_ID text PRIMARY KEY,
+                                        BenchmarkName text,
+                                        Iteration_No INTEGER,
+                                        IsWithInstrumentation INTEGER,
+                                        CubeFilePath text NOT NULL,
+                                        Runtime text NOT NULL,
+                                        Item_ID text NOT NULL,
+                                        FOREIGN KEY(Item_ID) REFERENCES Items(ItemID)
                                     ); """

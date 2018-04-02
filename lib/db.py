@@ -25,28 +25,32 @@ class database:
 
     def insert_data_application(self,cursor,values):
         #cursor.execute("INSERT INTO "+table_name+" VALUES (?,?,?)")
-        sql = ''' INSERT INTO Application(App_Name,Global_Flavor,Global_Submitter)
-              VALUES(?,?,?) '''
-
-        cursor.execute(sql, values)
-
-    def insert_data_builds(self,cursor,values):
-        #cursor.execute("INSERT INTO "+table_name+" VALUES (?,?,?)")
-        sql = ''' INSERT INTO Builds(Build_Name,Prefix,Flavors,App_Name)
+        sql = ''' INSERT INTO Application(AppID,App_Name,Global_Flavor,Global_Submitter)
               VALUES(?,?,?,?) '''
 
         cursor.execute(sql, values)
+        self.conn.commit()
+
+
+    def insert_data_builds(self,cursor,values):
+        #cursor.execute("INSERT INTO "+table_name+" VALUES (?,?,?)")
+        sql = ''' INSERT INTO Builds(BuildID,Build_Name,Prefix,Flavors,AppName)
+              VALUES(?,?,?,?,?) '''
+
+        cursor.execute(sql, values)
+        self.conn.commit()
 
     def insert_data_items(self,cursor,values):
         #cursor.execute("INSERT INTO "+table_name+" VALUES (?,?,?)")
-        sql = ''' INSERT INTO Items(Item_Name,Inst_Analysis,Builders,Run_Args,Runner,Submitter,Profile_Data,Build_Name)
-              VALUES(?,?,?,?,?,?,?,?) '''
+        sql = ''' INSERT INTO Items(ItemID,Item_Name,Inst_Analysis_Functor_Path,Builders_Funtor_Path,Run_Args,Runner_Functor_Path,Submitter_Functor_Path,Exp_Data_Dir_Base_Path,BuildName)
+              VALUES(?,?,?,?,?,?,?,?,?) '''
 
         cursor.execute(sql, values)
+        self.conn.commit()
 
     def insert_data_experiment(self,cursor,values):
         #cursor.execute("INSERT INTO "+table_name+" VALUES (?,?,?)")
-        sql = ''' INSERT INTO Experiment(Experiment_No,Profile_Data,Item_Name)
-              VALUES(?,?,?) '''
-
+        sql = ''' INSERT INTO Experiment(Experiment_ID,BenchmarkName,Iteration_No,IsWithInstrumentation,CubeFilePath,Runtime,Item_ID)
+              VALUES(?,?,?,?,?,?,?) '''
         cursor.execute(sql, values)
+        self.conn.commit()
