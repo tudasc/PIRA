@@ -42,13 +42,14 @@ class Builder:
         self.build_flavours(flavor,build,benchmark,kwargs)
 
     def build_flavours(self,flavor,build,benchmark,kwargs):
+        benchmark_name = self.config.get_benchmark_name(benchmark)
         if(self.build_no_instr == True):
-            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'clean_'+flavor)
-            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'no_instr_'+flavor)
+            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'clean_'+benchmark_name[0]+'_'+flavor)
+            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'no_instr_'+benchmark_name[0]+'_'+flavor)
 
         else:
-            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),flavor)
-            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'clean_'+flavor)
+            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),benchmark_name[0]+'_'+flavor)
+            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'clean_'+benchmark_name[0]+'_'+flavor)
 
         if build_functor.get_method()['active']:
             build_functor.active(benchmark, **kwargs)
@@ -59,7 +60,9 @@ class Builder:
                 commandclean = clean_functor.passive(benchmark,**kwargs)
                 util.change_cwd(benchmark)
                 util.shell(commandclean)
+                #util.unload_functo(clean_functor,'clean_'+flavor)
                 util.shell(commandbuild)
+                #util.unload_functo(build_functor,flavor)
 
             except Exception as e:
                 logging.get_logger().log(e.message, level='warn')

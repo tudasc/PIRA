@@ -7,7 +7,7 @@
         "/home/sachin/MasterThesis": {
           "prefix": "",
           "items": [
-            "/home/sachin/MasterThesis/lulesh2.0.3",
+            "/home/sachin/MasterThesis/lulesh203",
             "/home/sachin/MasterThesis/lulesh"
           ],
           "flavors": {
@@ -16,9 +16,9 @@
               "vanilla"
             ],
             "instrument-analysis": {
-              "/home/sachin/MasterThesis/lulesh2.0.3": [
+              "/home/sachin/MasterThesis/lulesh203": [
                 "/home/sachin/IdeaProjects/master/benchpress/functors",
-                "/home/sachin/MasterThesis/lulesh2.0.3/lulesh",
+                "/home/sachin/MasterThesis/lulesh203/lulesh",
                 "/home/sachin/CLionProjects/pgoe"
                 ],
               "/home/sachin/MasterThesis/lulesh":[
@@ -28,11 +28,11 @@
               ]
             },
             "builders": {
-              "/home/sachin/MasterThesis/lulesh2.0.3": "/home/sachin/IdeaProjects/master/benchpress/functors",
-              "/home/sachin/MasterThesis/lulesh": "/home/sachin/IdeaProjects/master/benchpress/functors"
+              "/home/sachin/MasterThesis/lulesh203": "/home/sachin/IdeaProjects/master/benchpress/functors",
+              "/home/sachin/MasterThesis/lulesh": "/home/sachin/IdeaProjects/master/benchpress/functors2"
             },
             "run": {
-              "/home/sachin/MasterThesis/lulesh2.0.3": {
+              "/home/sachin/MasterThesis/lulesh203": {
                 "args": [
                 ],
                 "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
@@ -42,7 +42,7 @@
                 "args":[
 
                 ],
-                "runner":"/home/sachin/IdeaProjects/master/benchpress/functors",
+                "runner":"/home/sachin/IdeaProjects/master/benchpress/functors2",
                 "submitter":""
               }
             }

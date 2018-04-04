@@ -11,7 +11,8 @@ class Analyzer:
         self.error = None
 
     def analyse(self,flavor,build,benchmark,kwargs,config,iterationNumber):
-        analyse_functor = util.load_functor(config.get_analyse_func(build,benchmark),'analyse_'+flavor)
+        benchmark_name = config.get_benchmark_name(benchmark)
+        analyse_functor = util.load_functor(config.get_analyse_func(build,benchmark),'analyse_'+benchmark_name[0]+'_'+flavor)
         if analyse_functor.get_method()['active']:
             analyse_functor.active(benchmark, **kwargs)
 
@@ -23,7 +24,7 @@ class Analyzer:
                 isdirectory_good = util.check_provided_directory(analyser_dir)
                 if isdirectory_good:
                     util.change_cwd(analyser_dir)
-                    benchmark_name = config.get_benchmark_name(benchmark)
+                    #benchmark_name = config.get_benchmark_name(benchmark)
                     instr_files = analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt'
                     prev_instr_file = analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt'
 
@@ -46,7 +47,7 @@ class Analyzer:
                 tup = [(flavor,'/home/sm49xeji/job_analyse.sh')]
                 kwargs={"util":util,"runs_per_job":1,"dependent":1}
                 analyse_functor.dispatch(tup,**kwargs)
-                print(analyse_functor)
+                #print(analyse_functor)
 
             except Exception as e:
                 logging.get_logger().log(e.message, level='error')

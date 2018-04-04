@@ -9,7 +9,8 @@ import lib.tables as tables
 
 
 def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
-        build_functor = util.load_functor(config.get_runner_func(build,benchmark),'runner_'+flavor)
+        benchmark_name = config.get_benchmark_name(benchmark)
+        build_functor = util.load_functor(config.get_runner_func(build,benchmark),'runner_'+benchmark_name[0]+'_'+flavor)
         if build_functor.get_method()['active']:
             build_functor.active(benchmark, **kwargs)
 
@@ -18,7 +19,7 @@ def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iteration
                 command = build_functor.passive(benchmark, **kwargs)
                 util.change_cwd(benchmark)
                 exp_dir = config.get_analyser_exp_dir(build,benchmark)
-                benchmark_name = config.get_benchmark_name(benchmark)
+                #benchmark_name = config.get_benchmark_name(benchmark)
                 if isNoInstrumentationRun == False:
                     DBIntVal = 1
                     DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)
@@ -39,7 +40,7 @@ def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iteration
                 logging.get_logger().log(e.message, level='warn')
 
 def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
-    print('In submitter');
+    #print('In submitter');
     submitter_functor = util.load_functor(config.get_runner_func(build,benchmark),'slurm_submitter_'+flavor)
     exp_dir = config.get_analyser_exp_dir(build,benchmark)
     benchmark_name = config.get_benchmark_name(benchmark)
@@ -55,7 +56,7 @@ def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterat
     tup = [(flavor,'/home/sm49xeji/job.sh')]
     kwargs={"util":util,"runs_per_job":1,"dependent":0}
     submitter_functor.dispatch(tup,**kwargs)
-    print(submitter_functor)
+    #print(submitter_functor)
 
 
 def run_detail(config,build,benchmark,flavor,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
@@ -138,12 +139,13 @@ def run(path_to_config):
                         database.insert_data_builds(cur,dbbuild)
 
                         #Insert into DB the benchmark data
-                        itemID = util.generate_random_string()
-                        analyse_functor = configuration.get_analyse_func(build,item)+'/analyse_'+flavor
-                        build_functor = configuration.get_flavor_func(build,item)+'/'+flavor
-                        run_functor = configuration.get_runner_func(build,item)+'/runner_'+flavor
                         benchmark_name = configuration.get_benchmark_name(item)
-                        submitter_functor = configuration.get_runner_func(build,item)+'/slurm_submitter_'+flavor
+                        itemID = util.generate_random_string()
+                        analyse_functor = configuration.get_analyse_func(build,item)+'/analyse_'+benchmark_name[0]+flavor
+                        build_functor = configuration.get_flavor_func(build,item)+'/'+benchmark_name[0]+flavor
+                        run_functor = configuration.get_runner_func(build,item)+'/runner_'+benchmark_name[0]+flavor
+
+                        submitter_functor = configuration.get_runner_func(build,item)+'/slurm_submitter_'+benchmark_name[0]+flavor
                         exp_dir = configuration.get_analyser_exp_dir(build,item)
                         itemDBData = (itemID,benchmark_name[0],analyse_functor,build_functor,'',run_functor,submitter_functor,exp_dir,build)
                         database.insert_data_items(cur,itemDBData)

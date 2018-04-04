@@ -74,9 +74,16 @@ def change_cwd(path):
 
 def load_functor(dir, module):
     append_to_sys_path(dir)
+    #print sys.path
     # Adding 'fromList' argument loads exactly the module.
-    functor = __import__(module, fromlist=[''])
+    functor = __import__(module)
+    remove_from_sys_path(dir)
+    #print sys.path
     return functor
+
+def unload_functo(functor,module):
+    del functor
+    sys.modules.pop(module)
 
 
 def shell(command, silent=True, dry=False):
@@ -93,7 +100,7 @@ def shell(command, silent=True, dry=False):
         cutime = t2[2]-t1[2]
         cstime = t2[3]-t1[3]
         runTime = cutime+cstime
-        print runTime
+        #print runTime
         return runTime
 
     except subprocess.CalledProcessError as e:
@@ -108,6 +115,8 @@ def shell(command, silent=True, dry=False):
 def append_to_sys_path(func_tuple):
     sys.path.append(func_tuple)
 
+def remove_from_sys_path(func_tuple):
+    sys.path.remove(func_tuple)
 
 def json_to_canonic(json_elem):
     if isinstance(json_elem, list):

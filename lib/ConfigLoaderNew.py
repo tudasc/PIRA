@@ -124,14 +124,14 @@ class ConfigurationNew:
     def initialize_stopping_iterator(self):
         for build in self.builds:
             for item in self.builds[build]['items']:
-                print(self.builds[build]['flavours'])
+                #print(self.builds[build]['flavours'])
                 for flavor in self.builds[build]['flavours']:
                     self.stop_iteration[build+item+flavor] = False
 
     def initialize_first_iteration(self):
         for build in self.builds:
             for item in self.builds[build]['items']:
-                print(self.builds[build]['flavours'])
+                #print(self.builds[build]['flavours'])
                 for flavor in self.builds[build]['flavours']:
                     self.is_first_iteration[build+item+flavor] = False
 
