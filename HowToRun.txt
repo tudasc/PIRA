@@ -1,8 +1,15 @@
 1. Edit Configuration file - "item_based.json"
-    Important note: The path should not end with "/" character.
-    Example :
-        Valid path in configuration file - /home/sachin/MasterThesis.
-        Invalid path - /home/sachin/MasterThesis/
+    Important note:
+        1. The path should not end with "/" character.
+            Example :
+            Valid path in configuration file - /home/sachin/MasterThesis.
+            Invalid path - /home/sachin/MasterThesis/
+
+        2. Do not have directories having '.' example : /home/sachin/MasterThesis/lulesh2.0.3
+           instead have /home/sachin/MasterThesis/lulesh203 this should be insync with the functors name
+           example: clean_lulesh203_local-flav1.py.
+           A future enhancement can be to decouple this dependency.
+
 
     An example of the configuration file is shown below
     detailed description if the key value can be found in the Thesis
@@ -109,3 +116,7 @@
 4.  Once the steps 1, 2 and 3 are completed and valid the application can be run
     using the following command
     python example_main.py item_based.json
+
+
+Known issue:
+1. Functors with names having '.' character may not be loaded. Example: clean_lulesh2.0.3_local-flav1.py
