@@ -40,30 +40,36 @@ def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iteration
                 logging.get_logger().log(e.message, level='warn')
 
 def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
-    #print('In submitter');
-    submitter_functor = util.load_functor(config.get_runner_func(build,benchmark),'slurm_submitter_'+flavor)
-    exp_dir = config.get_analyser_exp_dir(build,benchmark)
     benchmark_name = config.get_benchmark_name(benchmark)
+    submitter_functor = util.load_functor(config.get_runner_func(build,benchmark),'slurm_submitter_'+benchmark_name[0]+'_'+flavor)
+    exp_dir = config.get_analyser_exp_dir(build,benchmark)
+
     if isNoInstrumentationRun == False:
+        DBIntVal = 1
+        DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)
         util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber))
         util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
         util.set_env('SCOREP_PROFILING_BASE_NAME',flavor+'-'+benchmark_name[0])
     else:
+        DBIntVal = 0
+        DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun'
         util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun')
         util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
 
 
     tup = [(flavor,'/home/sm49xeji/job.sh')]
     kwargs={"util":util,"runs_per_job":1,"dependent":0}
-    submitter_functor.dispatch(tup,**kwargs)
-    #print(submitter_functor)
+    runTime = submitter_functor.dispatch(tup,**kwargs)
+    #Insert into DB
+    experiment_data = (util.generate_random_string(),benchmark_name[0],iterationNumber,DBIntVal,DBCubeFilePath,str(runTime),itemID)
+    database.insert_data_experiment(cur,experiment_data)
 
 
 def run_detail(config,build,benchmark,flavor,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
     kwargs = {'compiler': ''}
 
     if config.get_is_submitter(build,benchmark):
-        submitter(flavor,build,benchmark,kwargs,config,itemID,database,cur);
+        submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur);
     else:
         runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur)
 
@@ -114,20 +120,14 @@ def run(path_to_config):
         cur = database.create_cursor(database.conn)
 
         '''
-        Create tables
+        Create tables if not exists
         '''
         database.create_table(cur,tables.sql_create_application_table)
         database.create_table(cur,tables.sql_create_builds_table)
         database.create_table(cur,tables.sql_create_items_table)
         database.create_table(cur,tables.sql_create_experiment_table)
 
-        #insert to application table
 
-        '''
-        if ((configuration.global_flavors.__len__() == 0) and (configuration.global_submitter.__len__() == 0)):
-            application = ("GameofLife",'','')
-            database.insert_data_application(cur,application)
-        '''
         for build in configuration.builds:
             #if ((configuration.global_flavors.__len__() != 0) and (configuration.global_submitter.__len__() == 0)):
             application = (util.generate_random_string(),build,'','')
