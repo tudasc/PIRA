@@ -10,7 +10,8 @@ import lib.tables as tables
 
 def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterationNumber,itemID,database,cur):
         benchmark_name = config.get_benchmark_name(benchmark)
-        build_functor = util.load_functor(config.get_runner_func(build,benchmark),'runner_'+benchmark_name[0]+'_'+flavor)
+        #build_functor = util.load_functor(config.get_runner_func(build,benchmark),'runner_'+benchmark_name[0]+'_'+flavor)
+        build_functor = util.load_functor(config.get_runner_func(build,benchmark),util.build_runner_functor_filename(False,benchmark_name[0],flavor))
         if build_functor.get_method()['active']:
             build_functor.active(benchmark, **kwargs)
 
@@ -19,18 +20,19 @@ def runner(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iteration
                 command = build_functor.passive(benchmark, **kwargs)
                 util.change_cwd(benchmark)
                 exp_dir = config.get_analyser_exp_dir(build,benchmark)
-                #benchmark_name = config.get_benchmark_name(benchmark)
+
                 if isNoInstrumentationRun == False:
                     DBIntVal = 1
-                    DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)
-                    util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber))
-                    util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
-                    util.set_env('SCOREP_PROFILING_BASE_NAME',flavor+'-'+benchmark_name[0])
+                    DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+                    util.set_scorep_exp_dir(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+                    util.set_overwrite_scorep_exp_dir()
+                    util.set_scorep_profiling_basename(flavor,benchmark_name[0])
+
                 else:
                     DBIntVal = 0
-                    DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun'
-                    util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun')
-                    util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
+                    DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+                    util.set_scorep_exp_dir(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+                    util.set_overwrite_scorep_exp_dir()
 
                 runTime = util.shell(command)
                 #Insert into DB
@@ -46,15 +48,16 @@ def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterat
 
     if isNoInstrumentationRun == False:
         DBIntVal = 1
-        DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)
-        util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber))
-        util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
-        util.set_env('SCOREP_PROFILING_BASE_NAME',flavor+'-'+benchmark_name[0])
+        DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+        util.set_scorep_exp_dir(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+        util.set_overwrite_scorep_exp_dir()
+        util.set_scorep_profiling_basename(flavor,benchmark_name[0])
+
     else:
         DBIntVal = 0
-        DBCubeFilePath = exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun'
-        util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun')
-        util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
+        DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+        util.set_scorep_exp_dir(exp_dir,flavor,iterationNumber,isNoInstrumentationRun)
+        util.set_overwrite_scorep_exp_dir()
 
 
     tup = [(flavor,'/home/sm49xeji/job.sh')]
@@ -91,7 +94,8 @@ def run_setup(configuration,build,item,flavor,itemID,database,cur):
 
             analyser_dir = configuration.get_analyser_dir(build,item)
             #Remove anything in the output dir of the analysis tool
-            util.remove(analyser_dir+"/"+"out")
+
+            util.remove_from_pgoe_out_dir(analyser_dir)
 
             analyser = A(configuration,build,item)
             analyser.analyse_detail(configuration,build,item,flavor,y)
@@ -127,7 +131,11 @@ def run(path_to_config):
         database.create_table(cur,tables.sql_create_items_table)
         database.create_table(cur,tables.sql_create_experiment_table)
 
-
+        '''
+        if util.check_queued_job() == True:
+            analyser = A(configuration,build,item)
+            analyser.analyse_detail(configuration,build,item,flavor,x)
+        '''
         for build in configuration.builds:
             #if ((configuration.global_flavors.__len__() != 0) and (configuration.global_submitter.__len__() == 0)):
             application = (util.generate_random_string(),build,'','')
@@ -141,10 +149,9 @@ def run(path_to_config):
                         #Insert into DB the benchmark data
                         benchmark_name = configuration.get_benchmark_name(item)
                         itemID = util.generate_random_string()
-                        analyse_functor = configuration.get_analyse_func(build,item)+'/analyse_'+benchmark_name[0]+flavor
-                        build_functor = configuration.get_flavor_func(build,item)+'/'+benchmark_name[0]+flavor
-                        run_functor = configuration.get_runner_func(build,item)+'/runner_'+benchmark_name[0]+flavor
-
+                        analyse_functor = configuration.get_analyse_func(build,item)+util.build_analyse_functor_filename(True,benchmark_name[0]+flavor)
+                        build_functor = configuration.get_flavor_func(build,item)+util.build_builder_functor_filename(True,False,benchmark_name[0],flavor)
+                        run_functor = configuration.get_runner_func(build,item)+util.build_runner_functor_filename(True,benchmark_name[0],flavor)
                         submitter_functor = configuration.get_runner_func(build,item)+'/slurm_submitter_'+benchmark_name[0]+flavor
                         exp_dir = configuration.get_analyser_exp_dir(build,item)
                         itemDBData = (itemID,benchmark_name[0],analyse_functor,build_functor,'',run_functor,submitter_functor,exp_dir,build)

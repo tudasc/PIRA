@@ -10,6 +10,8 @@ from timeit import timeit
 import shutil
 
 
+queued_job_filename = "./queued_job.tmp"
+
 def read_file(file_name):
     f = file(file_name)
     content = f.read()
@@ -131,3 +133,87 @@ def json_to_canonic(json_elem):
 
     else:
         return str(json_elem)
+
+
+def create_batch_queued_temp_file(jobID):
+    #filename = "./queued_job.tmp"
+    try:
+        with open(queued_job_filename, "a") as myfile:
+            myfile.write(jobID)
+    except:
+        log.get_logger().log('Unable to create file', level='error')
+        exit(1)
+
+def read_batch_queued_job():
+    #filename = "./queued_job.tmp"
+    if check_file(queued_job_filename) == True:
+        with open(queued_job_filename, 'r+') as myfile:
+            content = myfile.read()
+            return content
+    else:
+        log.get_logger().log('File does not exists',level='error')
+        exit(1)
+
+def check_queued_job():
+    if check_file(queued_job_filename) == True:
+        return True
+    else:
+        return False
+
+def remove_from_pgoe_out_dir(dir):
+    util.remove(dir+"/"+"out")
+
+def build_runner_functor_filename(IsForDB,benchmark_name,flavor):
+    if IsForDB:
+        return '/runner_'+benchmark_name+flavor
+    else:
+        return 'runner_'+benchmark_name+'_'+flavor
+
+def build_builder_functor_filename(IsForDB,IsNoInstr,benchmark_name,flavor):
+    if IsForDB:
+        return '/'+benchmark_name+flavor
+    else:
+        if IsNoInstr:
+            return 'no_instr_'+benchmark_name+'_'+flavor
+        else:
+            return benchmark_name+'_'+flavor
+
+def build_clean_functor_filename(benchmark_name,flavor):
+    return 'clean_'+benchmark_name+'_'+flavor
+
+def build_analyse_functor_filename(IsForDB,benchmark_name,flavor):
+    if IsForDB:
+        return '/analyse_'+benchmark_name+flavor
+    else:
+        return 'analyse_'+benchmark_name+'_'+flavor
+
+def build_instr_file_path(analyser_dir,flavor,benchmark_name):
+    return analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name+'.txt'
+
+def build_previous_instr_file_path(analyser_dir,flavor,benchmark_name):
+    return analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name+'previous.txt'
+
+def run_analyser_command(command,analyser_dir,flavor,benchmark_name,exp_dir,iterationNumber):
+    util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name+'.ipcg '+exp_dir+'-'+flavor+'-'+str(iterationNumber)+'/'+flavor+'-'+benchmark_name[0]+'.cubex')
+
+def run_analyser_command_noInstr(command,analyser_dir,flavor,benchmark_name):
+    util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name+'.ipcg ')
+
+def build_cube_file_path_for_db(exp_dir,flavor,iterationNumber,isNoInstr):
+    if isNoInstr == False:
+        return exp_dir+'-'+flavor+'-'+str(iterationNumber)
+    else:
+        return exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun'
+
+def set_scorep_exp_dir(exp_dir,flavor,iterationNumber,isNoInstr):
+    if isNoInstr == False:
+        util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber))
+    else:
+        util.set_env('SCOREP_EXPERIMENT_DIRECTORY',exp_dir+'-'+flavor+'-'+str(iterationNumber)+'noInstrRun')
+
+def set_overwrite_scorep_exp_dir():
+    util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY','true')
+
+def set_scorep_profiling_basename(flavor,benchmark_name):
+    util.set_env('SCOREP_PROFILING_BASE_NAME',flavor+'-'+benchmark_name)
+

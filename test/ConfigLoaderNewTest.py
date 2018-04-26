@@ -13,11 +13,6 @@ logger.set_state('warn')
 config_loader = CL()
 configuration = config_loader.load_conf('../examples/item_based.json')
 
-'''
-logger.log(configuration.directories, 'debug')
-logger.log(configuration.global_flavors,'debug')
-logger.log(configuration.global_submitter,'debug')
-'''
 for key in configuration.builds:
     if(util.check_provided_directory(key) == False):
         logger.log("Build directory is invalid."+key,'error')

@@ -12,7 +12,7 @@ class Analyzer:
 
     def analyse(self,flavor,build,benchmark,kwargs,config,iterationNumber):
         benchmark_name = config.get_benchmark_name(benchmark)
-        analyse_functor = util.load_functor(config.get_analyse_func(build,benchmark),'analyse_'+benchmark_name[0]+'_'+flavor)
+        analyse_functor = util.load_functor(config.get_analyse_func(build,benchmark),util.build_analyse_functor_filename(False,benchmark_name[0],flavor))
         if analyse_functor.get_method()['active']:
             analyse_functor.active(benchmark, **kwargs)
 
@@ -24,16 +24,14 @@ class Analyzer:
                 isdirectory_good = util.check_provided_directory(analyser_dir)
                 if isdirectory_good:
                     util.change_cwd(analyser_dir)
-                    #benchmark_name = config.get_benchmark_name(benchmark)
-                    instr_files = analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'.txt'
-                    prev_instr_file = analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name[0]+'previous.txt'
+                    instr_files = util.build_instr_file_path(analyser_dir,flavor,benchmark_name[0])
+                    prev_instr_file = util.build_previous_instr_file_path(analyser_dir,flavor,benchmark_name[0])
 
                 if(util.check_file(instr_files)):
                     util.rename(instr_files,prev_instr_file)
-                    util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name[0]+'.ipcg '+exp_dir+'-'+flavor+'-'+str(iterationNumber)+'/'+flavor+'-'+benchmark_name[0]+'.cubex')
+                    util.run_analyser_command(command,analyser_dir,flavor,benchmark_name[0],exp_dir,iterationNumber)
                 else:
-                    util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name[0]+'.ipcg ')
-
+                    util.run_analyser_command_noInstr(command,analyser_dir,flavor,benchmark_name[0])
                 self.tear_down(exp_dir)
 
             except Exception as e:

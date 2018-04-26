@@ -3,16 +3,6 @@ import Logging as log
 import json
 
 #Some Contants
-#For builds
-PREFIX = 0
-ITEMS = 1
-FLAVORS = 2
-#For Items
-INSTRUMENT_ANALYSIS = 0
-BUILDERS = 1
-ARGS = 2
-RUNNER = 3
-SUBMITTER =4
 
 NO_ELEMENTS_BUILD = 8
 NO_ELEMENTS_ITEMS = 5
@@ -106,7 +96,7 @@ class ConfigurationNew:
         return self.items[build][item]['instrument_analysis'][2]
 
     def get_analyse_slurm_func(self,build,item):
-        return self.items[build][item]['instrument_analysis'][0]
+        return self.items[build][item]['instrument_analysis'][3]
 
 
     def get_is_submitter(self,build,item):

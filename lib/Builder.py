@@ -44,12 +44,12 @@ class Builder:
     def build_flavours(self,flavor,build,benchmark,kwargs):
         benchmark_name = self.config.get_benchmark_name(benchmark)
         if(self.build_no_instr == True):
-            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'clean_'+benchmark_name[0]+'_'+flavor)
-            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'no_instr_'+benchmark_name[0]+'_'+flavor)
+            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),util.build_clean_functor_filename(benchmark_name[0],flavor))
+            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),util.build_builder_functor_filename(False,True,benchmark_name[0],flavor))
 
         else:
-            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),benchmark_name[0]+'_'+flavor)
-            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),'clean_'+benchmark_name[0]+'_'+flavor)
+            build_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),util.build_builder_functor_filename(False,False,benchmark_name[0],flavor))
+            clean_functor = util.load_functor(self.config.get_flavor_func(build,benchmark),util.build_clean_functor_filename(benchmark_name[0],flavor))
 
         if build_functor.get_method()['active']:
             build_functor.active(benchmark, **kwargs)
