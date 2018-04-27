@@ -194,7 +194,7 @@ def build_previous_instr_file_path(analyser_dir,flavor,benchmark_name):
     return analyser_dir+"/"+'out/instrumented-'+flavor+'-'+benchmark_name+'previous.txt'
 
 def run_analyser_command(command,analyser_dir,flavor,benchmark_name,exp_dir,iterationNumber):
-    util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name+'.ipcg '+exp_dir+'-'+flavor+'-'+str(iterationNumber)+'/'+flavor+'-'+benchmark_name[0]+'.cubex')
+    util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name+'.ipcg '+exp_dir+'-'+flavor+'-'+str(iterationNumber)+'/'+flavor+'-'+benchmark_name+'.cubex')
 
 def run_analyser_command_noInstr(command,analyser_dir,flavor,benchmark_name):
     util.shell(command+' '+analyser_dir+"/"+flavor+'-'+benchmark_name+'.ipcg ')

@@ -149,7 +149,7 @@ def run(path_to_config):
                         #Insert into DB the benchmark data
                         benchmark_name = configuration.get_benchmark_name(item)
                         itemID = util.generate_random_string()
-                        analyse_functor = configuration.get_analyse_func(build,item)+util.build_analyse_functor_filename(True,benchmark_name[0]+flavor)
+                        analyse_functor = configuration.get_analyse_func(build,item)+util.build_analyse_functor_filename(True,benchmark_name[0],flavor)
                         build_functor = configuration.get_flavor_func(build,item)+util.build_builder_functor_filename(True,False,benchmark_name[0],flavor)
                         run_functor = configuration.get_runner_func(build,item)+util.build_runner_functor_filename(True,benchmark_name[0],flavor)
                         submitter_functor = configuration.get_runner_func(build,item)+'/slurm_submitter_'+benchmark_name[0]+flavor
