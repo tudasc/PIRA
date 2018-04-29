@@ -64,10 +64,13 @@ class Analyzer:
 
     def analyse_detail(self,config,build,benchmark,flavor,iterationNumber):
         kwargs = {'compiler': ''}
+        # No need to analyse on the slurm. May be a future extension
+        '''
         if config.get_is_submitter(build,benchmark):
             self.analyse_slurm(flavor,build,benchmark,kwargs,config)
         else:
-            self.analyse(flavor,build,benchmark,kwargs,config,iterationNumber)
+        '''
+        self.analyse(flavor,build,benchmark,kwargs,config,iterationNumber)
 
     def run_analyzer(self,flavors,build,benchmark,kwargs):
         pass
