@@ -4,7 +4,7 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-    return 'make INSTRFLAGS=\'-finstrument-functions -finstrument-functions-whitelist-inputfile="/home/sachin/CLionProjects/pgoe/out/instrumented-vanilla-lulesh2.0.3.txt"\''+ kwargs['compiler']
+    return 'make INSTRFLAGS=\'-finstrument-functions -finstrument-functions-whitelist-inputfile="/home/sachin/CLionProjects/pgoe/out/instrumented-vanilla-lulesh203.txt"\''+ kwargs['compiler']
 
 def active(benchmark, **kwargs):
     pass
