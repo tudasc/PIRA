@@ -166,6 +166,7 @@ def create_batch_queued_temp_file(job_id,benchmark_name,iterationNumber,DBIntVal
             myfile.write(build+'\n')
             myfile.write(benchmark+'\n')
             myfile.write(flavor+'\n')
+            myfile.close()
 
 
     except:

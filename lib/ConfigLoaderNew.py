@@ -76,6 +76,9 @@ class ConfigurationNew:
     def set_item_submitter(self,submitter,dir,item):
         self.items[dir][item].update({'submitter':submitter})
 
+    def set_item_batch_script(self,batch_script,dir,item):
+        self.items[dir][item].update({'batch_script':batch_script})
+
     def get_builds(self):
         return self.builds.keys()
 
@@ -107,6 +110,9 @@ class ConfigurationNew:
 
     def get_submitter_func(self,build,item):
         return self.items[build][item]['submitter']
+
+    def get_batch_script_func(self,build,item):
+        return self.items[build][item]['batch_script']
 
     def get_benchmark_name(self,benchmark):
         return benchmark.split('/')[-1:]
@@ -167,6 +173,8 @@ class ConfigurationLoader:
                                                           ['run'][items]['runner']),build_dirs,items)
                 conf.set_item_submitter(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors']
                                                           ['run'][items]['submitter']),build_dirs,items)
+                conf.set_item_batch_script(util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors']
+                                                             ['run'][items]['batch_script']),build_dirs,items)
         return conf
 
 

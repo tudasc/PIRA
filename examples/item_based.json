@@ -36,14 +36,16 @@
                 "args": [
                 ],
                 "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
-                "submitter":"/home/sachin/IdeaProjects/master/benchpress/functors"
+                "submitter":"/home/sachin/IdeaProjects/master/benchpress/functors",
+                "batch_script":"/home/sm49xeji/job.sh"
               },
               "/home/sachin/MasterThesis/lulesh":{
                 "args":[
 
                 ],
                 "runner":"/home/sachin/IdeaProjects/master/benchpress/functors2",
-                "submitter":""
+                "submitter":"",
+                "batch_script":"/home/sm49xeji/job.sh"
               }
             }
           }

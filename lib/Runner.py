@@ -71,7 +71,8 @@ def submitter(flavor,build,benchmark,kwargs,config,isNoInstrumentationRun,iterat
         util.set_overwrite_scorep_exp_dir()
 
 
-    tup = [(flavor,'/home/sm49xeji/job.sh')]
+    #tup = [(flavor,'/home/sm49xeji/job.sh')]
+    tup = [(flavor,config.get_batch_script_func(build,benchmark))]
     kwargs={"util":util,"runs_per_job":1,"dependent":0}
     job_id = submitter_functor.dispatch(tup,**kwargs)
     util.create_batch_queued_temp_file(job_id,benchmark_name[0],iterationNumber,DBIntVal,DBCubeFilePath,itemID,build,benchmark,flavor)
@@ -179,7 +180,7 @@ def run(path_to_config):
 
             if(int(job_details[ISWITHINSTR]) == 1):
                 analyser = A(configuration,job_details[BUILDNAME],job_details[ITEM])
-                analyser.analyse_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],int(job_details[2]))
+                analyser.analyse_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],int(job_details[ITERATIONNUMBER]))
 
 
                 builder = B(job_details[BUILDNAME], configuration)
