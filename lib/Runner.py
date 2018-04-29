@@ -154,11 +154,7 @@ def run(path_to_config):
             experiment_data = (util.generate_random_string(),job_details[BENCHMARKNAME],job_details[ITERATIONNUMBER],job_details[ISWITHINSTR],job_details[CUBEFILEPATH],runtime,job_details[ITEMID])
             database.insert_data_experiment(cur,experiment_data)
 
-            #Generate white-list functions
-            analyser = A(configuration,job_details[BUILDNAME],job_details[ITEM])
-            analyser.analyse_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],int(job_details[2]))
-
-            if(int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) < 5):
+            if(int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) < 4):
 
                 #Build and run without any instrumentation
                 BuildNoInstr = B(job_details[BUILDNAME],configuration)
@@ -167,17 +163,27 @@ def run(path_to_config):
 
                 # Run - this binary does not contain any instrumentation.
                 run_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],True,int(job_details[ITERATIONNUMBER])+1,job_details[ITEMID],database,cur)
-            else:
+
+            if(int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) == 4):
+                analyser_dir = configuration.get_analyser_dir(job_details[BUILDNAME],job_details[ITEM])
+                #Remove anything in the output dir of the analysis tool
+                util.remove_from_pgoe_out_dir(analyser_dir)
+
+                #Generate white-list functions
+                analyser = A(configuration,job_details[BUILDNAME],job_details[ITEM])
+                analyser.analyse_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],0)
+                run_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],False,0,job_details[ITEMID],database,cur)
+
+            if(int(job_details[ISWITHINSTR]) == 1):
+                analyser = A(configuration,job_details[BUILDNAME],job_details[ITEM])
+                analyser.analyse_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],int(job_details[2]))
+
+
                 builder = B(job_details[BUILDNAME], configuration)
                 builder.build(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR])
 
                 # Run Phase
-
-                #Check if it's 4th iteration and reset iteration to 0th
-                if int(job_details[ITERATIONNUMBER]) == 4:
-                    run_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],False,0,job_details[ITEMID],database,cur)
-                else:
-                    run_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],False,int(job_details[ITERATIONNUMBER])+1,job_details[ITEMID],database,cur)
+                run_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],False,int(job_details[ITERATIONNUMBER])+1,job_details[ITEMID],database,cur)
         else:
             for build in configuration.builds:
                 application = (util.generate_random_string(),build,'','')

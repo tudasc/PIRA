@@ -8,7 +8,7 @@ def dispatch(list_of_tuples, **kwargs):
     util = kwargs['util']
     rpj = kwargs['runs_per_job']
     dependent = kwargs['dependent']
-    
+
     for run_tuple in list_of_tuples:
         file_name = run_tuple[1]
         job_id = initial_dependency(util, run_tuple[0])
@@ -23,7 +23,7 @@ def dispatch(list_of_tuples, **kwargs):
 
 def initial_dependency(util, benchmark_flavor):
     command = slurm_queye + ' | grep ' + benchmark_flavor[0] + '.'
-    shell_output = util.shell_for_submitter(command, dry=True)
+    shell_output = util.shell_for_submitter(command, dry=False)
     out_list = shell_output.split('\n')
     ids = []
     for entry in out_list:
@@ -47,7 +47,7 @@ def submit_with_dependencies(util, run_script, job_id):
     else:
         command += '-afterok:' + str(job_id) + ' ' + run_script
 
-    shell_output = util.shell_for_submitter(command, dry=True)
+    shell_output = util.shell_for_submitter(command, dry=False)
     return extract_job_id(shell_output)
 
 
@@ -66,7 +66,7 @@ def extract_job_id(shell_string):
 
 def submit(util, run_script):
     command = slurm_binary + ' ' + run_script
-    shell_output = util.shell_for_submitter(command, dry=True)
+    shell_output = util.shell_for_submitter(command, dry=False)
     return extract_job_id(shell_output)
 
 
