@@ -172,6 +172,9 @@ def run(path_to_config):
                 #Generate white-list functions
                 analyser = A(configuration,job_details[BUILDNAME],job_details[ITEM])
                 analyser.analyse_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],0)
+
+                builder = B(job_details[BUILDNAME], configuration)
+                builder.build(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR])
                 run_detail(configuration,job_details[BUILDNAME],job_details[ITEM],job_details[FLAVOR],False,0,job_details[ITEMID],database,cur)
 
             if(int(job_details[ISWITHINSTR]) == 1):
