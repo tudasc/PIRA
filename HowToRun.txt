@@ -1,3 +1,11 @@
+0. Environment setup
+    1. Checkout the BenchPress code from https://github.com/jplehr/benchpress.git
+    2. Checkout the callgraph tool PGOE modified from https://github.com/sachinmanawadi271/pgoe.git
+    3. Load the following modules
+        module load papi/5.4.1
+        module load scorep/3.no_mpi
+        module load clang/3.8-wl
+
 1. Edit Configuration file - "item_based.json"
     Important note:
         1. The path should not end with "/" character.
@@ -51,14 +59,16 @@
                 "args": [
                 ],
                 "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
-                "submitter":""
+                "submitter":"",
+                "batch_script":""
               },
               "/home/sachin/MasterThesis/lulesh":{
                 "args":[
 
                 ],
                 "runner":"/home/sachin/IdeaProjects/master/benchpress/functors",
-                "submitter":""
+                "submitter":"",
+                "batch_script":""
               }
             }
           }
@@ -117,6 +127,30 @@
     using the following command
     python example_main.py item_based.json
 
+5. Running on Litchenberg cluster - batch submitter
+   1. Provide the functor for slurm submitter in the configuration file - "submitter".
+   2. Provide the batch script in the configuration file - "batch_script".
+   3. Run the application.
+   4. The application stops after each iteration while the job runs on the scheduler.
+   5. Job details will be written in queued_job.tmp.
+   6. Once the job is completed the runtime information shall be stored in stderr.txt.runner.<jobid>.
+      Please make sure to mention the below path in batch script
+      #SBATCH -e <path>/benchpress/stderr.txt.runner.%j
+   7. The application the batch script must be run with time command.
+      Example: time /local-flav1 -p -i 10
+   8. Before running the next iteration it is mandatory to check the stderr.txt.runner.<jobid> file
+      such that the first line is "real    0m0.444s". If the first line is different
+      the application shall throw exception
+
+   Notes:
+   1. As of now for slurm submitter only one item and one build is supported unlike non-slurm submitter.
+
+6. Viweing the Database
+    1. Run DBViwer.py to display the experiments on stdout.
+    2. Future enchancement can be made to tailor the queries.
+
 
 Known issue:
 1. Functors with names having '.' character may not be loaded. Example: clean_lulesh2.0.3_local-flav1.py
+2. It is observed that sometimes running via submitter during the first iteration with
+   instrumentation queued_job.tmp file write fails.
