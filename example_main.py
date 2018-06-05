@@ -2,7 +2,6 @@ import lib.Runner as runner
 import argparse
 from lib.db import database as db
 import lib.tables as tables
-
 '''
 trying DB
 
@@ -22,8 +21,6 @@ for row in rows:
     print(row)
 
 '''
-
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('config', help='The configuration json file.')
