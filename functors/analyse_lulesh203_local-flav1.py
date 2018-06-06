@@ -3,8 +3,7 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-  cc = kwargs['compiler']
-  return 'COMPILER=' + cc + ' COMPILERNAME=' + cc + ' FLAVOR=vanilla make ' + benchmark + '.' + cc + '.vanilla'
+  return './CubeCallGraphTool ' + kwargs['compiler']
 
 
 def active(benchmark, **kwargs):

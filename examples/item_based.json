@@ -1,61 +1,61 @@
 {
-  /* The description is the top level element. */
-  "description": {
-    /* It is organized according to directories, as our items are located in directories. */
-    "directories": [
-      /* The names of the directories are used as identifiers later on */
-      "one",
-      "two"
+  "description":{
+    "directories":[
+      "/home/sachin/MasterThesis"
     ],
-    /* One item corresponds to a specific program to build */
-    "items": {
-      /* If targets are prefixed, then it is assumed that they are organized in sub directories. */
-      "prefix": "xx_",
-      /* The identifier denote entities that can be referenced later on */
-      "one": [
-        "item1",
-        "item2",
-        "item3",
-        "item4"
+    "builds": {
+        "/home/sachin/MasterThesis": {
+          "prefix": "",
+          "items": [
+            "/home/sachin/MasterThesis/lulesh203",
+            "/home/sachin/MasterThesis/lulesh"
+          ],
+          "flavors": {
+            "/home/sachin/MasterThesis": [
+              "local-flav1",
+              "vanilla"
+            ],
+            "instrument-analysis": {
+              "/home/sachin/MasterThesis/lulesh203": [
+                "/home/sachin/IdeaProjects/master/benchpress/functors",
+                "/home/sachin/MasterThesis/lulesh203/lulesh",
+                "/home/sachin/CLionProjects/pgoe"
+                ],
+              "/home/sachin/MasterThesis/lulesh":[
+                "/home/sachin/IdeaProjects/master/benchpress/functors2",
+                "/home/sachin/MasterThesis/lulesh/lulesh",
+                "/home/sachin/CLionProjects/pgoe"
+              ]
+            },
+            "builders": {
+              "/home/sachin/MasterThesis/lulesh203": "/home/sachin/IdeaProjects/master/benchpress/functors",
+              "/home/sachin/MasterThesis/lulesh": "/home/sachin/IdeaProjects/master/benchpress/functors2"
+            },
+            "run": {
+              "/home/sachin/MasterThesis/lulesh203": {
+                "args": [
+                ],
+                "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
+                "submitter":"/home/sachin/IdeaProjects/master/benchpress/functors",
+                "batch_script":"/home/sm49xeji/job.sh"
+              },
+              "/home/sachin/MasterThesis/lulesh":{
+                "args":[
+
+                ],
+                "runner":"/home/sachin/IdeaProjects/master/benchpress/functors2",
+                "submitter":"",
+                "batch_script":"/home/sm49xeji/job.sh"
+              }
+            }
+          }
+        }
+      },
+      "glob-flavors":[
       ],
-      /* Placing flavors here, allows for item-specific flavors to consider. */
-      "flavors": {
-        /* Reference the item with its identifier */
-        "one": [
-          "local-flav1",
-          "local-flav2"
-        ],
-				/* This is responsible for generating the list of function to be instrumented in a file. The filename is given to the function
-				by the framework. */
-				"instrument-analysis":{
-					"item1": "/path/to/py/functor"
-				},
-				"builders" : {
-					"item1" : "/path/to/py/functor",
-					"item2" : "/path/to/different/functor"
-				},
-				"run" : {
-					"item1" : {
-						"args" : [123, "abs"],
-						"runner" : "path/to/py/func",
-						/* Dispatcher field decides whether invoked locally or submitted to workload manager (e.g. SLURM) Again user supplied function */
-						"submitter" : ""
-					}
-				}
+      "glob-submitter":{
+        "flav1":"/path/to/py/functor",
+        "flav2":"path/to/py/functor"
       }
-    },
-    /*
-      If all items are to be built with the same flavors, global flavors can be used.
-      Global flavors will always be built, unless switched off
-    */
-    "glob-flavors": [
-      "flav1",
-      "flav2"
-    ],
-    /* The global submitter can be used in the same way as the global flavors */
-    "glob-submitter" : {
-      "flav1": "/path/to/py/functor",
-      "flav2": "path/to/py/functor"
-    }
   }
 }

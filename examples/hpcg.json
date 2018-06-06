@@ -1,0 +1,43 @@
+{
+  "description":{
+    "directories":[
+      "/home/j_lehr/downloads/hpcg30"
+    ],
+    "builds": {
+        "/home/j_lehr/downloads/hpcg30": {
+          "prefix": "",
+          "items": [
+            "/home/j_lehr/downloads/hpcg30"
+          ],
+          "flavors": {
+            "/home/j_lehr/downloads/hpcg30": [
+              "test_run"
+            ],
+            "instrument-analysis": {
+              "/home/j_lehr/downloads/hpcg30": [
+                "/home/j_lehr/all_repos/gh-jplehr-benchpress/functors/hpcg30",
+                "/work/scratch/j_lehr/_preparation_/",
+                "/home/j_lehr/all_repos/gh-sachinmanawadi-pgoe"
+                ]
+            },
+            "builders": {
+              "/home/j_lehr/downloads/hpcg30": "/home/j_lehr/all_repos/gh-jplehr-benchpress/functors/hpcg30"
+            },
+            "run": {
+              "/home/j_lehr/downloads/hpcg30": {
+                "args": [
+                ],
+                "runner": "/home/j_lehr/all_repos/gh-jplehr-benchpress/functors/hpcg30",
+                "submitter":"",
+                "batch_script":"/home/j_lehr/job.sh"
+              }
+            }
+          }
+        }
+      },
+      "glob-flavors":[
+      ],
+      "glob-submitter":{
+      }
+  }
+}
