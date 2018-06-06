@@ -9,7 +9,7 @@ from string import ascii_uppercase
 from timeit import timeit
 import shutil
 
-queued_job_filename = "./queued_job.tmp"
+queued_job_filename = './queued_job.tmp'
 
 
 def read_file(file_name):
@@ -27,7 +27,7 @@ def check_provided_directory(path):
 
 
 def check_file(path):
-  if (os.path.exists(path)):
+  if os.path.exists(path):
     return True
   return False
 
@@ -189,7 +189,7 @@ def create_batch_queued_temp_file(job_id, benchmark_name, iterationNumber, DBInt
 
 def read_batch_queued_job():
   #filename = "./queued_job.tmp"
-  if check_file(queued_job_filename) == True:
+  if check_file(queued_job_filename):
     lines = [line.rstrip('\n') for line in open(queued_job_filename)]
     return lines
   else:
@@ -198,7 +198,7 @@ def read_batch_queued_job():
 
 
 def check_queued_job():
-  if check_file(queued_job_filename) == True:
+  if check_file(queued_job_filename):
     return True
   else:
     return False
@@ -270,10 +270,10 @@ def run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name):
 
 
 def build_cube_file_path_for_db(exp_dir, flavor, iterationNumber, isNoInstr):
-  if isNoInstr == False:
-    return exp_dir + '-' + flavor + '-' + str(iterationNumber)
-  else:
+  if isNoInstr:
     return exp_dir + '-' + flavor + '-' + str(iterationNumber) + 'noInstrRun'
+  else:
+    return exp_dir + '-' + flavor + '-' + str(iterationNumber)
 
 
 def set_scorep_exp_dir(exp_dir, flavor, iterationNumber, isNoInstr):
