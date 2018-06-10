@@ -9,7 +9,7 @@ import lib.tables as tables
 
 import BatchSystemHelper as bat_sys
 
-# Some contants to manage slurm submitter tmp file read
+# Contants to manage slurm submitter tmp file read
 JOBID = 0
 BENCHMARKNAME = 1
 ITERATIONNUMBER = 2
@@ -39,28 +39,28 @@ def runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, 
       util.change_cwd(benchmark)
       exp_dir = config.get_analyser_exp_dir(build, benchmark)
       log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
+      
+      DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
+                                                        is_no_instrumentation_run)
+      util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
+      util.set_overwrite_scorep_exp_dir()
 
+      # TODO Figure out what this integer means.
       if is_no_instrumentation_run:
         DBIntVal = 0
-        DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
-                                                          is_no_instrumentation_run)
-        util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
-        util.set_overwrite_scorep_exp_dir()
 
       else:
         DBIntVal = 1
-        DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
-                                                          is_no_instrumentation_run)
-        util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
-        util.set_overwrite_scorep_exp_dir()
         util.set_scorep_profiling_basename(flavor, benchmark_name[0])
 
       # Run the actual command
-      runTime = util.shell(command)
+      out, runtime = util.shell(command, time_invoc=True)
       # Insert into DB
       experiment_data = (util.generate_random_string(), benchmark_name[0], iteration_number, DBIntVal,
-                           DBCubeFilePath, str(runTime), itemID)
+                           DBCubeFilePath, str(runtime), itemID)
       database.insert_data_experiment(cur, experiment_data)
+
+      return runtime
 
     except Exception as e:
       logging.get_logger().log(e.message, level='warn')
@@ -72,25 +72,22 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
   submitter_functor = util.load_functor(
       config.get_runner_func(build, benchmark), 'slurm_submitter_' + benchmark_name[0] + '_' + flavor)
   exp_dir = config.get_analyser_exp_dir(build, benchmark)
+  DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
+                                                      is_no_instrumentation_run)
+  util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
+  util.set_overwrite_scorep_exp_dir()
 
   if is_no_instrumentation_run:
     DBIntVal = 0
-    DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
-                                                      is_no_instrumentation_run)
-    util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
-    util.set_overwrite_scorep_exp_dir()
 
   else:
     DBIntVal = 1
-    DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
-                                                      is_no_instrumentation_run)
-    util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
-    util.set_overwrite_scorep_exp_dir()
     util.set_scorep_profiling_basename(flavor, benchmark_name[0])
 
   tup = [(flavor, config.get_batch_script_func(build, benchmark))]
   kwargs = {"util": util, "runs_per_job": 1, "dependent": 0}
   job_id = submitter_functor.dispatch(tup, **kwargs)
+  # TODO: Create new BatchSystemJob instance instead
   bat_sys.create_batch_queued_temp_file(job_id, benchmark_name[0], iteration_number, DBIntVal, DBCubeFilePath,
                                      itemID, build, benchmark, flavor)
   log.get_logger().log('Submitted job. Exiting. Re-invoke when job is finished.')
@@ -105,7 +102,7 @@ def run_detail(config, build, benchmark, flavor, is_no_instrumentation_run, iter
     submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
               database, cur)
   else:
-    runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
+    return runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
            database, cur)
 
 
@@ -117,29 +114,35 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur):
       configuration.is_first_iteration[build + item + flavor] = True
 
       # Build and run without any instrumentation
-      BuildNoInstr = B(build, configuration)
-      BuildNoInstr.build_no_instr = True
-      BuildNoInstr.build(configuration, build, item, flavor)
+      vanilla_build = B(build, configuration, no_instrumentation)
+      vanilla_build.build(configuration, build, item, flavor)
 
       log.get_logger().log('Running the baseline binary.')
+      accu_runtime = .0
       # Run - this binary does not contain any instrumentation.
       for y in range(0, 5):
-        run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
-
+        accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
+      
+      vanilla_avg_rt = accu_runtime / 5.0
+      log.get_logger().log('Vanilla Avg: ' + str(vanilla_avg_rt), level='perf')
+     
       analyser_dir = configuration.get_analyser_dir(build, item)
-      #Remove anything in the output dir of the analysis tool
-
       util.remove_from_pgoe_out_dir(analyser_dir)
 
       analyser = A(configuration, build, item)
       analyser.analyse_detail(configuration, build, item, flavor, y)
 
-    builder = B(build, configuration)
+    # After baseline measurement is complete, do the instrumented build/run
+    no_instrumentation = False
+    builder = B(build, configuration, no_instrumentation)
     builder.build(configuration, build, item, flavor)
 
     #Run Phase
-    no_instrumentation = False
-    run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
+    instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
+
+    # Compute overhead of instrumentation
+    ovh_percentage = instr_rt / vanilla_avg_rt
+    log.get_logger().log('Iteration ' + str(x) + ': ' + str(ovh_percentage), level='perf')
 
     #Analysis Phase
     analyser = A(configuration, build, item)
@@ -147,7 +150,7 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur):
 
 
 def run(path_to_config):
-  log.get_logger().set_state('info')
+  #log.get_logger().set_state('info')
   log.get_logger().log('Running with configuration: ' + str(path_to_config))
 
   try:
@@ -171,6 +174,7 @@ def run(path_to_config):
     log.get_logger().log('Created necessary tables in database')
 
     # Flow for submitter
+    # FIXME: Refactor this code!
     if bat_sys.check_queued_job():
       log.get_logger().log('Running the submitter case.')
       # read file to get build, item, flavor, iteration, itemID, and runtime
@@ -189,9 +193,9 @@ def run(path_to_config):
       if (int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) < 4):
 
         # Build and run without any instrumentation
-        BuildNoInstr = B(job_details[BUILDNAME], configuration)
-        BuildNoInstr.build_no_instr = True
-        BuildNoInstr.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
+        vanilla_build = B(job_details[BUILDNAME], configuration)
+        vnailla_build.build_no_instr = True
+        vanilla_build.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
 
         # Run - this binary does not contain any instrumentation.
         run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], True,

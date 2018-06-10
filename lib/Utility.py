@@ -94,24 +94,28 @@ def load_functor(directory, module):
   return functor
 
 
-def unload_functo(functor, module):
-  del functor
-  sys.modules.pop(module)
-
-
-def shell(command, silent=True, dry=False):
-  if dry:
-    log.get_logger().log('DRY RUN SHELL CALL: ' + command, level='debug')
-    return ''
-
-  try:
+def timed_invocation(command):
     t1 = os.times()  # start time
     out = subprocess.check_output(command, shell=True)
     t2 = os.times()  # end time
     cutime = t2[2] - t1[2]
     cstime = t2[3] - t1[3]
-    runTime = cutime + cstime
-    return runTime
+    runtime = cutime + cstime
+    return out, runtime
+
+
+def shell(command, silent=True, dry=False, time_invoc=False):
+  if dry:
+    log.get_logger().log('DRY RUN SHELL CALL: ' + command, level='debug')
+    return ''
+
+  try:
+    if time_invoc:
+      return timed_invocation(command)
+    
+    else:
+      out = subprocess.check_output(command, shell=True)
+      return out, .0
 
   except subprocess.CalledProcessError as e:
     if e.returncode == 1:

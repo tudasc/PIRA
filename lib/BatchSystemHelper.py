@@ -4,6 +4,63 @@ import Logging as log
 queued_job_filename = './queued_job.tmp'
 
 
+class BatchSystemJob:
+  """
+  Class holding the description of a batch system job.
+  This class should be independent of the actually used batch system, but still supply enough information
+  for the automation process.
+  """
+
+  def __init__(s, job_id, b_name, iter_nr, has_instrumentation, cube_file, item_id, build, benchmark, flavor,
+               max_iter):
+    s.job_id = job_id
+    s.benchmark_name = b_name
+    s.iter_nr = iter_nr
+    s.has_instrumentation = has_instrumentation
+    s.cube_file = cube_file
+    s.item_id = item_id
+    s.build = build
+    s.benchmark = benchmark
+    s.flavor = flavor
+    s.max_iterations = max_iter
+
+  def is_instrumented(s):
+    return s.has_instrumentation
+
+  def is_first_iteration(s):
+    return s.iter_nr == 0
+
+  def is_iteration(s, number):
+    return s.iter_nr == number
+
+  def is_last_iteration(s):
+    return s.iter_nr == s.max_iterations
+
+  def get_job_id(s):
+    return s.job_id
+
+  def get_benchmark_name(s):
+    return s.benchmark_name
+
+  def get_iteration_number(s):
+    return s.iter_nr
+
+  def get_cube_file_path(s):
+    return s.cube_file
+
+  def get_item_id(s):
+    return s.item_id
+
+  def get_build(s):
+    return s.build
+
+  def get_benchmark(s):
+    return s.benchmark
+
+  def get_flavor(s):
+    return s.flavor
+
+
 def create_batch_queued_temp_file(job_id, benchmark_name, iterationNumber, DBIntVal, DBCubeFilePath, itemID,
                                   build, benchmark, flavor):
   try:

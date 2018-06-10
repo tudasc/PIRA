@@ -7,11 +7,11 @@ class Builder:
     Class which builds a benchmark and the run configuration.
     """
 
-  def __init__(self, dir_key, configuration):
+  def __init__(self, dir_key, configuration, no_instrumentation=False):
     self.directory = dir_key
     self.config = configuration
     self.old_cwd = ''
-    self.build_no_instr = False
+    self.build_no_instr = no_instrumentation
     self.error = None
 
   def build(self, config, build, benchmark, flavor):
@@ -69,10 +69,8 @@ class Builder:
         util.change_cwd(benchmark)
         logging.get_logger().log('Making clean in ' + benchmark, level='debug')
         util.shell(commandclean)
-        #util.unload_functo(clean_functor,'clean_'+flavor)
         logging.get_logger().log('Building with command: ' + commandbuild)
         util.shell(commandbuild)
-        #util.unload_functo(build_functor,flavor)
 
       except Exception as e:
         logging.get_logger().log(e.message, level='warn')
