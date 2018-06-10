@@ -7,6 +7,8 @@ import Logging as logging
 from lib.db import database as db
 import lib.tables as tables
 
+import BatchSystemHelper as bat_sys
+
 # Some contants to manage slurm submitter tmp file read
 JOBID = 0
 BENCHMARKNAME = 1
@@ -89,7 +91,7 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
   tup = [(flavor, config.get_batch_script_func(build, benchmark))]
   kwargs = {"util": util, "runs_per_job": 1, "dependent": 0}
   job_id = submitter_functor.dispatch(tup, **kwargs)
-  util.create_batch_queued_temp_file(job_id, benchmark_name[0], iteration_number, DBIntVal, DBCubeFilePath,
+  bat_sys.create_batch_queued_temp_file(job_id, benchmark_name[0], iteration_number, DBIntVal, DBCubeFilePath,
                                      itemID, build, benchmark, flavor)
   log.get_logger().log('Submitted job. Exiting. Re-invoke when job is finished.')
   exit(0)
@@ -169,14 +171,14 @@ def run(path_to_config):
     log.get_logger().log('Created necessary tables in database')
 
     # Flow for submitter
-    if util.check_queued_job():
+    if bat_sys.check_queued_job():
       log.get_logger().log('Running the submitter case.')
       # read file to get build, item, flavor, iteration, itemID, and runtime
-      job_details = util.read_batch_queued_job()
+      job_details = bat_sys.read_batch_queued_job()
 
       # get run-time of the submitted job
-      runtime = util.get_runtime_of_submitted_job(job_details[JOBID])
-      util.read_batch_queued_job()
+      runtime = bat_sys.get_runtime_of_submitted_job(job_details[JOBID])
+      bat_sys.read_batch_queued_job()
 
       # Insert into DB
       experiment_data = (util.generate_random_string(), job_details[BENCHMARKNAME],
