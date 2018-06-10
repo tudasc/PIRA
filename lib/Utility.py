@@ -85,13 +85,12 @@ def change_cwd(path):
   os.chdir(path)
 
 
-def load_functor(dir, module):
-  append_to_sys_path(dir)
-  #print sys.path
+def load_functor(directory, module):
+  log.get_logger().log('Appending ' + directory + ' to system path.', level='debug')
+  append_to_sys_path(directory)
   # Adding 'fromList' argument loads exactly the module.
   functor = __import__(module)
-  remove_from_sys_path(dir)
-  #print sys.path
+  remove_from_sys_path(directory)
   return functor
 
 
@@ -106,15 +105,12 @@ def shell(command, silent=True, dry=False):
     return ''
 
   try:
-
     t1 = os.times()  # start time
-    #out = timeit(stmt = "subprocess.check_output("+command+", shell=True)", number = 1)
     out = subprocess.check_output(command, shell=True)
     t2 = os.times()  # end time
     cutime = t2[2] - t1[2]
     cstime = t2[3] - t1[3]
     runTime = cutime + cstime
-    #print runTime
     return runTime
 
   except subprocess.CalledProcessError as e:
@@ -169,7 +165,6 @@ def json_to_canonic(json_elem):
 
 def create_batch_queued_temp_file(job_id, benchmark_name, iterationNumber, DBIntVal, DBCubeFilePath, itemID,
                                   build, benchmark, flavor):
-  #filename = "./queued_job.tmp"
   try:
     with open(queued_job_filename, "w") as myfile:
       myfile.write(str(job_id) + '\n')
@@ -184,17 +179,16 @@ def create_batch_queued_temp_file(job_id, benchmark_name, iterationNumber, DBInt
       myfile.close()
 
   except:
-    log.get_logger().log('File Error!', level='error')
+    log.get_logger().log('Unable to create batch system temporary file. Exit.', level='error')
     exit(1)
 
 
 def read_batch_queued_job():
-  #filename = "./queued_job.tmp"
   if check_file(queued_job_filename):
     lines = [line.rstrip('\n') for line in open(queued_job_filename)]
     return lines
   else:
-    log.get_logger().log('File does not exists', level='error')
+    log.get_logger().log('Batch system queued file does not exist. Exit.', level='error')
     exit(1)
 
 
@@ -206,7 +200,6 @@ def check_queued_job():
 
 
 def get_runtime_of_submitted_job(job_id):
-  #with open('stderr.txt.runner.'+job_id) as f:
   first_line = open('stderr.txt.runner.' + job_id).readline().rstrip()
   values = first_line.split("\t")
   print values[1]
@@ -217,8 +210,8 @@ def remove_queued_job_tmp_file():
   util.remove(queued_job_filename)
 
 
-def remove_from_pgoe_out_dir(dir):
-  util.remove(dir + "/" + "out")
+def remove_from_pgoe_out_dir(directory):
+  util.remove(directory + "/" + "out")
 
 
 def build_runner_functor_filename(IsForDB, benchmark_name, flavor):
@@ -280,26 +273,15 @@ def get_cube_file_path(experiment_dir, flavor, iter_nr, is_no_instr):
 def build_cube_file_path_for_db(exp_dir, flavor, iterationNumber, isNoInstr):
   return get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
 
-  if isNoInstr:
-    return exp_dir + '-' + flavor + '-' + str(iterationNumber) + 'noInstrRun'
-  else:
-    return exp_dir + '-' + flavor + '-' + str(iterationNumber)
-
 
 def set_scorep_exp_dir(exp_dir, flavor, iterationNumber, isNoInstr):
   effective_dir = get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
   util.set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
   return
 
-  if isNoInstr == False:
-    util.set_env('SCOREP_EXPERIMENT_DIRECTORY', exp_dir + '-' + flavor + '-' + str(iterationNumber))
-  else:
-    util.set_env('SCOREP_EXPERIMENT_DIRECTORY',
-                 exp_dir + '-' + flavor + '-' + str(iterationNumber) + 'noInstrRun')
-
 
 def set_overwrite_scorep_exp_dir():
-  util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'true')
+  util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'True')
 
 
 def set_scorep_profiling_basename(flavor, benchmark_name):
