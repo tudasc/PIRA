@@ -65,11 +65,12 @@ class Builder:
     else:
       try:
         commandbuild = build_functor.passive(benchmark, **kwargs)
-        logging.get_logger().log('Building with command: ' + commandbuild)
         commandclean = clean_functor.passive(benchmark, **kwargs)
         util.change_cwd(benchmark)
+        logging.get_logger().log('Making clean in ' + benchmark, level='debug')
         util.shell(commandclean)
         #util.unload_functo(clean_functor,'clean_'+flavor)
+        logging.get_logger().log('Building with command: ' + commandbuild)
         util.shell(commandbuild)
         #util.unload_functo(build_functor,flavor)
 

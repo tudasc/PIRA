@@ -49,7 +49,14 @@ class Logger:
     msg_str = '[' + level + '] ' + str(msg)
     self.tape.append(msg_str)
 
-  def dump_tape(self):
+  def dump_tape(self, out_file=None):
+    if out_file is not None:
+      of = open(str(out_file), 'w')
+      for m in self.tape:
+        of.write(m)
+        of.write('\n')
+      of.close()
+
     for msg in self.tape:
       print(msg)
 

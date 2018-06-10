@@ -64,6 +64,7 @@ def diff_inst_files(file1, file2):
 
 
 def set_env(env_var, val):
+  log.get_logger().log('Setting ' + env_var + ' to ' + str(val), level='debug')
   os.environ[env_var] = val
 
 
@@ -80,7 +81,7 @@ def get_cwd():
 
 
 def change_cwd(path):
-  log.get_logger().log('cd\'ing to ' + path)
+  log.get_logger().log('cd\'ing to ' + path, level='debug')
   os.chdir(path)
 
 
@@ -101,7 +102,7 @@ def unload_functo(functor, module):
 
 def shell(command, silent=True, dry=False):
   if dry:
-    log.get_logger().log('SHELL CALL: ' + command, level='debug')
+    log.get_logger().log('DRY RUN SHELL CALL: ' + command, level='debug')
     return ''
 
   try:
@@ -121,7 +122,7 @@ def shell(command, silent=True, dry=False):
       if command.find('grep '):
         return ''
 
-    log.get_logger().log('Utility.shell: Caught Exception ' + e.message, level='error')
+    log.get_logger().log('Utility.shell: Caught Exception ' + e.output, level='error')
     raise Exception('Running command ' + command + ' did not succeed')
 
 
@@ -259,17 +260,26 @@ def build_previous_instr_file_path(analyser_dir, flavor, benchmark_name):
 def run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber):
   sh_cmd = command + ' ' + analyser_dir + "/" + flavor + '-' + benchmark_name + '.ipcg ' + exp_dir + '-' + flavor + '-' + str(
       iterationNumber) + '/' + flavor + '-' + benchmark_name + '.cubex'
-  log.get_logger().log('   INSTR: Run cmd: ' + sh_cmd)
+  log.get_logger().log('  INSTR: Run cmd: ' + sh_cmd)
   util.shell(sh_cmd)
 
 
 def run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name):
   sh_cmd = command + ' ' + analyser_dir + "/" + flavor + '-' + benchmark_name + '.ipcg '
-  log.get_logger().log('NO INSTR: Run cmd: ' + sh_cmd)
+  log.get_logger().log('  NO INSTR: Run cmd: ' + sh_cmd)
   util.shell(sh_cmd)
 
 
+def get_cube_file_path(experiment_dir, flavor, iter_nr, is_no_instr):
+  if is_no_instr:
+    return experiment_dir + '-' + flavor + '-' + str(iter_nr) + 'noInstrRun'
+  
+  return experiment_dir + '-' + flavor + '-' + str(iter_nr)
+
+
 def build_cube_file_path_for_db(exp_dir, flavor, iterationNumber, isNoInstr):
+  return get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
+
   if isNoInstr:
     return exp_dir + '-' + flavor + '-' + str(iterationNumber) + 'noInstrRun'
   else:
@@ -277,6 +287,10 @@ def build_cube_file_path_for_db(exp_dir, flavor, iterationNumber, isNoInstr):
 
 
 def set_scorep_exp_dir(exp_dir, flavor, iterationNumber, isNoInstr):
+  effective_dir = get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
+  util.set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
+  return
+
   if isNoInstr == False:
     util.set_env('SCOREP_EXPERIMENT_DIRECTORY', exp_dir + '-' + flavor + '-' + str(iterationNumber))
   else:
