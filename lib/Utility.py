@@ -44,6 +44,12 @@ def remove(path):
       shutil.rmtree(os.path.join(root, d))
 
 
+def remove_file(path):
+  if check_file(path):
+    os.remove(path)
+    return
+
+
 def append_scorep_footer(filename):
   with open(filename, "a") as myfile:
     myfile.write("SCOREP_REGION_NAMES_END")
@@ -94,9 +100,9 @@ def load_functor(directory, module):
   return functor
 
 
-def timed_invocation(command):
+def timed_invocation(command, stderr_fd):
     t1 = os.times()  # start time
-    out = subprocess.check_output(command, shell=True)
+    out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
     t2 = os.times()  # end time
     cutime = t2[2] - t1[2]
     cstime = t2[3] - t1[3]
@@ -110,11 +116,15 @@ def shell(command, silent=True, dry=False, time_invoc=False):
     return ''
 
   try:
+    stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
+    stderr_fd = open(stderr_fn, 'w')
+
     if time_invoc:
-      return timed_invocation(command)
+      out, rt = timed_invocation(command, stderr_fd)
+      return out, rt
     
     else:
-      out = subprocess.check_output(command, shell=True)
+      out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
       return out, .0
 
   except subprocess.CalledProcessError as e:
@@ -124,6 +134,11 @@ def shell(command, silent=True, dry=False, time_invoc=False):
 
     log.get_logger().log('Utility.shell: Caught Exception ' + e.output, level='error')
     raise Exception('Running command ' + command + ' did not succeed')
+
+  finally:
+    stderr_fd.close()
+    remove_file(stderr_fn)
+    log.get_logger().log('Cleaning up temp files for subprocess communication.', level='debug')
 
 
 def shell_for_submitter(command, silent=True, dry=False):
