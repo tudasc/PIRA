@@ -2,6 +2,8 @@ import lib.Runner as runner
 import argparse
 from lib.db import database as db
 import lib.tables as tables
+import lib.Logging as log
+
 '''
 trying DB
 
@@ -27,3 +29,6 @@ parser.add_argument('config', help='The configuration json file.')
 args = parser.parse_args()
 
 runner.run(args.config)
+
+log.get_logger().log('End of process')
+log.get_logger().show_perf()

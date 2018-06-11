@@ -52,6 +52,10 @@ class Logger:
     if level == 'perf':
       self.perf_tape.append('[PERF]' + str(msg))
 
+  def show_perf(self):
+    for p in self.perf_tape:
+      print(p)
+
   def dump_tape(self, out_file=None, cli=False):
     if out_file is not None:
       of = open(str(out_file), 'w')
