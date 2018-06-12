@@ -162,7 +162,7 @@ def run(path_to_config):
     '''
         Initialize Database
     '''
-    database = db("BenchPressDB")
+    database = db("BenchPressDB.sqlite")
     cur = database.create_cursor(database.conn)
     '''
        Create tables if not exists
@@ -235,7 +235,7 @@ def run(path_to_config):
         database.insert_data_application(cur, application)
 
       for item in configuration.builds[build]['items']:
-        log.get_logger().print_info('Running for item ' + str(item))
+        log.get_logger().log('Running for item ' + str(item))
 
         if configuration.builds[build]['flavours']:
           log.get_logger().log('Using locally defined flavors', level='debug')
