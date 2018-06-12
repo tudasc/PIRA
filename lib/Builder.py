@@ -1,5 +1,5 @@
-import Utility as util
-import Logging as logging
+import lib.Utility as util
+import lib.Logging as logging
 
 
 class Builder:
@@ -45,12 +45,12 @@ class Builder:
     benchmark_name = self.config.get_benchmark_name(benchmark)
     clean_functor = util.load_functor(
         self.config.get_flavor_func(build, benchmark),
-        util.build_clean_functor_filename(benchmark_name[0], flavor))
+        util.build_clean_functor_filename(benchmark_name, flavor))
 
     # build_builder_functor_filename(is_for_db, is_no_instr,...)
     build_functor = util.load_functor(
         self.config.get_flavor_func(build, benchmark),
-        util.build_builder_functor_filename(False, self.build_no_instr, benchmark_name[0], flavor))
+        util.build_builder_functor_filename(False, self.build_no_instr, benchmark_name, flavor))
 
     if build_functor.get_method()['active']:
       build_functor.active(benchmark, **kwargs)
@@ -68,13 +68,12 @@ class Builder:
       except Exception as e:
         logging.get_logger().log(e.message, level='warn')
 
-
   def generate_run_configurations(self):
     """
         Generates scripts which are to be submitted to the batch system.
         These are stored in the format ((Benchmark, Flavor), Script_File_Name).
         :return: List of script files
-        """
+    """
     run_configs = []
     kwargs = {'util': util}
     for flavor in self.config.get_flavors():

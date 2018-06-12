@@ -1,5 +1,5 @@
-import Utility as util
-import Logging as logging
+import lib.Utility as util
+import lib.Logging as logging
 
 
 class Analyzer:
@@ -13,7 +13,7 @@ class Analyzer:
 
   def analyse(self, flavor, build, benchmark, kwargs, config, iterationNumber):
     benchmark_name = config.get_benchmark_name(benchmark)
-    anal_func_filename = util.build_analyse_functor_filename(False, benchmark_name[0], flavor)
+    anal_func_filename = util.build_analyse_functor_filename(False, benchmark_name, flavor)
     logging.get_logger().log('Loading analysis functor at: ' + anal_func_filename)
 
     analyse_functor = util.load_functor(config.get_analyse_func(build, benchmark), anal_func_filename)
@@ -23,24 +23,27 @@ class Analyzer:
     else:
       logging.get_logger().log('Using passive mode')
       try:
-        command = analyse_functor.passive(benchmark, **kwargs)
         exp_dir = config.get_analyser_exp_dir(build, benchmark)
         analyser_dir = config.get_analyser_dir(build, benchmark)
         isdirectory_good = util.check_provided_directory(analyser_dir)
+        # XXX We need to identify a 'needed set of variables' that can be relied on begin passed
+        kwargs = {'analyzer_dir': analyser_dir}
+        command = analyse_functor.passive(benchmark, **kwargs)
+
         logging.get_logger().log('Analyzer with command: ' + command)
         logging.get_logger().log('Checking ' + analyser_dir + ' | is good: ' + str(isdirectory_good))
         if isdirectory_good:
           util.change_cwd(analyser_dir)
-          instr_files = util.build_instr_file_path(analyser_dir, flavor, benchmark_name[0])
-          logging.get_logger().log('The generated instrumentation file is: ' + instr_files)
-          prev_instr_file = util.build_previous_instr_file_path(analyser_dir, flavor, benchmark_name[0])
+          instr_files = util.build_instr_file_path(analyser_dir, flavor, benchmark_name)
+          logging.get_logger().log('The built instrumentation file path is: ' + instr_files)
+          prev_instr_file = util.build_previous_instr_file_path(analyser_dir, flavor, benchmark_name)
 
         if util.check_file(instr_files):
           util.rename(instr_files, prev_instr_file)
-          util.run_analyser_command(command, analyser_dir, flavor, benchmark_name[0], exp_dir,
+          util.run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir,
                                     iterationNumber)
         else:
-          util.run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name[0])
+          util.run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name)
         self.tear_down(exp_dir)
 
       except Exception as e:

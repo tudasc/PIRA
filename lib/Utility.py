@@ -1,9 +1,8 @@
 import sys
 import os
 import subprocess
-import Logging as log
+import lib.Logging as log
 import filecmp
-import Utility as util
 from random import choice
 from string import ascii_uppercase
 from timeit import timeit
@@ -13,9 +12,9 @@ queued_job_filename = './queued_job.tmp'
 
 
 def read_file(file_name):
-  f = file(file_name)
-  content = f.read()
-  f.close()
+  with open(file_name) as f:
+    content = f.read()
+
   return content
 
 
@@ -101,13 +100,13 @@ def load_functor(directory, module):
 
 
 def timed_invocation(command, stderr_fd):
-    t1 = os.times()  # start time
-    out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
-    t2 = os.times()  # end time
-    cutime = t2[2] - t1[2]
-    cstime = t2[3] - t1[3]
-    runtime = cutime + cstime
-    return out, runtime
+  t1 = os.times()  # start time
+  out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
+  t2 = os.times()  # end time
+  cutime = t2[2] - t1[2]
+  cstime = t2[3] - t1[3]
+  runtime = cutime + cstime
+  return out, runtime
 
 
 def shell(command, silent=True, dry=False, time_invoc=False):
@@ -122,7 +121,7 @@ def shell(command, silent=True, dry=False, time_invoc=False):
     if time_invoc:
       out, rt = timed_invocation(command, stderr_fd)
       return out, rt
-    
+
     else:
       out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
       return out, .0
@@ -183,35 +182,39 @@ def json_to_canonic(json_elem):
 
 
 def remove_from_pgoe_out_dir(directory):
-  util.remove(directory + "/" + "out")
+  remove(directory + "/" + "out")
+
+
+def concat_a_b_with_sep(a, b, sep):
+  return a + sep + b
 
 
 def build_runner_functor_filename(IsForDB, benchmark_name, flavor):
   if IsForDB:
-    return '/runner_' + benchmark_name + flavor
+    return '/runner_' + concat_a_b_with_sep(benchmark_name, flavor, '')
   else:
-    return 'runner_' + benchmark_name + '_' + flavor
+    return 'runner_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
 def build_builder_functor_filename(IsForDB, IsNoInstr, benchmark_name, flavor):
   if IsForDB:
-    return '/' + benchmark_name + flavor
+    return '/' + concat_a_b_with_sep(benchmark_name, flavor, '')
   else:
     if IsNoInstr:
-      return 'no_instr_' + benchmark_name + '_' + flavor
+      return 'no_instr_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
     else:
-      return benchmark_name + '_' + flavor
+      return concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
 def build_clean_functor_filename(benchmark_name, flavor):
-  return 'clean_' + benchmark_name + '_' + flavor
+  return 'clean_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
 def build_analyse_functor_filename(IsForDB, benchmark_name, flavor):
   if IsForDB:
-    return '/analyse_' + benchmark_name + flavor
+    return '/analyse_' + concat_a_b_with_sep(benchmark_name, flavor, '')
   else:
-    return 'analyse_' + benchmark_name + '_' + flavor
+    return 'analyse_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
 def build_instr_file_path(analyser_dir, flavor, benchmark_name):
@@ -222,39 +225,50 @@ def build_previous_instr_file_path(analyser_dir, flavor, benchmark_name):
   return analyser_dir + "/" + 'out/instrumented-' + flavor + '-' + benchmark_name + 'previous.txt'
 
 
+def get_ipcg_file_name(base_dir, b_name, flavor):
+  return base_dir + "/" + flavor + '-' + b_name + '.ipcg'
+
+
 def run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber):
-  sh_cmd = command + ' ' + analyser_dir + "/" + flavor + '-' + benchmark_name + '.ipcg ' + exp_dir + '-' + flavor + '-' + str(
-      iterationNumber) + '/' + flavor + '-' + benchmark_name + '.cubex'
+  ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
+  cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber, False)
+  cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
+
+  sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
   log.get_logger().log('  INSTR: Run cmd: ' + sh_cmd)
-  util.shell(sh_cmd)
+  shell(sh_cmd)
 
 
 def run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name):
-  sh_cmd = command + ' ' + analyser_dir + "/" + flavor + '-' + benchmark_name + '.ipcg '
+  ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
+  sh_cmd = command + ' ' + ipcg_file
   log.get_logger().log('  NO INSTR: Run cmd: ' + sh_cmd)
-  util.shell(sh_cmd)
+  shell(sh_cmd)
 
 
 def get_cube_file_path(experiment_dir, flavor, iter_nr, is_no_instr):
-  if is_no_instr:
-    return experiment_dir + '-' + flavor + '-' + str(iter_nr) + 'noInstrRun'
-
   return experiment_dir + '-' + flavor + '-' + str(iter_nr)
 
 
 def build_cube_file_path_for_db(exp_dir, flavor, iterationNumber, isNoInstr):
-  return get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
+  fp = get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
+  if check_file(fp):
+    return fp
 
+  raise Exception('Built file path to Cube not valid. fp: ' + fp)
 
 def set_scorep_exp_dir(exp_dir, flavor, iterationNumber, isNoInstr):
   effective_dir = get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
-  util.set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
+  if not check_file(effective_dir):
+    raise Exception('Score-p experiment directory invalid.')
+
+  set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
   return
 
 
 def set_overwrite_scorep_exp_dir():
-  util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'True')
+  set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'True')
 
 
 def set_scorep_profiling_basename(flavor, benchmark_name):
-  util.set_env('SCOREP_PROFILING_BASE_NAME', flavor + '-' + benchmark_name)
+  set_env('SCOREP_PROFILING_BASE_NAME', flavor + '-' + benchmark_name)

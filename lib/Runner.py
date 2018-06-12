@@ -1,13 +1,13 @@
-from ConfigLoaderNew import ConfigurationLoader as Conf
-from Builder import Builder as B
-from Analyzer import Analyzer as A
-import Logging as log
-import Utility as util
-import Logging as logging
+from lib.ConfigLoaderNew import ConfigurationLoader as Conf
+from lib.Builder import Builder as B
+from lib.Analyzer import Analyzer as A
+import lib.Logging as log
+import lib.Utility as util
+import lib.Logging as logging
 from lib.db import database as db
 import lib.tables as tables
 
-import BatchSystemHelper as bat_sys
+import lib.BatchSystemHelper as bat_sys
 
 # Contants to manage slurm submitter tmp file read
 JOBID = 0
@@ -27,7 +27,7 @@ def runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, 
   is_for_db = False
   build_functor = util.load_functor(
       config.get_runner_func(build, benchmark),
-      util.build_runner_functor_filename(is_for_db, benchmark_name[0], flavor))
+      util.build_runner_functor_filename(is_for_db, benchmark_name, flavor))
 
   if build_functor.get_method()['active']:
     kwargs['util'] = util
@@ -39,7 +39,7 @@ def runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, 
       util.change_cwd(benchmark)
       exp_dir = config.get_analyser_exp_dir(build, benchmark)
       log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
-      
+
       DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
                                                         is_no_instrumentation_run)
       util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
@@ -51,12 +51,12 @@ def runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, 
 
       else:
         DBIntVal = 1
-        util.set_scorep_profiling_basename(flavor, benchmark_name[0])
+        util.set_scorep_profiling_basename(flavor, benchmark_name)
 
       # Run the actual command
       out, runtime = util.shell(command, time_invoc=True)
       # Insert into DB
-      experiment_data = (util.generate_random_string(), benchmark_name[0], iteration_number, DBIntVal,
+      experiment_data = (util.generate_random_string(), benchmark_name, iteration_number, DBIntVal,
                            DBCubeFilePath, str(runtime), itemID)
       database.insert_data_experiment(cur, experiment_data)
 
@@ -70,7 +70,7 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
               database, cur):
   benchmark_name = config.get_benchmark_name(benchmark)
   submitter_functor = util.load_functor(
-      config.get_runner_func(build, benchmark), 'slurm_submitter_' + benchmark_name[0] + '_' + flavor)
+      config.get_runner_func(build, benchmark), 'slurm_submitter_' + benchmark_name + '_' + flavor)
   exp_dir = config.get_analyser_exp_dir(build, benchmark)
   DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
                                                       is_no_instrumentation_run)
@@ -82,13 +82,13 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
 
   else:
     DBIntVal = 1
-    util.set_scorep_profiling_basename(flavor, benchmark_name[0])
+    util.set_scorep_profiling_basename(flavor, benchmark_name)
 
   tup = [(flavor, config.get_batch_script_func(build, benchmark))]
   kwargs = {"util": util, "runs_per_job": 1, "dependent": 0}
   job_id = submitter_functor.dispatch(tup, **kwargs)
   # TODO: Create new BatchSystemJob instance instead
-  bat_sys.create_batch_queued_temp_file(job_id, benchmark_name[0], iteration_number, DBIntVal, DBCubeFilePath,
+  bat_sys.create_batch_queued_temp_file(job_id, benchmark_name, iteration_number, DBIntVal, DBCubeFilePath,
                                      itemID, build, benchmark, flavor)
   log.get_logger().log('Submitted job. Exiting. Re-invoke when job is finished.')
   exit(0)
@@ -122,10 +122,10 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur):
       # Run - this binary does not contain any instrumentation.
       for y in range(0, 5):
         accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
-      
+
       vanilla_avg_rt = accu_runtime / 5.0
       log.get_logger().log('Vanilla Avg: ' + str(vanilla_avg_rt), level='perf')
-     
+
       analyser_dir = configuration.get_analyser_dir(build, item)
       util.remove_from_pgoe_out_dir(analyser_dir)
 
@@ -248,17 +248,18 @@ def run(path_to_config):
 
             # Insert into DB the benchmark data
             benchmark_name = configuration.get_benchmark_name(item)
+            log.get_logger().log('benchmark_name: ' + benchmark_name, level='debug')
             itemID = util.generate_random_string()
             analyse_functor = configuration.get_analyse_func(
-                build, item) + util.build_analyse_functor_filename(True, benchmark_name[0], flavor)
+                build, item) + util.build_analyse_functor_filename(True, benchmark_name, flavor)
             build_functor = configuration.get_flavor_func(build, item) + util.build_builder_functor_filename(
-                True, False, benchmark_name[0], flavor)
+                True, False, benchmark_name, flavor)
             run_functor = configuration.get_runner_func(build, item) + util.build_runner_functor_filename(
-                True, benchmark_name[0], flavor)
+                True, benchmark_name, flavor)
             submitter_functor = configuration.get_runner_func(
-                build, item) + '/slurm_submitter_' + benchmark_name[0] + flavor
+                build, item) + '/slurm_submitter_' + benchmark_name + flavor
             exp_dir = configuration.get_analyser_exp_dir(build, item)
-            itemDBData = (itemID, benchmark_name[0], analyse_functor, build_functor, '', run_functor,
+            itemDBData = (itemID, benchmark_name, analyse_functor, build_functor, '', run_functor,
                           submitter_functor, exp_dir, build)
             database.insert_data_items(cur, itemDBData)
 
@@ -270,7 +271,7 @@ def run(path_to_config):
             run_setup(configuration, build, item, flavor, itemID, database, cur)
     log.get_logger().dump_tape('/home/j_lehr/all_repos/tape.log')
 
-  except StandardError as se:
+  except RuntimeError as se:
     log.get_logger().log(
         'Runner.run caught exception: ' + se.__class__.__name__ + ' Message: ' + se.message, level='warn')
     log.get_logger().dump_tape('/home/j_lehr/all_repos/tape.log')

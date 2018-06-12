@@ -1,5 +1,5 @@
-import Utility as util
-import Logging as log
+import lib.Utility as util
+import lib.Logging as log
 import json
 
 #Some Contants
@@ -113,7 +113,7 @@ class ConfigurationNew:
     return self.items[build][item]['batch_script']
 
   def get_benchmark_name(self, benchmark):
-    return benchmark.split('/')[-1:]
+    return benchmark.split('/')[-1:][0]
 
   def initialize_stopping_iterator(self):
     for build in self.builds:
