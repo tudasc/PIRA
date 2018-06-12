@@ -3,7 +3,7 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-  return './bin/test_run-xhpcg --nx 104 --ny 104 --nz 104'
+  return './bin/test_run-xhpcg --nx 14 --ny 14 --nz 14'
 
 
 def active(benchmark, **kwargs):
