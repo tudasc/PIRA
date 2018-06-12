@@ -4,8 +4,9 @@ class Logger:
     """
 
   def __init__(self):
-    self.state = {'debug': False, 'info': False, 'warn': False, 'error': True}
+    self.state = {'debug': False, 'info': False, 'warn': False, 'error': True, 'perf': True}
     self.tape = []
+    self.perf_tape = []
 
   def log(self, msg, level='info'):
     if self.state[level]:
@@ -48,10 +49,24 @@ class Logger:
   def record(self, level, msg):
     msg_str = '[' + level + '] ' + str(msg)
     self.tape.append(msg_str)
+    if level == 'perf':
+      self.perf_tape.append('[PERF]' + str(msg))
 
-  def dump_tape(self):
-    for msg in self.tape:
-      print(msg)
+  def show_perf(self):
+    for p in self.perf_tape:
+      print(p)
+
+  def dump_tape(self, out_file=None, cli=False):
+    if out_file is not None:
+      of = open(str(out_file), 'w')
+      for m in self.tape:
+        of.write(m)
+        of.write('\n')
+      of.close()
+
+    if cli:
+      for msg in self.tape:
+        print(msg)
 
 
 logger = Logger()

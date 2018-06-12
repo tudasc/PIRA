@@ -3,7 +3,7 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-  return 'make arch=Linux_Serial CXX=' + kwargs['compiler']
+  return 'make -j16 arch=Linux_Serial CXX=' + kwargs['compiler']
 
 
 def active(benchmark, **kwargs):

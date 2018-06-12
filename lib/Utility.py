@@ -44,6 +44,12 @@ def remove(path):
       shutil.rmtree(os.path.join(root, d))
 
 
+def remove_file(path):
+  if check_file(path):
+    os.remove(path)
+    return
+
+
 def append_scorep_footer(filename):
   with open(filename, "a") as myfile:
     myfile.write("SCOREP_REGION_NAMES_END")
@@ -64,6 +70,7 @@ def diff_inst_files(file1, file2):
 
 
 def set_env(env_var, val):
+  log.get_logger().log('Setting ' + env_var + ' to ' + str(val), level='debug')
   os.environ[env_var] = val
 
 
@@ -80,49 +87,58 @@ def get_cwd():
 
 
 def change_cwd(path):
-  log.get_logger().log('cd\'ing to ' + path)
+  log.get_logger().log('cd\'ing to ' + path, level='debug')
   os.chdir(path)
 
 
-def load_functor(dir, module):
-  append_to_sys_path(dir)
-  #print sys.path
+def load_functor(directory, module):
+  log.get_logger().log('Appending ' + directory + ' to system path.', level='debug')
+  append_to_sys_path(directory)
   # Adding 'fromList' argument loads exactly the module.
   functor = __import__(module)
-  remove_from_sys_path(dir)
-  #print sys.path
+  remove_from_sys_path(directory)
   return functor
 
 
-def unload_functo(functor, module):
-  del functor
-  sys.modules.pop(module)
-
-
-def shell(command, silent=True, dry=False):
-  if dry:
-    log.get_logger().log('SHELL CALL: ' + command, level='debug')
-    return ''
-
-  try:
-
+def timed_invocation(command, stderr_fd):
     t1 = os.times()  # start time
-    #out = timeit(stmt = "subprocess.check_output("+command+", shell=True)", number = 1)
-    out = subprocess.check_output(command, shell=True)
+    out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
     t2 = os.times()  # end time
     cutime = t2[2] - t1[2]
     cstime = t2[3] - t1[3]
-    runTime = cutime + cstime
-    #print runTime
-    return runTime
+    runtime = cutime + cstime
+    return out, runtime
+
+
+def shell(command, silent=True, dry=False, time_invoc=False):
+  if dry:
+    log.get_logger().log('DRY RUN SHELL CALL: ' + command, level='debug')
+    return ''
+
+  try:
+    stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
+    stderr_fd = open(stderr_fn, 'w')
+
+    if time_invoc:
+      out, rt = timed_invocation(command, stderr_fd)
+      return out, rt
+    
+    else:
+      out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
+      return out, .0
 
   except subprocess.CalledProcessError as e:
     if e.returncode == 1:
       if command.find('grep '):
         return ''
 
-    log.get_logger().log('Utility.shell: Caught Exception ' + e.message, level='error')
+    log.get_logger().log('Utility.shell: Caught Exception ' + e.output, level='error')
     raise Exception('Running command ' + command + ' did not succeed')
+
+  finally:
+    stderr_fd.close()
+    remove_file(stderr_fn)
+    log.get_logger().log('Cleaning up temp files for subprocess communication.', level='debug')
 
 
 def shell_for_submitter(command, silent=True, dry=False):
@@ -166,58 +182,8 @@ def json_to_canonic(json_elem):
     return str(json_elem)
 
 
-def create_batch_queued_temp_file(job_id, benchmark_name, iterationNumber, DBIntVal, DBCubeFilePath, itemID,
-                                  build, benchmark, flavor):
-  #filename = "./queued_job.tmp"
-  try:
-    with open(queued_job_filename, "w") as myfile:
-      myfile.write(str(job_id) + '\n')
-      myfile.write(benchmark_name + '\n')
-      myfile.write(str(iterationNumber) + '\n')
-      myfile.write(str(DBIntVal) + '\n')
-      myfile.write(DBCubeFilePath + '\n')
-      myfile.write(itemID + '\n')
-      myfile.write(build + '\n')
-      myfile.write(benchmark + '\n')
-      myfile.write(flavor + '\n')
-      myfile.close()
-
-  except:
-    log.get_logger().log('File Error!', level='error')
-    exit(1)
-
-
-def read_batch_queued_job():
-  #filename = "./queued_job.tmp"
-  if check_file(queued_job_filename):
-    lines = [line.rstrip('\n') for line in open(queued_job_filename)]
-    return lines
-  else:
-    log.get_logger().log('File does not exists', level='error')
-    exit(1)
-
-
-def check_queued_job():
-  if check_file(queued_job_filename):
-    return True
-  else:
-    return False
-
-
-def get_runtime_of_submitted_job(job_id):
-  #with open('stderr.txt.runner.'+job_id) as f:
-  first_line = open('stderr.txt.runner.' + job_id).readline().rstrip()
-  values = first_line.split("\t")
-  print values[1]
-  return values[1]
-
-
-def remove_queued_job_tmp_file():
-  util.remove(queued_job_filename)
-
-
-def remove_from_pgoe_out_dir(dir):
-  util.remove(dir + "/" + "out")
+def remove_from_pgoe_out_dir(directory):
+  util.remove(directory + "/" + "out")
 
 
 def build_runner_functor_filename(IsForDB, benchmark_name, flavor):
@@ -259,33 +225,35 @@ def build_previous_instr_file_path(analyser_dir, flavor, benchmark_name):
 def run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber):
   sh_cmd = command + ' ' + analyser_dir + "/" + flavor + '-' + benchmark_name + '.ipcg ' + exp_dir + '-' + flavor + '-' + str(
       iterationNumber) + '/' + flavor + '-' + benchmark_name + '.cubex'
-  log.get_logger().log('   INSTR: Run cmd: ' + sh_cmd)
+  log.get_logger().log('  INSTR: Run cmd: ' + sh_cmd)
   util.shell(sh_cmd)
 
 
 def run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name):
   sh_cmd = command + ' ' + analyser_dir + "/" + flavor + '-' + benchmark_name + '.ipcg '
-  log.get_logger().log('NO INSTR: Run cmd: ' + sh_cmd)
+  log.get_logger().log('  NO INSTR: Run cmd: ' + sh_cmd)
   util.shell(sh_cmd)
 
 
+def get_cube_file_path(experiment_dir, flavor, iter_nr, is_no_instr):
+  if is_no_instr:
+    return experiment_dir + '-' + flavor + '-' + str(iter_nr) + 'noInstrRun'
+
+  return experiment_dir + '-' + flavor + '-' + str(iter_nr)
+
+
 def build_cube_file_path_for_db(exp_dir, flavor, iterationNumber, isNoInstr):
-  if isNoInstr:
-    return exp_dir + '-' + flavor + '-' + str(iterationNumber) + 'noInstrRun'
-  else:
-    return exp_dir + '-' + flavor + '-' + str(iterationNumber)
+  return get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
 
 
 def set_scorep_exp_dir(exp_dir, flavor, iterationNumber, isNoInstr):
-  if isNoInstr == False:
-    util.set_env('SCOREP_EXPERIMENT_DIRECTORY', exp_dir + '-' + flavor + '-' + str(iterationNumber))
-  else:
-    util.set_env('SCOREP_EXPERIMENT_DIRECTORY',
-                 exp_dir + '-' + flavor + '-' + str(iterationNumber) + 'noInstrRun')
+  effective_dir = get_cube_file_path(exp_dir, flavor, iterationNumber, isNoInstr)
+  util.set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
+  return
 
 
 def set_overwrite_scorep_exp_dir():
-  util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'true')
+  util.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'True')
 
 
 def set_scorep_profiling_basename(flavor, benchmark_name):

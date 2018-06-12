@@ -7,11 +7,11 @@ class Builder:
     Class which builds a benchmark and the run configuration.
     """
 
-  def __init__(self, dir_key, configuration):
+  def __init__(self, dir_key, configuration, no_instrumentation=False):
     self.directory = dir_key
     self.config = configuration
     self.old_cwd = ''
-    self.build_no_instr = False
+    self.build_no_instr = no_instrumentation
     self.error = None
 
   def build(self, config, build, benchmark, flavor):
@@ -43,38 +43,31 @@ class Builder:
 
   def build_flavours(self, flavor, build, benchmark, kwargs):
     benchmark_name = self.config.get_benchmark_name(benchmark)
-    if self.build_no_instr:
-      clean_functor = util.load_functor(
-          self.config.get_flavor_func(build, benchmark),
-          util.build_clean_functor_filename(benchmark_name[0], flavor))
-      build_functor = util.load_functor(
-          self.config.get_flavor_func(build, benchmark),
-          util.build_builder_functor_filename(False, True, benchmark_name[0], flavor))
+    clean_functor = util.load_functor(
+        self.config.get_flavor_func(build, benchmark),
+        util.build_clean_functor_filename(benchmark_name[0], flavor))
 
-    else:
-      build_functor = util.load_functor(
-          self.config.get_flavor_func(build, benchmark),
-          util.build_builder_functor_filename(False, False, benchmark_name[0], flavor))
-      clean_functor = util.load_functor(
-          self.config.get_flavor_func(build, benchmark),
-          util.build_clean_functor_filename(benchmark_name[0], flavor))
+    # build_builder_functor_filename(is_for_db, is_no_instr,...)
+    build_functor = util.load_functor(
+        self.config.get_flavor_func(build, benchmark),
+        util.build_builder_functor_filename(False, self.build_no_instr, benchmark_name[0], flavor))
 
     if build_functor.get_method()['active']:
       build_functor.active(benchmark, **kwargs)
 
     else:
       try:
-        commandbuild = build_functor.passive(benchmark, **kwargs)
-        logging.get_logger().log('Building with command: ' + commandbuild)
-        commandclean = clean_functor.passive(benchmark, **kwargs)
+        command_build = build_functor.passive(benchmark, **kwargs)
+        command_clean = clean_functor.passive(benchmark, **kwargs)
         util.change_cwd(benchmark)
-        util.shell(commandclean)
-        #util.unload_functo(clean_functor,'clean_'+flavor)
-        util.shell(commandbuild)
-        #util.unload_functo(build_functor,flavor)
+        logging.get_logger().log('Making clean in ' + benchmark, level='debug')
+        util.shell(command_clean)
+        logging.get_logger().log('Building with command: ' + command_build, level='debug')
+        util.shell(command_build)
 
       except Exception as e:
         logging.get_logger().log(e.message, level='warn')
+
 
   def generate_run_configurations(self):
     """
