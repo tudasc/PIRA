@@ -1,6 +1,7 @@
 import lib.Utility as util
 import lib.Logging as log
 import json
+import typing
 
 #Some Contants
 
@@ -18,7 +19,7 @@ class ConfigurationNew:
     self.builds = {}
     self.items = {}
     self.prefix = []
-    self.flavors = []
+    self.flavors = {}
     self.instrument_analysis = []
     self.builders = []
     self.args = []
@@ -47,18 +48,16 @@ class ConfigurationNew:
   def set_flavours(self, flavours, dir):
     self.builds[dir].update({'flavours': flavours})
 
-  def initialize_list(self, length):
-    self.builds = [[''] * NO_ELEMENTS_BUILD for i in range(length)]
-    self.items = [[''] * NO_ELEMENTS_ITEMS for i in range(length)]
-
   def initialize_build_dict(self, dir):
     for dirs in dir:
       self.builds.update({dirs: {}})
       self.items.update({dirs: {}})
+      self.flavors.update({dirs: {}})
 
   def initialize_item_dict(self, dir, items):
     for item in items:
       self.items[dir].update({item: {}})
+      self.flavors[dir].update({item: {}})
 
   def set_item_instrument_analysis(self, inst_analysis, dir, item):
     self.items[dir][item].update({'instrument_analysis': inst_analysis})
@@ -78,41 +77,66 @@ class ConfigurationNew:
   def set_item_batch_script(self, batch_script, dir, item):
     self.items[dir][item].update({'batch_script': batch_script})
 
-  def get_builds(self):
+  def set_item_flavor(self, flavors, dir, item):
+    self.flavors[dir][item].update({'flavors': flavors})
+
+  def get_builds(self) -> typing.List[str]:
     return self.builds.keys()
 
-  def get_flavor_func(self, build, item):
+  def get_items(self, d) -> typing.List[str]:
+    return self.items[d].keys()
+
+  def get_flavors(self, b, it) -> typing.List[str]:
+    return self.flavors[b][it]['flavors']
+
+  def has_local_flavors(self, b, it):
+    return len(self.flavors[b][it]['flavors']) > 0
+
+  def get_args(self, b, it) -> typing.List[str]:
+    return self.items[b][it]['args']
+
+  def get_cleaner_path(self, b :str, i: str) -> str:
+    return self.items[b][i]['builders']
+
+  def get_builder_path(self, b:str, i:str) ->str:
+    return self.items[b][i]['builders']
+
+  def get_analyzer_path(self, b:str, i:str) -> str:
+    return self.items[b][i]['instrument_analysis'][0]
+
+  def get_runner_path(self, b:str, i:str) -> str:
+    return self.items[b][i]['runner']
+
+  # FIXME Rename some more reasonable // get_builder_path
+  def get_flavor_func(self, build, item) -> str:
+    log.get_logger().log('Using a deprecated function: get_flavor_func', level='warn')
     return self.items[build][item]['builders']
 
-  def get_runner_func(self, build, item):
+  def get_runner_func(self, build, item) -> str:
     return self.items[build][item]['runner']
 
-  def get_analyse_func(self, build, item):
-    #print self.items[build][item]['instrument_analysis']
+  def get_analyse_func(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][0]
 
-  def get_analyser_exp_dir(self, build, item):
+  def get_analyser_exp_dir(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][1]
 
-  def get_analyser_dir(self, build, item):
+  def get_analyser_dir(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][2]
 
-  def get_analyse_slurm_func(self, build, item):
+  def get_analyse_slurm_func(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][3]
 
-  def get_is_submitter(self, build, item):
-    if (self.items[build][item]['submitter'] != ''):
-      return 1
-    else:
-      return 0
+  def is_submitter(self, build: str, item: str) -> bool:
+    return self.items[build][item]['submitter'] != ''
 
-  def get_submitter_func(self, build, item):
+  def get_submitter_func(self, build, item) -> str:
     return self.items[build][item]['submitter']
 
-  def get_batch_script_func(self, build, item):
+  def get_batch_script_func(self, build, item) -> str:
     return self.items[build][item]['batch_script']
 
-  def get_benchmark_name(self, benchmark):
+  def get_benchmark_name(self, benchmark) -> str:
     return benchmark.split('/')[-1:][0]
 
   def initialize_stopping_iterator(self):
@@ -163,9 +187,6 @@ class ConfigurationLoader:
       conf.set_items(
           util.json_to_canonic(json_tree['description']['builds'][build_dirs]['items']), build_dirs)
       conf.initialize_item_dict(build_dirs, conf.builds[build_dirs]['items'])
-      conf.set_flavours(
-          util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors'][build_dirs]),
-          build_dirs)
       for items in conf.builds[build_dirs]['items']:
         conf.set_item_instrument_analysis(
             util.json_to_canonic(
@@ -191,4 +212,11 @@ class ConfigurationLoader:
             util.json_to_canonic(
                 json_tree['description']['builds'][build_dirs]['flavors']['run'][items]['batch_script']),
             build_dirs, items)
+        conf.set_flavours(
+            util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors'][items]),
+            build_dirs)
+        conf.set_item_flavor(
+            util.json_to_canonic(json_tree['description']['builds'][build_dirs]['flavors'][items]),
+            build_dirs, items)
+
     return conf

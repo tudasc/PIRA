@@ -3,7 +3,7 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-  return './CubeCallGraphTool'
+  return 'CubeCallGraphTool'
 
 
 def active(benchmark, **kwargs):

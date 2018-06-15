@@ -77,7 +77,7 @@ class Analyzer:
     kwargs = {'compiler': ''}
     # No need to analyse on the slurm. May be a future extension
     '''
-        if config.get_is_submitter(build,benchmark):
+        if config.is_submitter(build,benchmark):
             self.analyse_slurm(flavor,build,benchmark,kwargs,config)
         else:
         '''
