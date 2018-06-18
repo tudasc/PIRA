@@ -83,16 +83,16 @@ class ConfigurationNew:
   def get_builds(self) -> typing.List[str]:
     return self.builds.keys()
 
-  def get_items(self, d) -> typing.List[str]:
-    return self.items[d].keys()
+  def get_items(self, b: str) -> typing.List[str]:
+    return self.items[b].keys()
 
-  def get_flavors(self, b, it) -> typing.List[str]:
+  def get_flavors(self, b:str, it:str) -> typing.List[str]:
     return self.flavors[b][it]['flavors']
 
-  def has_local_flavors(self, b, it):
+  def has_local_flavors(self, b:str, it:str)-> bool:
     return len(self.flavors[b][it]['flavors']) > 0
 
-  def get_args(self, b, it) -> typing.List[str]:
+  def get_args(self, b:str, it:str) -> typing.List[str]:
     return self.items[b][it]['args']
 
   def get_cleaner_path(self, b :str, i: str) -> str:
@@ -108,11 +108,11 @@ class ConfigurationNew:
     return self.items[b][i]['runner']
 
   # FIXME Rename some more reasonable // get_builder_path
-  def get_flavor_func(self, build, item) -> str:
+  def get_flavor_func(self, build:str, item:str) -> str:
     log.get_logger().log('Using a deprecated function: get_flavor_func', level='warn')
     return self.items[build][item]['builders']
 
-  def get_runner_func(self, build, item) -> str:
+  def get_runner_func(self, build:str, item:str) -> str:
     return self.items[build][item]['runner']
 
   def get_analyse_func(self, build, item) -> str:
@@ -163,7 +163,7 @@ class ConfigurationLoader:
   def __init__(self):
     self.config_cache = {}
 
-  def load_conf(self, config_file):
+  def load_conf(self, config_file: str) -> ConfigurationNew:
     if config_file in self.config_cache:
       return self.config_cache[config_file]
 

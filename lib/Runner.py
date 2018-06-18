@@ -43,19 +43,11 @@ def runner(flavor: str, build: str, benchmark: str, kwargs, config: CLoader, is_
       scorep_helper.set_up(build, benchmark, flavor, iteration_number, not is_no_instrumentation_run)
       DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')
 
-      #exp_dir = config.get_analyser_exp_dir(build, benchmark)
-      #log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
-
-      #DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number)
-      #util.set_scorep_exp_dir(exp_dir, flavor, iteration_number)
-      #util.set_overwrite_scorep_exp_dir()
-
       # The integer is only a bool for the database to show if no_instrumentation is set.
       if is_no_instrumentation_run:
         DBIntVal = 0
       else:
         DBIntVal = 1
-      #  util.set_scorep_profiling_basename(flavor, benchmark_name)
 
       # Run the actual command
       command = run_functor.passive(benchmark, **kwargs)
@@ -158,6 +150,7 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
 def run(path_to_config) -> None:
   #log.get_logger().set_state('info')
   log.get_logger().log('Running with configuration: ' + str(path_to_config))
+  home_dir = util.get_cwd()
 
   try:
     config_loader = CLoader()
@@ -245,8 +238,6 @@ def run(path_to_config) -> None:
         log.get_logger().log('Running for item ' + str(item))
 
         if configuration.has_local_flavors(build, item):
-          log.get_logger().log('Using locally defined flavors', level='debug')
-
           for flavor in configuration.get_flavors(build, item):
             log.get_logger().log('Running for local flavor ' + flavor, level='debug')
 
@@ -281,10 +272,11 @@ def run(path_to_config) -> None:
         else:
           for flavor in configuration.global_flavors:
             run_setup(configuration, build, item, flavor, itemID, database, cur)
-    log.get_logger().dump_tape('/home/j_lehr/all_repos/tape.log')
+    util.change_cwd(home_dir)
+    log.get_logger().dump_tape('tape.log')
 
   except RuntimeError as rt_err:
     log.get_logger().log(
         'Runner.run caught exception: ' + rt_err.__class__.__name__ + ' Message: ' + str(rt_err), level='warn')
-    log.get_logger().dump_tape('/home/j_lehr/all_repos/tape.log')
+    log.get_logger().dump_tape('tape.log')
     log.get_logger().dump_tape()

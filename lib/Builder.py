@@ -45,6 +45,7 @@ class Builder:
     self.build_flavours(flavor, build, benchmark, kwargs)
 
   def build_flavours(self, flavor:str, build:str, benchmark:str, kwargs)->None:
+    # benchmark == item
     benchmark_name = self.config.get_benchmark_name(benchmark)
     f_man = fm.FunctorManager(self.config)
     clean_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'clean')
