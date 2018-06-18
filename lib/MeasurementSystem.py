@@ -20,6 +20,10 @@ class ScorepSystemHelper:
     raise KeyError()
 
   def set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
+    log.get_logger().log('ScorepSystemHelper.set_up: is_instr_run: ' + str(is_instr_run), level='debug')
+    if not is_instr_run:
+      return
+
     exp_dir = self.config.get_analyser_exp_dir(build, item)
     log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
     

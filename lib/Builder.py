@@ -54,7 +54,6 @@ class Builder:
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'basebuild')
     else:
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'build')
-    log.get_logger().log('The retrieved build functor: ' + str(build_functor), level='debug')
 
     if build_functor.get_method()['active']:
       build_functor.active(benchmark, **kwargs)

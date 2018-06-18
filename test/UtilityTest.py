@@ -4,7 +4,6 @@ sys.path.append('../')
 import unittest
 import typing
 
-
 import lib.Utility as u
 import lib.Logging as log
 
@@ -35,7 +34,7 @@ class TestUtility(unittest.TestCase):
 
     out, t = u.shell(command, time_invoc=True)
     self.assertEqual(out, 'Hello World!')
-    self.assertGreater(t, -1.0) # XXX This is already a little fishy!
+    self.assertGreater(t, -1.0)  # XXX This is already a little fishy!
 
   def test_shell_invoc(self):
     command = 'echo "Hello World!"'
@@ -43,7 +42,7 @@ class TestUtility(unittest.TestCase):
 
     out, t = u.shell(command, time_invoc=False)
     self.assertEqual(out, 'Hello World!')
-    self.assertEqual(t, -1.0) # XXX This is already a little fishy!
+    self.assertEqual(t, -1.0)  # XXX This is already a little fishy!
 
   def test_concat_a_b_with_sep_all_empty(self):
     a = ''
@@ -61,7 +60,7 @@ class TestUtility(unittest.TestCase):
 
     b = 'a'
     a = ''
-    r = u.concat_a_b_with_sep(a,b,sep)
+    r = u.concat_a_b_with_sep(a, b, sep)
     self.assertEqual(r, 'a')
 
   def test_concat_a_b_with_sep(self):
@@ -75,6 +74,41 @@ class TestUtility(unittest.TestCase):
     b = ''
     r = u.concat_a_b_with_sep(a, b, sep)
     self.assertEqual(r, 'aaaa_')
+
+  def test_is_valid_file(self):
+    file_name = '/work/scratch/j_lehr/temp1-a'
+    res = u.is_valid_file(file_name)
+    self.assertTrue(res)
+
+  def test_is_valid_file_cube_pattern(self):
+    file_name = '/work/scratch/j_lehr/_preparation_/hpcg-1-test_run-1'
+    res = u.is_valid_file(file_name)
+    self.assertTrue(res)
+
+  def test_is_valid_file_false(self):
+    file_name = '/work\\scratch/j_lehr/temp1-%a'
+    res = u.is_valid_file(file_name)
+    self.assertFalse(res)
+
+  def test_is_valid_file_long(self):
+    file_name = '/work/scratch/j_lehr/temp1-a/_asd-tes-12-_2-/asd/nul'
+    res = u.is_valid_file(file_name)
+    self.assertTrue(res)
+
+  def test_is_valid_file_dot(self):
+    file_name = '/work+tch/j.lehr/temp1-a'
+    res = u.is_valid_file(file_name)
+    self.assertFalse(res)
+
+  def test_is_valid_file_plus(self):
+    file_name = '/work+tch/j_lehr/temp1-a'
+    res = u.is_valid_file(file_name)
+    self.assertFalse(res)
+
+  def test_is_valid_file_whitespace(self):
+    file_name = '/work+tch/j_leh r/temp1-a'
+    res = u.is_valid_file(file_name)
+    self.assertFalse(res)
 
 
 if __name__ == '__main__':

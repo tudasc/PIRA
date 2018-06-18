@@ -41,7 +41,10 @@ def runner(flavor: str, build: str, benchmark: str, kwargs, config: CLoader, is_
       util.change_cwd(build)
       scorep_helper = ms.ScorepSystemHelper(config)
       scorep_helper.set_up(build, benchmark, flavor, iteration_number, not is_no_instrumentation_run)
-      DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')
+      try:
+        DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')
+      except KeyError:
+        DBCubeFilePath = ''
 
       # The integer is only a bool for the database to show if no_instrumentation is set.
       if is_no_instrumentation_run:
@@ -61,7 +64,8 @@ def runner(flavor: str, build: str, benchmark: str, kwargs, config: CLoader, is_
 
     except Exception as e:
       log.get_logger().log(str(e), level='warn')
-      return -1.0
+
+      raise Exception('Runner encountered problem.')
 
 
 def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
@@ -94,57 +98,67 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
 def run_detail(config, build, benchmark, flavor, is_no_instrumentation_run, iteration_number, itemID, database,
     cur) -> float:
   kwargs = {'compiler': ''}
-
-  if config.is_submitter(build, benchmark):
-    submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
+  try:
+    if config.is_submitter(build, benchmark):
+      submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
               database, cur)
-  else:
-    return runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
+    else:
+      return runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
            database, cur)
+
+  except Exception as e:
+    log.get_logger().log('Unwinding')
+    raise Exception('run_detail(' + str(build) + ', ' + str(benchmark) + ', ' + str(flavor) + ', ' +
+                    str(is_no_instrumentation_run) + ', ' + str(iteration_number) + ', ' + str(itemID) +
+                    ',...')
 
 
 def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None:
-  for x in range(0, 5):
-    no_instrumentation = True
-    # Only run the pgoe to get the functions name
-    if (configuration.is_first_iteration[build + item + flavor] == False):
-      configuration.is_first_iteration[build + item + flavor] = True
+  try:
+    for x in range(0, 5):
+      no_instrumentation = True
+      # Only run the pgoe to get the functions name
+      if (configuration.is_first_iteration[build + item + flavor] == False):
+        configuration.is_first_iteration[build + item + flavor] = True
 
-      # Build and run without any instrumentation
-      vanilla_build = B(build, configuration, no_instrumentation)
-      vanilla_build.build(configuration, build, item, flavor)
+        # Build and run without any instrumentation
+        vanilla_build = B(build, configuration, no_instrumentation)
+        vanilla_build.build(configuration, build, item, flavor)
 
-      log.get_logger().log('Running the baseline binary.')
-      accu_runtime = .0
-      # Baseline run. TODO Better evaluation of the obtained timings.
-      for y in range(0, 5):
-        accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
+        log.get_logger().log('Running the baseline binary.')
+        accu_runtime = .0
+        # Baseline run. TODO Better evaluation of the obtained timings.
+        for y in range(0, 5):
+          accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
 
-      vanilla_avg_rt = accu_runtime / 5.0
-      log.get_logger().log('Vanilla Avg: ' + str(vanilla_avg_rt), level='perf')
+        vanilla_avg_rt = accu_runtime / 5.0
+        log.get_logger().log('Vanilla Avg: ' + str(vanilla_avg_rt), level='perf')
 
-      analyser_dir = configuration.get_analyser_dir(build, item)
-      util.remove_from_pgoe_out_dir(analyser_dir)
+        analyser_dir = configuration.get_analyser_dir(build, item)
+        util.remove_from_pgoe_out_dir(analyser_dir)
 
+        analyser = A(configuration, build, item)
+        analyser.analyse_detail(configuration, build, item, flavor, y)
+
+      log.get_logger().log('Starting with the profiler run', level='debug')
+      # After baseline measurement is complete, do the instrumented build/run
+      no_instrumentation = False
+      builder = B(build, configuration, no_instrumentation)
+      builder.build(configuration, build, item, flavor)
+
+      #Run Phase
+      instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
+
+      # Compute overhead of instrumentation
+      ovh_percentage = instr_rt / vanilla_avg_rt
+      log.get_logger().log('Iteration ' + str(x) + ': ' + str(ovh_percentage), level='perf')
+
+      #Analysis Phase
       analyser = A(configuration, build, item)
-      analyser.analyse_detail(configuration, build, item, flavor, y)
+      analyser.analyse_detail(configuration, build, item, flavor, x)
 
-    log.get_logger().log('Starting with the profiler run', level='debug')
-    # After baseline measurement is complete, do the instrumented build/run
-    no_instrumentation = False
-    builder = B(build, configuration, no_instrumentation)
-    builder.build(configuration, build, item, flavor)
-
-    #Run Phase
-    instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
-
-    # Compute overhead of instrumentation
-    ovh_percentage = instr_rt / vanilla_avg_rt
-    log.get_logger().log('Iteration ' + str(x) + ': ' + str(ovh_percentage), level='perf')
-
-    #Analysis Phase
-    analyser = A(configuration, build, item)
-    analyser.analyse_detail(configuration, build, item, flavor, x)
+  except Exception as e:
+    raise RuntimeError()
 
 
 def run(path_to_config) -> None:
@@ -276,6 +290,7 @@ def run(path_to_config) -> None:
     log.get_logger().dump_tape('tape.log')
 
   except RuntimeError as rt_err:
+    util.change_cwd(home_dir)
     log.get_logger().log(
         'Runner.run caught exception: ' + rt_err.__class__.__name__ + ' Message: ' + str(rt_err), level='warn')
     log.get_logger().dump_tape('tape.log')

@@ -1,6 +1,7 @@
 import typing
 import lib.Utility as u
 from lib.ConfigLoaderNew import ConfigurationNew
+import lib.Logging as log
 
 
 class FunctorManager:
@@ -31,6 +32,8 @@ class FunctorManager:
       res = self.functor_cache[wnm]
     except KeyError:
       self.functor_cache[wnm] = u.load_functor(path, name)
+
+    log.get_logger().log('The retrieved ' + func + ' functor: ' + str(self.functor_cache[wnm]), level='debug')
 
     return self.functor_cache[wnm]
 

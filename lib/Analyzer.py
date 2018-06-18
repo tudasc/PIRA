@@ -47,7 +47,9 @@ class Analyzer:
         self.tear_down(exp_dir)
 
       except Exception as e:
-        logging.get_logger().log(e.message, level='error')
+        logging.get_logger().log(str(e), level='error')
+
+        raise Exception('Problem in Analyzer')
 
   def analyse_slurm(self, flavors, build, benchmark, kwargs, config):
     for flavor in flavors:
@@ -60,7 +62,9 @@ class Analyzer:
         #print(analyse_functor)
 
       except Exception as e:
-        logging.get_logger().log(e.message, level='error')
+        logging.get_logger().log(str(e), level='error')
+
+        raise Exception('Problem in Analyzer')
 
   def set_up(self):
     pass

@@ -33,6 +33,12 @@ def check_file(path: str) -> bool:
   return False
 
 
+def is_valid_file(file_name:str)->bool:
+  import re
+  search = re.compile(r'[^a-zA-z0-9/_-]').search
+  return not bool(search(file_name))
+
+
 def rename(old: str, new: str) -> None:
   os.rename(old, new)
 
@@ -258,7 +264,7 @@ def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:
 
 def build_cube_file_path_for_db(exp_dir: str, flavor: str, iterationNumber: int) -> str:
   fp = get_cube_file_path(exp_dir, flavor, iterationNumber)
-  if check_file(fp):
+  if is_valid_file(fp):
     return fp
 
   raise Exception('Built file path to Cube not valid. fp: ' + fp)
@@ -266,7 +272,7 @@ def build_cube_file_path_for_db(exp_dir: str, flavor: str, iterationNumber: int)
 
 def set_scorep_exp_dir(exp_dir: str, flavor: str, iterationNumber: int) -> None:
   effective_dir = get_cube_file_path(exp_dir, flavor, iterationNumber)
-  if not check_file(effective_dir):
+  if not is_valid_file(effective_dir):
     raise Exception('Score-p experiment directory invalid.')
 
   set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
