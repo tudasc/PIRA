@@ -121,6 +121,7 @@ def shell(command: str, silent: bool = True, dry: bool = False,
   try:
     stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
     stderr_fd = open(stderr_fn, 'w')
+    log.get_logger().log('util executing: ' + str(command), level='debug')
 
     if time_invoc:
       out, rt = timed_invocation(command, stderr_fd)
@@ -135,7 +136,7 @@ def shell(command: str, silent: bool = True, dry: bool = False,
       if command.find('grep '):
         return '', .0
 
-    log.get_logger().log('Utility.shell: Caught Exception ' + e.output, level='error')
+    log.get_logger().log('Utility.shell: Caught Exception ' + str(e), level='error')
     raise Exception('Running command ' + command + ' did not succeed')
 
   finally:

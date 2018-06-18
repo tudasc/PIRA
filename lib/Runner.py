@@ -1,13 +1,13 @@
-from lib.ConfigLoaderNew import ConfigurationLoader as Conf
+from lib.ConfigLoaderNew import ConfigurationLoader as CLoader
 from lib.Builder import Builder as B
 from lib.Analyzer import Analyzer as A
+from lib.db import database as db
 import lib.Logging as log
 import lib.Utility as util
-import lib.Logging as logging
-from lib.db import database as db
 import lib.tables as tables
 import lib.BatchSystemHelper as bat_sys
 import lib.FunctorManagement as fm
+import lib.MeasurementSystem as ms
 
 import typing
 
@@ -23,40 +23,42 @@ ITEM = 7
 FLAVOR = 8
 
 
-def runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
-           database, cur) -> float:
+def runner(flavor: str, build: str, benchmark: str, kwargs, config: CLoader, is_no_instrumentation_run: bool,
+           iteration_number: int, itemID: str, database, cur) -> float:
   benchmark_name = config.get_benchmark_name(benchmark)
   is_for_db = False
-  build_functor = util.load_functor(
-      config.get_runner_func(build, benchmark),
-      util.build_runner_functor_filename(is_for_db, benchmark_name, flavor))
+  f_man = fm.FunctorManager(config)
+  run_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'run')
 
-  if build_functor.get_method()['active']:
+  if run_functor.get_method()['active']:
     kwargs['util'] = util
-    build_functor.active(benchmark, **kwargs)
+    run_functor.active(benchmark, **kwargs)
     log.get_logger().log('For the active functor we cannot measure runtime', level='warn')
     return .0
 
   else:
     try:
-      command = build_functor.passive(benchmark, **kwargs)
       util.change_cwd(benchmark)
-      exp_dir = config.get_analyser_exp_dir(build, benchmark)
-      log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
+      scorep_helper = ms.ScorepSystemHelper(config)
+      scorep_helper.set_up(build, benchmark, flavor, iteration_number, not is_no_instrumentation_run)
+      DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')
 
-      DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number)
-      util.set_scorep_exp_dir(exp_dir, flavor, iteration_number)
-      util.set_overwrite_scorep_exp_dir()
+      #exp_dir = config.get_analyser_exp_dir(build, benchmark)
+      #log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
+
+      #DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number)
+      #util.set_scorep_exp_dir(exp_dir, flavor, iteration_number)
+      #util.set_overwrite_scorep_exp_dir()
 
       # The integer is only a bool for the database to show if no_instrumentation is set.
       if is_no_instrumentation_run:
         DBIntVal = 0
-
       else:
         DBIntVal = 1
-        util.set_scorep_profiling_basename(flavor, benchmark_name)
+      #  util.set_scorep_profiling_basename(flavor, benchmark_name)
 
       # Run the actual command
+      command = run_functor.passive(benchmark, **kwargs)
       out, runtime = util.shell(command, time_invoc=True)
       # Insert into DB
       experiment_data = (util.generate_random_string(), benchmark_name, iteration_number, DBIntVal,
@@ -66,7 +68,7 @@ def runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, 
       return runtime
 
     except Exception as e:
-      logging.get_logger().log(str(e), level='warn')
+      log.get_logger().log(str(e), level='warn')
       return -1.0
 
 
@@ -122,7 +124,7 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
 
       log.get_logger().log('Running the baseline binary.')
       accu_runtime = .0
-      # Run - this binary does not contain any instrumentation.
+      # Baseline run. TODO Better evaluation of the obtained timings.
       for y in range(0, 5):
         accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
 
@@ -135,6 +137,7 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
       analyser = A(configuration, build, item)
       analyser.analyse_detail(configuration, build, item, flavor, y)
 
+    log.get_logger().log('Starting with the profiler run', level='debug')
     # After baseline measurement is complete, do the instrumented build/run
     no_instrumentation = False
     builder = B(build, configuration, no_instrumentation)
@@ -157,7 +160,7 @@ def run(path_to_config) -> None:
   log.get_logger().log('Running with configuration: ' + str(path_to_config))
 
   try:
-    config_loader = Conf()
+    config_loader = CLoader()
     configuration = config_loader.load_conf(path_to_config)
     configuration.initialize_stopping_iterator()
     configuration.initialize_first_iteration()
@@ -253,8 +256,9 @@ def run(path_to_config) -> None:
             # Insert into DB the benchmark data
             benchmark_name = configuration.get_benchmark_name(item)
             log.get_logger().log('benchmark_name: ' + benchmark_name, level='debug')
+            # The FunctorManager manages loaded functors and generates the respective names
             func_manager = fm.FunctorManager(configuration)
-            
+
             # XXX My implementation returns the full path, including the file extension.
             #     In case something in the database goes wild, this could be it.
             analyse_functor = func_manager.get_analyzer_file(build, item, flavor)
@@ -262,15 +266,6 @@ def run(path_to_config) -> None:
             run_functor = func_manager.get_runner_file(build, item, flavor)
             # TODO implement the get_submitter_file(build, item, flavor) method!
 
-            #analyse_functor = configuration.get_analyse_func(
-            #    build, item) + util.build_analyse_functor_filename(True, benchmark_name, flavor)
-            #log.get_logger().log(
-            #    'New analyse functor: ' + new_analyse_functor + '\nOld analyse functor: ' + analyse_functor,
-            #    level='debug')
-            #build_functor = configuration.get_flavor_func(build, item) + util.build_builder_functor_filename(
-            #    True, False, benchmark_name, flavor)
-            #run_functor = configuration.get_runner_func(build, item) + util.build_runner_functor_filename(
-            #    True, benchmark_name, flavor)
             submitter_functor = configuration.get_runner_func(
                 build, item) + '/slurm_submitter_' + benchmark_name + flavor
             exp_dir = configuration.get_analyser_exp_dir(build, item)

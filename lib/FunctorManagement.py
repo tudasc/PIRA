@@ -14,7 +14,9 @@ class FunctorManager:
     We use the wholename, i.e. fully qualified path to the functor, as the key
     in our functor cache.
     '''
-    if func is 'build':
+    if func is 'basebuild':
+      path, name, wnm = self.get_builder(build, item, flavor, True)
+    elif func is 'build':
       path, name, wnm = self.get_builder(build, item, flavor)
     elif func is 'clean':
       path, name, wnm = self.get_cleaner(build, item, flavor)
@@ -25,15 +27,19 @@ class FunctorManager:
     else:
       raise Exception('No such option available to load functor for. Value = ' + func)
 
-    if self.functor_cache[wnm] is not None:
-      return self.functor_cache[wnm]
+    try:
+      res = self.functor_cache[wnm]
+    except KeyError:
+      self.functor_cache[wnm] = u.load_functor(path, name)
 
-    self.functor_cache[wnm] = u.load_functor(path, name)
     return self.functor_cache[wnm]
 
-  def get_builder(self, build: str, item: str, flavor: str) -> typing.Tuple[str, str, str]:
+  def get_builder(self, build: str, item: str, flavor: str,
+                  base: bool = False) -> typing.Tuple[str, str, str]:
     p = self.config.get_builder_path(build, item)
     n = self.get_builder_name(build, item, flavor)
+    if base:
+      n = u.concat_a_b_with_sep('no_instr', n, '_')
     wnm = self.get_builder_file(build, item, flavor)
     return p, n, wnm
 
