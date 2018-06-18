@@ -38,7 +38,7 @@ def runner(flavor: str, build: str, benchmark: str, kwargs, config: CLoader, is_
 
   else:
     try:
-      util.change_cwd(benchmark)
+      util.change_cwd(build)
       scorep_helper = ms.ScorepSystemHelper(config)
       scorep_helper.set_up(build, benchmark, flavor, iteration_number, not is_no_instrumentation_run)
       DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')

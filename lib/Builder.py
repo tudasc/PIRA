@@ -61,7 +61,7 @@ class Builder:
 
     else:
       try:
-        util.change_cwd(benchmark)
+        util.change_cwd(build)
         
         build_command = build_functor.passive(benchmark, **kwargs)
         clean_command = clean_functor.passive(benchmark, **kwargs)
