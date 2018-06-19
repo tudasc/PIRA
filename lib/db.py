@@ -1,5 +1,5 @@
 import sqlite3 as db
-import Logging as log
+import lib.Logging as log
 
 
 class database:

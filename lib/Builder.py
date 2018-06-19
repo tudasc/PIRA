@@ -1,5 +1,8 @@
-import Utility as util
-import Logging as logging
+import lib.Utility as util
+import lib.Logging as log
+import lib.FunctorManagement as fm
+
+import typing
 
 
 class Builder:
@@ -7,7 +10,7 @@ class Builder:
     Class which builds a benchmark and the run configuration.
     """
 
-  def __init__(self, dir_key, configuration, no_instrumentation=False):
+  def __init__(self, dir_key, configuration, no_instrumentation=False)->None:
     self.directory = dir_key
     self.config = configuration
     self.old_cwd = ''
@@ -21,11 +24,12 @@ class Builder:
       self.tear_down()
 
     except Exception as e:
-      logging.get_logger().log('Caught exception ' + e.message, level='info')
+      log.get_logger().log('Caught exception ' + e.message, level='info')
       if self.error:
         raise Exception('Severe Problem in Builder.build')
 
   def set_up(self):
+    log.get_logger().log('Builder::set_up for ' + self.directory)
     directory_good = util.check_provided_directory(self.directory)
     if directory_good:
       self.old_cwd = util.get_cwd()
@@ -41,40 +45,43 @@ class Builder:
     kwargs = {'compiler': 'clang++'}
     self.build_flavours(flavor, build, benchmark, kwargs)
 
-  def build_flavours(self, flavor, build, benchmark, kwargs):
+  def build_flavours(self, flavor:str, build:str, benchmark:str, kwargs)->None:
+    log.get_logger().log('Building for ' + flavor, level='debug')
+    # benchmark == item
     benchmark_name = self.config.get_benchmark_name(benchmark)
-    clean_functor = util.load_functor(
-        self.config.get_flavor_func(build, benchmark),
-        util.build_clean_functor_filename(benchmark_name[0], flavor))
+    log.get_logger().log('Obtained benchmark_name: ' + benchmark_name, level='debug')
+    f_man = fm.FunctorManager(self.config)
+    clean_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'clean')
+    log.get_logger().log('Retrieved clean_functor')
 
-    # build_builder_functor_filename(is_for_db, is_no_instr,...)
-    build_functor = util.load_functor(
-        self.config.get_flavor_func(build, benchmark),
-        util.build_builder_functor_filename(False, self.build_no_instr, benchmark_name[0], flavor))
+    if self.build_no_instr:
+      build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'basebuild')
+    else:
+      build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'build')
 
     if build_functor.get_method()['active']:
       build_functor.active(benchmark, **kwargs)
 
     else:
       try:
-        command_build = build_functor.passive(benchmark, **kwargs)
-        command_clean = clean_functor.passive(benchmark, **kwargs)
-        util.change_cwd(benchmark)
-        logging.get_logger().log('Making clean in ' + benchmark, level='debug')
-        util.shell(command_clean)
-        logging.get_logger().log('Building with command: ' + command_build, level='debug')
-        util.shell(command_build)
+        log.get_logger().log('Running the passive functor.', level='debug')
+        util.change_cwd(build)
+        build_command = build_functor.passive(benchmark, **kwargs)
+        clean_command = clean_functor.passive(benchmark, **kwargs)
+        log.get_logger().log('Making clean in ' + benchmark, level='debug')
+        util.shell(clean_command)
+        log.get_logger().log('Building with command: ' + build_command, level='debug')
+        util.shell(build_command)
 
       except Exception as e:
-        logging.get_logger().log(e.message, level='warn')
-
+        log.get_logger().log(str(e), level='warn')
 
   def generate_run_configurations(self):
     """
         Generates scripts which are to be submitted to the batch system.
         These are stored in the format ((Benchmark, Flavor), Script_File_Name).
         :return: List of script files
-        """
+    """
     run_configs = []
     kwargs = {'util': util}
     for flavor in self.config.get_flavors():

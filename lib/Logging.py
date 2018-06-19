@@ -50,11 +50,14 @@ class Logger:
     msg_str = '[' + level + '] ' + str(msg)
     self.tape.append(msg_str)
     if level == 'perf':
-      self.perf_tape.append('[PERF]' + str(msg))
+      self.perf_tape.append('[PERF] ' + str(msg))
 
   def show_perf(self):
     for p in self.perf_tape:
       print(p)
+
+  def get_last_msg(self) -> str:
+    return self.tape[len(self.tape)-1]
 
   def dump_tape(self, out_file=None, cli=False):
     if out_file is not None:
