@@ -29,6 +29,7 @@ class Builder:
         raise Exception('Severe Problem in Builder.build')
 
   def set_up(self):
+    log.get_logger().log('Builder::set_up for ' + self.directory)
     directory_good = util.check_provided_directory(self.directory)
     if directory_good:
       self.old_cwd = util.get_cwd()
@@ -45,10 +46,13 @@ class Builder:
     self.build_flavours(flavor, build, benchmark, kwargs)
 
   def build_flavours(self, flavor:str, build:str, benchmark:str, kwargs)->None:
+    log.get_logger().log('Building for ' + flavor, level='debug')
     # benchmark == item
     benchmark_name = self.config.get_benchmark_name(benchmark)
+    log.get_logger().log('Obtained benchmark_name: ' + benchmark_name, level='debug')
     f_man = fm.FunctorManager(self.config)
     clean_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'clean')
+    log.get_logger().log('Retrieved clean_functor')
 
     if self.build_no_instr:
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'basebuild')
@@ -60,8 +64,8 @@ class Builder:
 
     else:
       try:
+        log.get_logger().log('Running the passive functor.', level='debug')
         util.change_cwd(build)
-        
         build_command = build_functor.passive(benchmark, **kwargs)
         clean_command = clean_functor.passive(benchmark, **kwargs)
         log.get_logger().log('Making clean in ' + benchmark, level='debug')

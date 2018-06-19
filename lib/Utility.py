@@ -33,7 +33,7 @@ def check_file(path: str) -> bool:
   return False
 
 
-def is_valid_file(file_name:str)->bool:
+def is_valid_file(file_name: str) -> bool:
   import re
   search = re.compile(r'[^a-zA-z0-9/_-]').search
   return not bool(search(file_name))
@@ -95,16 +95,23 @@ def get_cwd() -> str:
 
 
 def change_cwd(path: str) -> None:
-  log.get_logger().log('cd\'ing to ' + path, level='debug')
+  log.get_logger().log('util.change_cwd to ' + path, level='debug')
   os.chdir(path)
 
 
 def load_functor(directory: str, module: str):
+  if not check_provided_directory(directory):
+    log.get_logger().log('Functor directory invalid', level='warn')
+  if not check_file(directory + '/' + module):
+    log.get_logger().log('Functor filename invalid', level='warn')
+
+  # TODO: Add error if functor path does not exist!!!
   log.get_logger().log('Appending ' + directory + ' to system path.', level='debug')
   append_to_sys_path(directory)
   # Adding 'fromList' argument loads exactly the module.
   functor = __import__(module)
   remove_from_sys_path(directory)
+  log.get_logger().log('Returning from load_functor', level='debug')
   return functor
 
 
@@ -131,11 +138,11 @@ def shell(command: str, silent: bool = True, dry: bool = False,
 
     if time_invoc:
       out, rt = timed_invocation(command, stderr_fd)
-      return out, rt
+      return str(out.decode('utf-8')), rt
 
     else:
       out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
-      return out, -1.0
+      return str(out.decode('utf-8')), -1.0
 
   except subprocess.CalledProcessError as e:
     if e.returncode == 1:
@@ -269,19 +276,3 @@ def build_cube_file_path_for_db(exp_dir: str, flavor: str, iterationNumber: int)
 
   raise Exception('Built file path to Cube not valid. fp: ' + fp)
 
-
-def set_scorep_exp_dir(exp_dir: str, flavor: str, iterationNumber: int) -> None:
-  effective_dir = get_cube_file_path(exp_dir, flavor, iterationNumber)
-  if not is_valid_file(effective_dir):
-    raise Exception('Score-p experiment directory invalid.')
-
-  set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
-  return
-
-
-def set_overwrite_scorep_exp_dir() -> None:
-  set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'True')
-
-
-def set_scorep_profiling_basename(flavor: str, benchmark_name: str) -> None:
-  set_env('SCOREP_PROFILING_BASE_NAME', flavor + '-' + benchmark_name)

@@ -30,18 +30,18 @@ class TestUtility(unittest.TestCase):
 
   def test_shell_time_invoc(self):
     command = 'echo "Hello World!"'
-    expected_out = 'Hello World!'
+    expected_out = 'Hello World!\n'
 
     out, t = u.shell(command, time_invoc=True)
-    self.assertEqual(out, 'Hello World!')
+    self.assertEqual(out, expected_out)
     self.assertGreater(t, -1.0)  # XXX This is already a little fishy!
 
   def test_shell_invoc(self):
     command = 'echo "Hello World!"'
-    expected_out = 'Hello World!'
+    expected_out = 'Hello World!\n'
 
     out, t = u.shell(command, time_invoc=False)
-    self.assertEqual(out, 'Hello World!')
+    self.assertEqual(out, expected_out)
     self.assertEqual(t, -1.0)  # XXX This is already a little fishy!
 
   def test_concat_a_b_with_sep_all_empty(self):

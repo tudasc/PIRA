@@ -41,10 +41,7 @@ def runner(flavor: str, build: str, benchmark: str, kwargs, config: CLoader, is_
       util.change_cwd(build)
       scorep_helper = ms.ScorepSystemHelper(config)
       scorep_helper.set_up(build, benchmark, flavor, iteration_number, not is_no_instrumentation_run)
-      try:
-        DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')
-      except KeyError:
-        DBCubeFilePath = ''
+      DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')
 
       # The integer is only a bool for the database to show if no_instrumentation is set.
       if is_no_instrumentation_run:
@@ -74,6 +71,7 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
   submitter_functor = util.load_functor(
       config.get_runner_func(build, benchmark), 'slurm_submitter_' + benchmark_name + '_' + flavor)
   exp_dir = config.get_analyser_exp_dir(build, benchmark)
+  # TODO These functions are now part of the ScorepHelper
   DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number)
   util.set_scorep_exp_dir(exp_dir, flavor, iteration_number)
   util.set_overwrite_scorep_exp_dir()
@@ -115,6 +113,7 @@ def run_detail(config, build, benchmark, flavor, is_no_instrumentation_run, iter
 
 def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None:
   try:
+    log.get_logger().log('run_setup phase.', level='debug')
     for x in range(0, 5):
       no_instrumentation = True
       # Only run the pgoe to get the functions name
@@ -158,6 +157,7 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
       analyser.analyse_detail(configuration, build, item, flavor, x)
 
   except Exception as e:
+    log.get_logger().log('run_setup problem', level='debug')
     raise RuntimeError()
 
 
@@ -292,6 +292,6 @@ def run(path_to_config) -> None:
   except RuntimeError as rt_err:
     util.change_cwd(home_dir)
     log.get_logger().log(
-        'Runner.run caught exception: ' + rt_err.__class__.__name__ + ' Message: ' + str(rt_err), level='warn')
+        'Runner.run caught exception. Message: ' + str(rt_err), level='warn')
     log.get_logger().dump_tape('tape.log')
     log.get_logger().dump_tape()
