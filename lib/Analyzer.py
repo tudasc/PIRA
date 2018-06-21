@@ -16,6 +16,8 @@ class Analyzer:
     anal_func_filename = util.build_analyse_functor_filename(False, benchmark_name, flavor)
     logging.get_logger().log('Loading analysis functor at: ' + anal_func_filename)
 
+    # TODO Refactor these code pieces.
+
     analyse_functor = util.load_functor(config.get_analyse_func(build, benchmark), anal_func_filename)
     if analyse_functor.get_method()['active']:
       analyse_functor.active(benchmark, **kwargs)
@@ -32,6 +34,7 @@ class Analyzer:
 
         logging.get_logger().log('Analyzer with command: ' + command)
         logging.get_logger().log('Checking ' + analyser_dir + ' | is good: ' + str(isdirectory_good))
+
         if isdirectory_good:
           util.change_cwd(analyser_dir)
           instr_files = util.build_instr_file_path(analyser_dir, flavor, benchmark_name)

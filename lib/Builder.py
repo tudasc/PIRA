@@ -10,7 +10,7 @@ class Builder:
     Class which builds a benchmark and the run configuration.
     """
 
-  def __init__(self, dir_key, configuration, no_instrumentation=False)->None:
+  def __init__(self, dir_key, configuration, no_instrumentation=False) -> None:
     self.directory = dir_key
     self.config = configuration
     self.old_cwd = ''
@@ -28,7 +28,7 @@ class Builder:
       if self.error:
         raise Exception('Severe Problem in Builder.build')
 
-  def set_up(self):
+  def set_up(self) -> None:
     log.get_logger().log('Builder::set_up for ' + self.directory)
     directory_good = util.check_provided_directory(self.directory)
     if directory_good:
@@ -38,14 +38,14 @@ class Builder:
       self.error = True
       raise Exception('Could not change to directory')
 
-  def tear_down(self):
+  def tear_down(self) -> None:
     util.change_cwd(self.old_cwd)
 
-  def build_detail(self, build, benchmark, flavor):
+  def build_detail(self, build, benchmark, flavor) -> None:
     kwargs = {'compiler': 'clang++'}
     self.build_flavours(flavor, build, benchmark, kwargs)
 
-  def build_flavours(self, flavor:str, build:str, benchmark:str, kwargs)->None:
+  def build_flavours(self, flavor: str, build: str, benchmark: str, kwargs) -> None:
     log.get_logger().log('Building for ' + flavor, level='debug')
     # benchmark == item
     benchmark_name = self.config.get_benchmark_name(benchmark)
