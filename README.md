@@ -1,15 +1,18 @@
-# benchpress
+# PyIRA
 
-## Configurations
-The base of a configuration is a directory. The name of the directory is also used as an identifier.
-Within a directory live items. Items are basically targets, which can be built in different flavors.
-The flavors can be indicated in two different ways. The first way is a globally specified "glob-flavor".
-The glob-flavor is applied to every item in every directory. This serves the purpose of, e.g., building baseline
-versions for all applications.
-If a prefix is given for the items, then it is assumed that every item lives within its only sub-directory
-of the form '''prefix_item'''. As such, the builder will descent into the sub directory and run the build command
-there.
+The Python Instrumentation Refinement Automation (PyIRA) framework approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base.
+Currently, the framework assumes a Score-P driven toolchain. However, the goal is to be as flexibel w.r.t. the used toolchain as possible.
 
-item = i
-prefix = p
-flavor = f
+## Approach
+The framework uses four/five phases to automatically:
+* Build the target application and perform baseline measurement.
+* Generate an initial performance instrumentation, based on the statement aggregation selection strategy.
+* Run the target application to generate a profile.
+* Analyze the generated profile to find a new and (hopefully) improved instrumentation.
+* Iterate the latter two steps to find a well suited instrumentation.
+
+## Configuration
+The framework takesa configuration file in `json` format as input. This file specifies the target codes.
+In addition, the configuration holds the paths and names to ~functors~ - Python files that implement a specified set of functions and are loaded at runtime. Within the Python function, the user can implement her own commands to build the target software. Also, the analysis framework to drive the process of finding a suitable instrumentation is loaded using a functor.
+In a configuration, the user lists a base directory. This directory, holds, so called, items, which are built in different flavors.
+Adding this additional layer of indirection, the user can perform multiple tests on the same target application within a single configuration file - maybe use two different measurement strategies.
