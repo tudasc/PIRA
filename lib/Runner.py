@@ -1,32 +1,277 @@
-from ConfigLoader import ConfigurationLoader as CL
+from ConfigLoaderNew import ConfigurationLoader as Conf
 from Builder import Builder as B
+from Analyzer import Analyzer as A
 import Logging as log
 import Utility as util
+import Logging as logging
+from lib.db import database as db
+import lib.tables as tables
+
+import BatchSystemHelper as bat_sys
+
+# Contants to manage slurm submitter tmp file read
+JOBID = 0
+BENCHMARKNAME = 1
+ITERATIONNUMBER = 2
+ISWITHINSTR = 3
+CUBEFILEPATH = 4
+ITEMID = 5
+BUILDNAME = 6
+ITEM = 7
+FLAVOR = 8
+
+
+def runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
+           database, cur):
+  benchmark_name = config.get_benchmark_name(benchmark)
+  is_for_db = False
+  build_functor = util.load_functor(
+      config.get_runner_func(build, benchmark),
+      util.build_runner_functor_filename(is_for_db, benchmark_name[0], flavor))
+
+  if build_functor.get_method()['active']:
+    kwargs['util'] = util
+    build_functor.active(benchmark, **kwargs)
+
+  else:
+    try:
+      command = build_functor.passive(benchmark, **kwargs)
+      util.change_cwd(benchmark)
+      exp_dir = config.get_analyser_exp_dir(build, benchmark)
+      log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
+      
+      DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
+                                                        is_no_instrumentation_run)
+      util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
+      util.set_overwrite_scorep_exp_dir()
+
+      # TODO Figure out what this integer means.
+      if is_no_instrumentation_run:
+        DBIntVal = 0
+
+      else:
+        DBIntVal = 1
+        util.set_scorep_profiling_basename(flavor, benchmark_name[0])
+
+      # Run the actual command
+      out, runtime = util.shell(command, time_invoc=True)
+      # Insert into DB
+      experiment_data = (util.generate_random_string(), benchmark_name[0], iteration_number, DBIntVal,
+                           DBCubeFilePath, str(runtime), itemID)
+      database.insert_data_experiment(cur, experiment_data)
+
+      return runtime
+
+    except Exception as e:
+      logging.get_logger().log(e.message, level='warn')
+
+
+def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
+              database, cur):
+  benchmark_name = config.get_benchmark_name(benchmark)
+  submitter_functor = util.load_functor(
+      config.get_runner_func(build, benchmark), 'slurm_submitter_' + benchmark_name[0] + '_' + flavor)
+  exp_dir = config.get_analyser_exp_dir(build, benchmark)
+  DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number,
+                                                      is_no_instrumentation_run)
+  util.set_scorep_exp_dir(exp_dir, flavor, iteration_number, is_no_instrumentation_run)
+  util.set_overwrite_scorep_exp_dir()
+
+  if is_no_instrumentation_run:
+    DBIntVal = 0
+
+  else:
+    DBIntVal = 1
+    util.set_scorep_profiling_basename(flavor, benchmark_name[0])
+
+  tup = [(flavor, config.get_batch_script_func(build, benchmark))]
+  kwargs = {"util": util, "runs_per_job": 1, "dependent": 0}
+  job_id = submitter_functor.dispatch(tup, **kwargs)
+  # TODO: Create new BatchSystemJob instance instead
+  bat_sys.create_batch_queued_temp_file(job_id, benchmark_name[0], iteration_number, DBIntVal, DBCubeFilePath,
+                                     itemID, build, benchmark, flavor)
+  log.get_logger().log('Submitted job. Exiting. Re-invoke when job is finished.')
+  exit(0)
+
+
+def run_detail(config, build, benchmark, flavor, is_no_instrumentation_run, iteration_number, itemID, database,
+               cur):
+  kwargs = {'compiler': ''}
+
+  if config.get_is_submitter(build, benchmark):
+    submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
+              database, cur)
+  else:
+    return runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
+           database, cur)
+
+
+def run_setup(configuration, build, item, flavor, itemID, database, cur):
+  for x in range(0, 5):
+    no_instrumentation = True
+    # Only run the pgoe to get the functions name
+    if (configuration.is_first_iteration[build + item + flavor] == False):
+      configuration.is_first_iteration[build + item + flavor] = True
+
+      # Build and run without any instrumentation
+      vanilla_build = B(build, configuration, no_instrumentation)
+      vanilla_build.build(configuration, build, item, flavor)
+
+      log.get_logger().log('Running the baseline binary.')
+      accu_runtime = .0
+      # Run - this binary does not contain any instrumentation.
+      for y in range(0, 5):
+        accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
+      
+      vanilla_avg_rt = accu_runtime / 5.0
+      log.get_logger().log('Vanilla Avg: ' + str(vanilla_avg_rt), level='perf')
+     
+      analyser_dir = configuration.get_analyser_dir(build, item)
+      util.remove_from_pgoe_out_dir(analyser_dir)
+
+      analyser = A(configuration, build, item)
+      analyser.analyse_detail(configuration, build, item, flavor, y)
+
+    # After baseline measurement is complete, do the instrumented build/run
+    no_instrumentation = False
+    builder = B(build, configuration, no_instrumentation)
+    builder.build(configuration, build, item, flavor)
+
+    #Run Phase
+    instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
+
+    # Compute overhead of instrumentation
+    ovh_percentage = instr_rt / vanilla_avg_rt
+    log.get_logger().log('Iteration ' + str(x) + ': ' + str(ovh_percentage), level='perf')
+
+    #Analysis Phase
+    analyser = A(configuration, build, item)
+    analyser.analyse_detail(configuration, build, item, flavor, x)
 
 
 def run(path_to_config):
-    try:
-        config_loader = CL()
-        configuration = config_loader.load(path_to_config)
-        top_level_directories = configuration.get_directories()
+  #log.get_logger().set_state('info')
+  log.get_logger().log('Running with configuration: ' + str(path_to_config))
 
-        for directory in top_level_directories:
-            builder = B(directory, configuration)
+  try:
+    config_loader = Conf()
+    configuration = config_loader.load_conf(path_to_config)
+    configuration.initialize_stopping_iterator()
+    configuration.initialize_first_iteration()
+    log.get_logger().log('Loaded configuration')
+    '''
+        Initialize Database
+    '''
+    database = db("BenchPressDB.sqlite")
+    cur = database.create_cursor(database.conn)
+    '''
+       Create tables if not exists
+    '''
+    database.create_table(cur, tables.sql_create_application_table)
+    database.create_table(cur, tables.sql_create_builds_table)
+    database.create_table(cur, tables.sql_create_items_table)
+    database.create_table(cur, tables.sql_create_experiment_table)
+    log.get_logger().log('Created necessary tables in database')
 
-            builder.build()
+    # Flow for submitter
+    # FIXME: Refactor this code!
+    if bat_sys.check_queued_job():
+      log.get_logger().log('Running the submitter case.')
+      # read file to get build, item, flavor, iteration, itemID, and runtime
+      job_details = bat_sys.read_batch_queued_job()
 
-            run_configs = builder.generate_run_configurations()
+      # get run-time of the submitted job
+      runtime = bat_sys.get_runtime_of_submitted_job(job_details[JOBID])
+      bat_sys.read_batch_queued_job()
 
-            run_dispatcher = configuration.get_submitter()
+      # Insert into DB
+      experiment_data = (util.generate_random_string(), job_details[BENCHMARKNAME],
+                         job_details[ITERATIONNUMBER], job_details[ISWITHINSTR], job_details[CUBEFILEPATH],
+                         runtime, job_details[ITEMID])
+      database.insert_data_experiment(cur, experiment_data)
 
-            # TODO Make these configuration options configurable (cli and .json)
-            runs_per_job = configuration.get_num_runs_per_job()
-            kwargs = {'util': util, 'runs_per_job': runs_per_job, 'dependent': True}
-            run_dispatcher.dispatch(run_configs, **kwargs)
+      if (int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) < 4):
 
-            log.get_logger().dump_tape()
+        # Build and run without any instrumentation
+        vanilla_build = B(job_details[BUILDNAME], configuration)
+        vnailla_build.build_no_instr = True
+        vanilla_build.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
 
-    except StandardError as se:
-        log.get_logger().log('Runner.run caught exception: ' + se.__class__.__name__ + ' Message: ' + se.message,
-                             level='warn')
-        log.get_logger().dump_tape()
+        # Run - this binary does not contain any instrumentation.
+        run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], True,
+                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, cur)
+
+      if (int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) == 4):
+        analyser_dir = configuration.get_analyser_dir(job_details[BUILDNAME], job_details[ITEM])
+        # Remove anything in the output dir of the analysis tool
+        util.remove_from_pgoe_out_dir(analyser_dir)
+
+        # Generate white-list functions
+        analyser = A(configuration, job_details[BUILDNAME], job_details[ITEM])
+        analyser.analyse_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR],
+                                0)
+
+        builder = B(job_details[BUILDNAME], configuration)
+        builder.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
+        run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], False, 0,
+                   job_details[ITEMID], database, cur)
+
+      if (int(job_details[ISWITHINSTR]) == 1):
+        analyser = A(configuration, job_details[BUILDNAME], job_details[ITEM])
+        analyser.analyse_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR],
+                                int(job_details[ITERATIONNUMBER]))
+
+        builder = B(job_details[BUILDNAME], configuration)
+        builder.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
+
+        # Run Phase
+        run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], False,
+                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, cur)
+    else:
+      log.get_logger().log('Running the local case')
+
+      for build in configuration.builds:
+        application = (util.generate_random_string(), build, '', '')
+        database.insert_data_application(cur, application)
+
+      for item in configuration.builds[build]['items']:
+        log.get_logger().log('Running for item ' + str(item))
+
+        if configuration.builds[build]['flavours']:
+          log.get_logger().log('Using locally defined flavors', level='debug')
+
+          for flavor in configuration.builds[build]['flavours']:
+            log.get_logger().log('Running for local flavor ' + flavor, level='debug')
+
+            dbbuild = (util.generate_random_string(), build, '', flavor, build)
+            database.insert_data_builds(cur, dbbuild)
+
+            # Insert into DB the benchmark data
+            benchmark_name = configuration.get_benchmark_name(item)
+            itemID = util.generate_random_string()
+            analyse_functor = configuration.get_analyse_func(
+                build, item) + util.build_analyse_functor_filename(True, benchmark_name[0], flavor)
+            build_functor = configuration.get_flavor_func(build, item) + util.build_builder_functor_filename(
+                True, False, benchmark_name[0], flavor)
+            run_functor = configuration.get_runner_func(build, item) + util.build_runner_functor_filename(
+                True, benchmark_name[0], flavor)
+            submitter_functor = configuration.get_runner_func(
+                build, item) + '/slurm_submitter_' + benchmark_name[0] + flavor
+            exp_dir = configuration.get_analyser_exp_dir(build, item)
+            itemDBData = (itemID, benchmark_name[0], analyse_functor, build_functor, '', run_functor,
+                          submitter_functor, exp_dir, build)
+            database.insert_data_items(cur, itemDBData)
+
+            run_setup(configuration, build, item, flavor, itemID, database, cur)
+
+        # If global flavor
+        else:
+          for flavor in configuration.global_flavors:
+            run_setup(configuration, build, item, flavor, itemID, database, cur)
+    log.get_logger().dump_tape('/home/j_lehr/all_repos/tape.log')
+
+  except StandardError as se:
+    log.get_logger().log(
+        'Runner.run caught exception: ' + se.__class__.__name__ + ' Message: ' + se.message, level='warn')
+    log.get_logger().dump_tape('/home/j_lehr/all_repos/tape.log')
+    log.get_logger().dump_tape()

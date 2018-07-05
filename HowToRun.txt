@@ -1,0 +1,156 @@
+0. Environment setup
+    1. Checkout the BenchPress code from https://github.com/jplehr/benchpress.git
+    2. Checkout the callgraph tool PGOE modified from https://github.com/sachinmanawadi271/pgoe.git
+    3. Load the following modules
+        module load papi/5.4.1
+        module load scorep/3.no_mpi
+        module load clang/3.8-wl
+
+1. Edit Configuration file - "item_based.json"
+    Important note:
+        1. The path should not end with "/" character.
+            Example :
+            Valid path in configuration file - /home/sachin/MasterThesis.
+            Invalid path - /home/sachin/MasterThesis/
+
+        2. Do not have directories having '.' example : /home/sachin/MasterThesis/lulesh2.0.3
+           instead have /home/sachin/MasterThesis/lulesh203 this should be insync with the functors name
+           example: clean_lulesh203_local-flav1.py.
+           A future enhancement can be to decouple this dependency.
+
+
+    An example of the configuration file is shown below
+    detailed description if the key value can be found in the Thesis
+{
+  "description":{
+    "directories":[
+      "/home/sachin/MasterThesis"
+    ],
+    "builds": {
+        "/home/sachin/MasterThesis": {
+          "prefix": "",
+          "items": [
+            "/home/sachin/MasterThesis/lulesh2.0.3",
+            "/home/sachin/MasterThesis/lulesh"
+          ],
+          "flavors": {
+            "/home/sachin/MasterThesis": [
+              "local-flav1",
+              "vanilla"
+            ],
+            "instrument-analysis": {
+              "/home/sachin/MasterThesis/lulesh2.0.3": [
+                "/home/sachin/IdeaProjects/master/benchpress/functors",
+                "/home/sachin/MasterThesis/lulesh2.0.3/lulesh",
+                "/home/sachin/CLionProjects/pgoe"
+                ],
+              "/home/sachin/MasterThesis/lulesh":[
+                "/home/sachin/IdeaProjects/master/benchpress/functors2",
+                "/home/sachin/MasterThesis/lulesh/lulesh",
+                "/home/sachin/CLionProjects/pgoe"
+              ]
+            },
+            "builders": {
+              "/home/sachin/MasterThesis/lulesh2.0.3": "/home/sachin/IdeaProjects/master/benchpress/functors",
+              "/home/sachin/MasterThesis/lulesh": "/home/sachin/IdeaProjects/master/benchpress/functors"
+            },
+            "run": {
+              "/home/sachin/MasterThesis/lulesh2.0.3": {
+                "args": [
+                ],
+                "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
+                "submitter":"",
+                "batch_script":""
+              },
+              "/home/sachin/MasterThesis/lulesh":{
+                "args":[
+
+                ],
+                "runner":"/home/sachin/IdeaProjects/master/benchpress/functors",
+                "submitter":"",
+                "batch_script":""
+              }
+            }
+          }
+        }
+      },
+      "glob-flavors":[
+      ],
+      "glob-submitter":{
+        "flav1":"/path/to/py/functor",
+        "flav2":"path/to/py/functor"
+      }
+  }
+}
+
+        a. Directories
+            The values of the directories is a container in which all the related applications reside.
+
+        b. builds
+            i) Each directory example "/home/sachin/MasterThesis" contains applications called items.
+                In the above shown "/home/sachin/MasterThesis/lulesh2.0.3" and "/home/sachin/MasterThesis/lulesh"
+                are two different items.
+
+    ii) Each directory has one or more flavors
+
+    iii) Key "instrument-analysis" represent each items configuration for analysis
+        Example the first value of "/home/sachin/MasterThesis/lulesh2.0.3" i.e.,
+        "/home/sachin/IdeaProjects/master/benchpress/functors" represents the path where the functors for analysis are located.
+        The second value i.e., "/home/sachin/MasterThesis/lulesh2.0.3/lulesh" represents the experiment directory
+        especially used for Score-P where the cube files will be stored.
+        The third value i.e., "/home/sachin/CLionProjects/pgoe" represents the path where the analysis tool executable is located.
+
+    iv) Key - "builders"
+        Contains the path to functors to build the items.
+
+    v) Key - "run"
+        Contains the path funtors to run the items.
+
+
+2. Naming ipcg file
+    The ipcg file should be stored in analysis tool executable path with the naming convention
+    <flavor>-<item>.ipcg example:local-flav1-lulesh2.0.3.ipcg
+
+
+3. Creating functors
+    Each item should have a different directory for its functors
+    and the path must be specified in "builders", "run" and "instrument-analysis" keys.
+    Each item shall follow the specific naming conventions for each of its flavors
+    Example for flavor "vanilla" and item "lulesh2.3.0". Lets assume the functors are stored in Lulesh-2.3.0
+    vanilla.py - contains the build rules.
+    clean_vanilla.py - contains the clean rules.
+    no_instr_vanilla.py - contains the build rules without instrumentation.
+    runner_vanilla.py - contains the run rules.
+    analyse_vanilla.py - contains the analysis command.
+
+4.  Once the steps 1, 2 and 3 are completed and valid the application can be run
+    using the following command
+    python example_main.py item_based.json
+
+5. Running on Litchenberg cluster - batch submitter
+   1. Provide the functor for slurm submitter in the configuration file - "submitter".
+   2. Provide the batch script in the configuration file - "batch_script".
+   3. Run the application.
+   4. The application stops after each iteration while the job runs on the scheduler.
+   5. Job details will be written in queued_job.tmp.
+   6. Once the job is completed the runtime information shall be stored in stderr.txt.runner.<jobid>.
+      Please make sure to mention the below path in batch script
+      #SBATCH -e <path>/benchpress/stderr.txt.runner.%j
+   7. The application the batch script must be run with time command.
+      Example: time /local-flav1 -p -i 10
+   8. Before running the next iteration it is mandatory to check the stderr.txt.runner.<jobid> file
+      such that the first line is "real    0m0.444s". If the first line is different
+      the application shall throw exception
+
+   Notes:
+   1. As of now for slurm submitter only one item and one build is supported unlike non-slurm submitter.
+
+6. Viweing the Database
+    1. Run DBViwer.py to display the experiments on stdout.
+    2. Future enchancement can be made to tailor the queries.
+
+
+Known issue:
+1. Functors with names having '.' character may not be loaded. Example: clean_lulesh2.0.3_local-flav1.py
+2. It is observed that sometimes running via submitter during the first iteration with
+   instrumentation queued_job.tmp file write fails.
