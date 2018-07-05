@@ -1,6 +1,6 @@
 
 slurm_binary = 'sbatch'
-slurm_queye = 'squeue --format="%i %j"'
+slurm_queue = 'squeue --format="%i %j"'
 
 
 def dispatch(list_of_tuples, **kwargs):
@@ -20,7 +20,7 @@ def dispatch(list_of_tuples, **kwargs):
 
 
 def initial_dependency(util, benchmark_flavor):
-    command = slurm_queye + ' | grep ' + benchmark_flavor[0] + '.'
+    command = slurm_queue + ' | grep ' + benchmark_flavor[0] + '.'
     shell_output = util.shell(command, dry=True)
     out_list = shell_output.split('\n')
     ids = []
