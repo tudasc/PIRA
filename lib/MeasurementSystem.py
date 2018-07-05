@@ -51,3 +51,9 @@ class ScorepSystemHelper:
 
   def set_overwrite_scorep_exp_dir(self) -> None:
     u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'True')
+
+  def set_filter_file(self, file_name:str) -> None:
+    if not u.is_valid_file(file_name):
+      raise RuntimeError('Score-P filter file not valid.')
+
+    u.set_env('SCOREP_FILTERING_FILE', file_name)
