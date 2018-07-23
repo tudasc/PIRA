@@ -30,6 +30,10 @@ class ScorepSystemHelper:
 
     exp_dir = self.config.get_analyser_exp_dir(build, item)
     log.get_logger().log('Retrieved analyser experiment directory: ' + exp_dir, level='debug')
+    if not u.check_provided_directory(exp_dir):
+      log.get_logger().log('EXPERIMENT DIRECTORY DOES NOT EXIST', level='error')
+      effective_dir = u.get_cube_file_path(exp_dir, flavor, it_nr)
+      u.create_directory(effective_dir)
 
     db_exp_dir = u.build_cube_file_path_for_db(exp_dir, flavor, it_nr)
     self.data['cube_dir'] = db_exp_dir

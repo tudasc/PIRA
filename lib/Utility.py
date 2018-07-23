@@ -27,6 +27,10 @@ def check_provided_directory(path: str) -> bool:
   return False
 
 
+def create_directory(path: str) -> None:
+  os.makedirs(path)
+
+
 def check_file(path: str) -> bool:
   if os.path.exists(path):
     return True
