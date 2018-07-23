@@ -4,14 +4,14 @@ import lib.Logging as logging
 
 class Analyzer:
 
-  def __init__(self, configuration, build, benchmark):
+  def __init__(self, configuration, build, benchmark) -> None:
     self.directory = build
     self.config = configuration
     self.benchmark = benchmark
     self.old_cwd = build
     self.error = None
 
-  def analyse(self, flavor, build, benchmark, kwargs, config, iterationNumber):
+  def analyse(self, flavor, build, benchmark, kwargs, config, iterationNumber) -> str:
     benchmark_name = config.get_benchmark_name(benchmark)
     anal_func_filename = util.build_analyse_functor_filename(False, benchmark_name, flavor)
     logging.get_logger().log('Loading analysis functor at: ' + anal_func_filename)
@@ -48,6 +48,7 @@ class Analyzer:
         else:
           util.run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name)
         self.tear_down(exp_dir)
+        return instr_files
 
       except Exception as e:
         logging.get_logger().log(str(e), level='error')
@@ -80,7 +81,7 @@ class Analyzer:
       except Exception as e:
         logging.get_logger().log(e.message, level='error')
 
-  def analyse_detail(self, config, build, benchmark, flavor, iterationNumber):
+  def analyse_detail(self, config, build, benchmark, flavor, iterationNumber) -> str:
     kwargs = {'compiler': ''}
     # No need to analyse on the slurm. May be a future extension
     '''
@@ -88,7 +89,7 @@ class Analyzer:
             self.analyse_slurm(flavor,build,benchmark,kwargs,config)
         else:
         '''
-    self.analyse(flavor, build, benchmark, kwargs, config, iterationNumber)
+    return self.analyse(flavor, build, benchmark, kwargs, config, iterationNumber)
 
   def run_analyzer(self, flavors, build, benchmark, kwargs):
     pass

@@ -115,6 +115,9 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
   try:
     log.get_logger().log('run_setup phase.', level='debug')
     for x in range(0, 5):
+      log.get_logger().toggle_state('info')
+      log.get_logger().log('Running iteration ' + str(x), level='info')
+      log.get_logger().toggle_state('info')
       no_instrumentation = True
       # Only run the pgoe to get the functions name
       if (configuration.is_first_iteration[build + item + flavor] == False):

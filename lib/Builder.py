@@ -61,7 +61,6 @@ class Builder:
 
     if build_functor.get_method()['active']:
       build_functor.active(benchmark, **kwargs)
-
     else:
       try:
         log.get_logger().log('Running the passive functor.', level='debug')
