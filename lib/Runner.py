@@ -1,3 +1,4 @@
+import os
 from lib.ConfigLoaderNew import ConfigurationLoader as CLoader
 from lib.Builder import Builder as B
 from lib.Analyzer import Analyzer as A
@@ -136,16 +137,17 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
           accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
 
         vanilla_avg_rt = accu_runtime / num_vanilla_repetitions
-        log.get_logger().log('[TIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
+        log.get_logger().log('[RUNTIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
 
         analyser_dir = configuration.get_analyser_dir(build, item)
         util.remove_from_pgoe_out_dir(analyser_dir)
 
         analyser = A(configuration, build, item)
         instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
-        log.get_logger().log('[WHITELIST] Iteration ' + str(x) + ': ' + str(util.lines_in_file(instr_file)), level='perf')
+        log.get_logger().log('[WHITELIST][' + str(x) + '] ' + str(util.lines_in_file(instr_file)), level='perf')
 
       log.get_logger().log('Starting with the profiler run', level='debug')
+      iteration_timer_start = os.times()
       # After baseline measurement is complete, do the instrumented build/run
       no_instrumentation = False
       builder = B(build, configuration, no_instrumentation)
@@ -156,12 +158,16 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rt / vanilla_avg_rt
-      log.get_logger().log('[TIME] Iteration ' + str(x) + ': ' + str(ovh_percentage), level='perf')
+      log.get_logger().log('[OVERHEAD][' + str(x) + '] ' + str(ovh_percentage), level='perf')
 
       #Analysis Phase
       analyser = A(configuration, build, item)
       instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
-      log.get_logger().log('[WHITELIST] Iteration ' + str(x) + ': ' + str(util.lines_in_file(instr_file)), level='perf')
+      log.get_logger().log('[WHITELIST][' + str(x) + '] ' + str(util.lines_in_file(instr_file)), level='perf')
+      iteration_timer_stop = os.times()
+      user_time = iteration_timer_stop[2] - iteration_timer_start[2]
+      system_time = iteration_timer_stop[3] - iteration_timer_start[3]
+      log.get_logger().log('[ITERTIME][' + str(x) + '] ' + str(user_time) + ', ' + str(system_time), level='perf')
 
   except Exception as e:
     log.get_logger().log('run_setup problem', level='debug')

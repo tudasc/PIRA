@@ -274,7 +274,8 @@ def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark
 
   sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
   log.get_logger().log('  INSTR: Run cmd: ' + sh_cmd)
-  shell(sh_cmd)
+  out, rt = shell(sh_cmd)
+  log.get_logger().log('Output of analyzer:\n' + out, level='debug')
 
 
 def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, benchmark_name: str) -> None:
