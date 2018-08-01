@@ -20,6 +20,16 @@ def read_file(file_name: str) -> str:
   return content
 
 
+def lines_in_file(file_name: str) -> int:
+  if check_file(file_name):
+    content = read_file(file_name)
+    lines = len(content.split('\n'))
+    return lines
+
+  log.get_logger().log('No file ' + file_name + ' to read. Return 0 lines', level='debug')
+  return 0
+
+
 def check_provided_directory(path: str) -> bool:
   if os.path.isdir(path):
     return True
@@ -131,9 +141,9 @@ def shell(command: str, silent: bool = True, dry: bool = False,
     log.get_logger().log('DRY RUN SHELL CALL: ' + command, level='debug')
     return '', -1.0
 
+  stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
+  stderr_fd = open(stderr_fn, 'w+')
   try:
-    stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
-    stderr_fd = open(stderr_fn, 'w')
     log.get_logger().log('util executing: ' + str(command), level='debug')
 
     if time_invoc:
@@ -149,6 +159,11 @@ def shell(command: str, silent: bool = True, dry: bool = False,
       if command.find('grep '):
         return '', .0
 
+    err_out = ''
+    log.get_logger().log('Attempt to write stderr file', level='debug')
+    err_out += stderr_fd.read()
+
+    log.get_logger().log('Error output: ' + str(err_out), level='debug')
     log.get_logger().log('Utility.shell: Caught Exception ' + str(e), level='error')
     raise Exception('Running command ' + command + ' did not succeed')
 
