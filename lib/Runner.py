@@ -119,6 +119,7 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
       log.get_logger().log('Running iteration ' + str(x), level='info')
       log.get_logger().toggle_state('info')
       no_instrumentation = True
+      instr_file = ''
       # Only run the pgoe to get the functions name
       if (configuration.is_first_iteration[build + item + flavor] == False):
         configuration.is_first_iteration[build + item + flavor] = True
@@ -129,18 +130,20 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
 
         log.get_logger().log('Running the baseline binary.')
         accu_runtime = .0
+        num_vanilla_repetitions = 1
         # Baseline run. TODO Better evaluation of the obtained timings.
-        for y in range(0, 5):
+        for y in range(0, num_vanilla_repetitions):
           accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
 
-        vanilla_avg_rt = accu_runtime / 5.0
-        log.get_logger().log('Vanilla Avg: ' + str(vanilla_avg_rt), level='perf')
+        vanilla_avg_rt = accu_runtime / num_vanilla_repetitions
+        log.get_logger().log('[TIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
 
         analyser_dir = configuration.get_analyser_dir(build, item)
         util.remove_from_pgoe_out_dir(analyser_dir)
 
         analyser = A(configuration, build, item)
-        analyser.analyse_detail(configuration, build, item, flavor, y)
+        instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
+        log.get_logger().log('[WHITELIST] Iteration ' + str(x) + ': ' + str(util.lines_in_file(instr_file)), level='perf')
 
       log.get_logger().log('Starting with the profiler run', level='debug')
       # After baseline measurement is complete, do the instrumented build/run
@@ -153,15 +156,16 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rt / vanilla_avg_rt
-      log.get_logger().log('Iteration ' + str(x) + ': ' + str(ovh_percentage), level='perf')
+      log.get_logger().log('[TIME] Iteration ' + str(x) + ': ' + str(ovh_percentage), level='perf')
 
       #Analysis Phase
       analyser = A(configuration, build, item)
-      analyser.analyse_detail(configuration, build, item, flavor, x)
+      instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
+      log.get_logger().log('[WHITELIST] Iteration ' + str(x) + ': ' + str(util.lines_in_file(instr_file)), level='perf')
 
   except Exception as e:
     log.get_logger().log('run_setup problem', level='debug')
-    raise RuntimeError()
+    raise RuntimeError(str(e))
 
 
 def run(path_to_config) -> None:
