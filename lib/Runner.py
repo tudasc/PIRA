@@ -151,7 +151,12 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
       # After baseline measurement is complete, do the instrumented build/run
       no_instrumentation = False
       builder = B(build, configuration, no_instrumentation)
+      builder_timer_start = os.times()
       builder.build(configuration, build, item, flavor)
+      builder_timer_stop = os.times()
+      user_time = builder_timer_stop[2] - builder_timer_start[2]
+      system_time = builder_timer_stop[3] - builder_timer_start[3]
+      log.get_logger().log('[BUILDTIME][' + str(x) + '] ' + str(user_time) + ', ' + str(system_time), level='perf')
 
       #Run Phase
       instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)

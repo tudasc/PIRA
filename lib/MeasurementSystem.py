@@ -38,9 +38,13 @@ class ScorepSystemHelper:
     db_exp_dir = u.build_cube_file_path_for_db(exp_dir, flavor, it_nr)
     self.data['cube_dir'] = db_exp_dir
     self.set_scorep_exp_dir(exp_dir, flavor, it_nr)
+    self.set_scorep_memory_size('500M')
     self.set_overwrite_scorep_exp_dir()
     if is_instr_run:
       self.set_scorep_profiling_basename(flavor, build, item)
+
+  def set_scorep_memory_size(self, mem_str: str) -> None:
+    u.set_env('SCOREP_TOTAL_MEMORY', mem_str)
 
   def set_scorep_profiling_basename(self, flavor: str, base: str, item: str) -> None:
     u.set_env('SCOREP_PROFILING_BASE_NAME', flavor + '-' + item)
