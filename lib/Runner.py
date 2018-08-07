@@ -96,6 +96,8 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
 def run_streamline(configuration, build, item, flavor, itemID, database, cur) -> None:
   try:
     log.get_logger().log('run_setup phase.', level='debug')
+    log.get_logger().dump_tape(cli=True)
+    no_instrumentation = True
     # Build and run without any instrumentation
     vanilla_build = B(build, configuration, no_instrumentation)
     vanilla_build.build(configuration, build, item, flavor)
@@ -113,18 +115,25 @@ def run_streamline(configuration, build, item, flavor, itemID, database, cur) ->
     analyser_dir = configuration.get_analyser_dir(build, item)
     util.remove_from_pgoe_out_dir(analyser_dir)
 
-    analyser = A(configuration, build, item)
-    instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
-    log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
+#    analyser = A(configuration, build, item)
+#    instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
+#    log.get_logger().log('[WHITELIST] $0$ ' + str(util.lines_in_file(instr_file)), level='perf')
+    
+    #configuration.is_first_iteration[build + item + flavor] = True
     for x in range(0, 5):
       log.get_logger().toggle_state('info')
       log.get_logger().log('Running iteration ' + str(x), level='info')
       log.get_logger().toggle_state('info')
-      no_instrumentation = True
       instr_file = ''
       # Only run the pgoe to get the functions name
       log.get_logger().log('Starting with the profiler run', level='debug')
       iteration_timer_start = os.times()
+      
+      #Analysis Phase
+      analyser = A(configuration, build, item)
+      instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
+      log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
+      
       # After baseline measurement is complete, do the instrumented build/run
       no_instrumentation = False
       builder = B(build, configuration, no_instrumentation)
@@ -140,16 +149,14 @@ def run_streamline(configuration, build, item, flavor, itemID, database, cur) ->
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rt / vanilla_avg_rt
+      log.get_logger().log('[RUNTIME] $' + str(x) + '$ ' + str(instr_rt), level='perf')
       log.get_logger().log('[OVERHEAD] $' + str(x) + '$ ' + str(ovh_percentage), level='perf')
 
-      #Analysis Phase
-      analyser = A(configuration, build, item)
-      instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
-      log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
       iteration_timer_stop = os.times()
       user_time = iteration_timer_stop[2] - iteration_timer_start[2]
       system_time = iteration_timer_stop[3] - iteration_timer_start[3]
       log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+      log.get_logger().dump_tape(cli=True)
 
   except Exception as e:
     log.get_logger().log('run_setup problem', level='debug')
@@ -360,7 +367,8 @@ def run(path_to_config) -> None:
                           submitter_functor, exp_dir, build)
             database.insert_data_items(cur, itemDBData)
 
-            run_setup(configuration, build, item, flavor, itemID, database, cur)
+            #run_setup(configuration, build, item, flavor, itemID, database, cur)
+            run_streamline(configuration, build, item, flavor, itemID, database, cur)
 
         # If global flavor
         else:

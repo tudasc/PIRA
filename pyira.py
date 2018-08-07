@@ -30,6 +30,8 @@ parser.add_argument('--tape', help='Path to tape file to dump.')
 args = parser.parse_args()
 
 try:
+  log.get_logger().log('Starting', level='debug')
+  log.get_logger().dump_tape(cli=True)
   runner.run(args.config)
 
 finally:
