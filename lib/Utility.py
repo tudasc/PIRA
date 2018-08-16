@@ -282,7 +282,8 @@ def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, b
   ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
   sh_cmd = command + ' ' + ipcg_file
   log.get_logger().log('  NO INSTR: Run cmd: ' + sh_cmd)
-  shell(sh_cmd)
+  out, rt = shell(sh_cmd)
+  log.get_logger().log('Output of analyzer:\n' + out, level='debug')
 
 
 def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:

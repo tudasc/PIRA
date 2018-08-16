@@ -98,6 +98,7 @@ def run_streamline(configuration, build, item, flavor, itemID, database, cur) ->
     log.get_logger().log('run_setup phase.', level='debug')
     log.get_logger().dump_tape(cli=True)
     no_instrumentation = True
+    configuration.is_first_iteration[build + item + flavor] = True
     # Build and run without any instrumentation
     vanilla_build = B(build, configuration, no_instrumentation)
     vanilla_build.build(configuration, build, item, flavor)
