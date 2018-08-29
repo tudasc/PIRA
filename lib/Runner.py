@@ -121,7 +121,7 @@ def run_streamline(configuration, build, item, flavor, itemID, database, cur) ->
 #    log.get_logger().log('[WHITELIST] $0$ ' + str(util.lines_in_file(instr_file)), level='perf')
     
     #configuration.is_first_iteration[build + item + flavor] = True
-    for x in range(0, 5):
+    for x in range(0, 15):
       log.get_logger().toggle_state('info')
       log.get_logger().log('Running iteration ' + str(x), level='info')
       log.get_logger().toggle_state('info')
@@ -134,6 +134,7 @@ def run_streamline(configuration, build, item, flavor, itemID, database, cur) ->
       analyser = A(configuration, build, item)
       instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
       log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
+      util.shell('stat ' + instr_file)
       
       # After baseline measurement is complete, do the instrumented build/run
       no_instrumentation = False
