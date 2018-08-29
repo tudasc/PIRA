@@ -44,7 +44,7 @@ class Analyzer:
         if util.check_file(instr_files):
           util.rename(instr_files, prev_instr_file)
           util.run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir,
-                                    iterationNumber)
+                                    iterationNumber-1)
           logging.get_logger().log('Analyzer command finished', level='debug')
         else:
           util.run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name)

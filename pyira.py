@@ -26,9 +26,19 @@ for row in rows:
 
 parser = argparse.ArgumentParser()
 parser.add_argument('config', help='The configuration json file.')
+parser.add_argument('--tape', help='Path to tape file to dump.')
 args = parser.parse_args()
 
-runner.run(args.config)
+try:
+  log.get_logger().log('Starting', level='debug')
+  log.get_logger().dump_tape(cli=True)
+  runner.run(args.config)
+
+finally:
+  if args.tape is not None:
+    log.get_logger().dump_tape(args.tape)
+  else:
+    log.get_logger().dump_tape('tape.tp')
 
 log.get_logger().log('End of process')
 log.get_logger().show_perf()

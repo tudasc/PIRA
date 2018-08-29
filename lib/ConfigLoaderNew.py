@@ -167,11 +167,15 @@ class ConfigurationLoader:
     if config_file in self.config_cache:
       return self.config_cache[config_file]
 
-    file_content = util.read_file(config_file)
-    json_tree = json.loads(file_content)
-    configuration = self.construct_from_json(json_tree)
-    self.config_cache[config_file] = configuration
-    return configuration
+    try:
+      file_content = util.read_file(config_file)
+      json_tree = json.loads(file_content)
+      configuration = self.construct_from_json(json_tree)
+      self.config_cache[config_file] = configuration
+      return configuration
+
+    except Exception as e:
+      print('Exception occured ' + str(e))
 
   def construct_from_json(self, json_tree):
     conf = ConfigurationNew()

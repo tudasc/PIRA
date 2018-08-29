@@ -93,6 +93,77 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
   log.get_logger().log('Submitted job. Exiting. Re-invoke when job is finished.')
   exit(0)
 
+def run_streamline(configuration, build, item, flavor, itemID, database, cur) -> None:
+  try:
+    log.get_logger().log('run_setup phase.', level='debug')
+    log.get_logger().dump_tape(cli=True)
+    no_instrumentation = True
+    configuration.is_first_iteration[build + item + flavor] = True
+    # Build and run without any instrumentation
+    vanilla_build = B(build, configuration, no_instrumentation)
+    vanilla_build.build(configuration, build, item, flavor)
+
+    log.get_logger().log('Running the baseline binary.')
+    accu_runtime = .0
+    num_vanilla_repetitions = 1
+    # Baseline run. TODO Better evaluation of the obtained timings.
+    for y in range(0, num_vanilla_repetitions):
+      accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
+
+    vanilla_avg_rt = accu_runtime / num_vanilla_repetitions
+    log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
+
+    analyser_dir = configuration.get_analyser_dir(build, item)
+    util.remove_from_pgoe_out_dir(analyser_dir)
+
+#    analyser = A(configuration, build, item)
+#    instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
+#    log.get_logger().log('[WHITELIST] $0$ ' + str(util.lines_in_file(instr_file)), level='perf')
+    
+    #configuration.is_first_iteration[build + item + flavor] = True
+    for x in range(0, 15):
+      log.get_logger().toggle_state('info')
+      log.get_logger().log('Running iteration ' + str(x), level='info')
+      log.get_logger().toggle_state('info')
+      instr_file = ''
+      # Only run the pgoe to get the functions name
+      log.get_logger().log('Starting with the profiler run', level='debug')
+      iteration_timer_start = os.times()
+      
+      #Analysis Phase
+      analyser = A(configuration, build, item)
+      instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
+      log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
+      util.shell('stat ' + instr_file)
+      
+      # After baseline measurement is complete, do the instrumented build/run
+      no_instrumentation = False
+      builder = B(build, configuration, no_instrumentation)
+      builder_timer_start = os.times()
+      builder.build(configuration, build, item, flavor)
+      builder_timer_stop = os.times()
+      user_time = builder_timer_stop[2] - builder_timer_start[2]
+      system_time = builder_timer_stop[3] - builder_timer_start[3]
+      log.get_logger().log('[BUILDTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+
+      #Run Phase
+      instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
+
+      # Compute overhead of instrumentation
+      ovh_percentage = instr_rt / vanilla_avg_rt
+      log.get_logger().log('[RUNTIME] $' + str(x) + '$ ' + str(instr_rt), level='perf')
+      log.get_logger().log('[OVERHEAD] $' + str(x) + '$ ' + str(ovh_percentage), level='perf')
+
+      iteration_timer_stop = os.times()
+      user_time = iteration_timer_stop[2] - iteration_timer_start[2]
+      system_time = iteration_timer_stop[3] - iteration_timer_start[3]
+      log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+      log.get_logger().dump_tape(cli=True)
+
+  except Exception as e:
+    log.get_logger().log('run_setup problem', level='debug')
+    raise RuntimeError(str(e))
+
 
 def run_detail(config, build, benchmark, flavor, is_no_instrumentation_run, iteration_number, itemID, database,
     cur) -> float:
@@ -137,14 +208,14 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
           accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
 
         vanilla_avg_rt = accu_runtime / num_vanilla_repetitions
-        log.get_logger().log('[RUNTIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
+        log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
 
         analyser_dir = configuration.get_analyser_dir(build, item)
         util.remove_from_pgoe_out_dir(analyser_dir)
 
         analyser = A(configuration, build, item)
         instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
-        log.get_logger().log('[WHITELIST][' + str(x) + '] ' + str(util.lines_in_file(instr_file)), level='perf')
+        log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
 
       log.get_logger().log('Starting with the profiler run', level='debug')
       iteration_timer_start = os.times()
@@ -156,23 +227,23 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
       builder_timer_stop = os.times()
       user_time = builder_timer_stop[2] - builder_timer_start[2]
       system_time = builder_timer_stop[3] - builder_timer_start[3]
-      log.get_logger().log('[BUILDTIME][' + str(x) + '] ' + str(user_time) + ', ' + str(system_time), level='perf')
+      log.get_logger().log('[BUILDTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
       #Run Phase
       instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rt / vanilla_avg_rt
-      log.get_logger().log('[OVERHEAD][' + str(x) + '] ' + str(ovh_percentage), level='perf')
+      log.get_logger().log('[OVERHEAD] $' + str(x) + '$ ' + str(ovh_percentage), level='perf')
 
       #Analysis Phase
       analyser = A(configuration, build, item)
       instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
-      log.get_logger().log('[WHITELIST][' + str(x) + '] ' + str(util.lines_in_file(instr_file)), level='perf')
+      log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
       iteration_timer_stop = os.times()
       user_time = iteration_timer_stop[2] - iteration_timer_start[2]
       system_time = iteration_timer_stop[3] - iteration_timer_start[3]
-      log.get_logger().log('[ITERTIME][' + str(x) + '] ' + str(user_time) + ', ' + str(system_time), level='perf')
+      log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
   except Exception as e:
     log.get_logger().log('run_setup problem', level='debug')
@@ -298,18 +369,17 @@ def run(path_to_config) -> None:
                           submitter_functor, exp_dir, build)
             database.insert_data_items(cur, itemDBData)
 
-            run_setup(configuration, build, item, flavor, itemID, database, cur)
+            #run_setup(configuration, build, item, flavor, itemID, database, cur)
+            run_streamline(configuration, build, item, flavor, itemID, database, cur)
 
         # If global flavor
         else:
           for flavor in configuration.global_flavors:
             run_setup(configuration, build, item, flavor, itemID, database, cur)
     util.change_cwd(home_dir)
-    log.get_logger().dump_tape('tape.log')
 
   except RuntimeError as rt_err:
     util.change_cwd(home_dir)
     log.get_logger().log(
         'Runner.run caught exception. Message: ' + str(rt_err), level='warn')
-    log.get_logger().dump_tape('tape.log')
     log.get_logger().dump_tape()
