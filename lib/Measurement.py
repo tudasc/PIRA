@@ -5,12 +5,59 @@ import lib.ConfigLoaderNew as cln
 import typing
 
 
+class RunConfiguration:
+
+  """This class holds information required for one specific experiment run"""
+
+  def __init__(self, iteration, is_instr_run, db_item_id) -> None:
+    """TODO: Implement
+
+    :iteration: The number of the iteration of this invocation
+    :is_instr_run: Whether this iteration does instrumentation
+
+    """
+    self._iteration = iteration
+    self._is_instr_run = is_instr_run
+    self._db_item_id = db_item_id
+
+
+  def get_iteration(self):
+    """Returns the current iteration saved in this instance
+
+    :f: TODO
+    :returns: TODO
+    """
+    return self._iteration
+
+
+  def get_db_item_id(self):
+    """Returns the db item id associated with this instance
+
+    :f: TODO
+    :returns: TODO
+
+    """
+    return self._db_item_id
+
+
+  def is_instr(self):
+    """Returns true iff this instance is meant for instrumentation
+    :returns: TODO
+    """
+    return self._is_instr_run
+    
+
 class ScorepSystemHelper:
 
   def __init__(self, config: cln.ConfigurationNew) -> None:
     self.known_files = ['.cubex']
     self.config = config
     self.data = {}
+    self.cur_mem_size = ''
+    self.cur_exp_directory = ''
+    self.cur_overwrite_exp_dir = 'False'
+    self.cur_base_name = ''
+    self.cur_filter_file = ''
 
   def get_data_elem(self, key: str):
     try:
@@ -44,24 +91,29 @@ class ScorepSystemHelper:
       self.set_scorep_profiling_basename(flavor, build, item)
 
   def set_scorep_memory_size(self, mem_str: str) -> None:
-    u.set_env('SCOREP_TOTAL_MEMORY', mem_str)
+    self.cur_mem_size = mem_str
+    u.set_env('SCOREP_TOTAL_MEMORY', self.cur_mem_size)
 
   def set_scorep_profiling_basename(self, flavor: str, base: str, item: str) -> None:
-    u.set_env('SCOREP_PROFILING_BASE_NAME', flavor + '-' + item)
+    self.cur_base_name = flavor + '-' + item
+    u.set_env('SCOREP_PROFILING_BASE_NAME', self.cur_base_name)
 
   def set_scorep_exp_dir(self, exp_dir: str, flavor: str, iterationNumber: int) -> None:
     effective_dir = u.get_cube_file_path(exp_dir, flavor, iterationNumber)
     if not u.is_valid_file(effective_dir):
       raise Exception('Score-p experiment directory invalid.')
 
-    u.set_env('SCOREP_EXPERIMENT_DIRECTORY', effective_dir)
+    self.cur_exp_directory = effective_dir
+    u.set_env('SCOREP_EXPERIMENT_DIRECTORY', self.cur_exp_directory)
     return
 
   def set_overwrite_scorep_exp_dir(self) -> None:
-    u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', 'True')
+    self.cur_overwrite_exp_dir = 'True'
+    u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', self.cur_overwrite_exp_dir)
 
   def set_filter_file(self, file_name:str) -> None:
     if not u.is_valid_file(file_name):
       raise RuntimeError('Score-P filter file not valid.')
 
-    u.set_env('SCOREP_FILTERING_FILE', file_name)
+    self.cur_filter_file = file_name
+    u.set_env('SCOREP_FILTERING_FILE', self.cur_filter_file)
