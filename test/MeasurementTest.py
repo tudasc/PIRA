@@ -44,7 +44,7 @@ class TestMeasurement(unittest.TestCase):
     self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
 
 
-  def test_scorep_mh_set_up_instr(self):
+  def test_scorep_mh_set_up_no_instr(self):
     s_mh = m.ScorepSystemHelper(self.cfg)
     s_mh.set_up('/this/is/top_dir', 'item01', 'item01-flavor01', 0, False)
 
@@ -53,6 +53,15 @@ class TestMeasurement(unittest.TestCase):
     self.assertEqual('False', s_mh.cur_overwrite_exp_dir)
     self.assertEqual('', s_mh.cur_base_name)
     self.assertEqual('', s_mh.cur_exp_directory)
+
+
+  def test_scorep_mh_dir_invalid(self):
+    s_mh = m.ScorepSystemHelper(self.cfg)
+    s_mh.set_up('/this/is/top_dir', 'item01', 'item01-flavor01', 0, True)
+
+    self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
+    self.assertRaises(Exception, s_mh.set_scorep_exp_dir, '+/invalid/path/haha', 'item01-flavor01', 0)
+    self.assertRaises(Exception, s_mh.set_scorep_exp_dir, '/inv?alid/path/haha', 'item01-flavor01', 0)
    
 
 if __name__ == '__main__':

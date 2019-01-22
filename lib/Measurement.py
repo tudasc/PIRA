@@ -87,8 +87,7 @@ class ScorepSystemHelper:
     self.set_scorep_exp_dir(exp_dir, flavor, it_nr)
     self.set_scorep_memory_size('500M')
     self.set_overwrite_scorep_exp_dir()
-    if is_instr_run:
-      self.set_scorep_profiling_basename(flavor, build, item)
+    self.set_scorep_profiling_basename(flavor, build, item)
 
   def set_scorep_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
