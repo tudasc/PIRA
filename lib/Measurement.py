@@ -5,6 +5,12 @@ import lib.ConfigLoaderNew as cln
 import typing
 
 
+class MeasurementSystemException(Exception):
+  def __init__(self, message):
+    super().__init__(message)
+
+
+
 class RunConfiguration:
 
   """This class holds information required for one specific experiment run"""
@@ -100,7 +106,7 @@ class ScorepSystemHelper:
   def set_scorep_exp_dir(self, exp_dir: str, flavor: str, iterationNumber: int) -> None:
     effective_dir = u.get_cube_file_path(exp_dir, flavor, iterationNumber)
     if not u.is_valid_file(effective_dir):
-      raise Exception('Score-p experiment directory invalid.')
+      raise MeasurementSystemException('Score-p experiment directory invalid.')
 
     self.cur_exp_directory = effective_dir
     u.set_env('SCOREP_EXPERIMENT_DIRECTORY', self.cur_exp_directory)
@@ -112,7 +118,7 @@ class ScorepSystemHelper:
 
   def set_filter_file(self, file_name:str) -> None:
     if not u.is_valid_file(file_name):
-      raise RuntimeError('Score-P filter file not valid.')
+      raise MeasurementSystemException('Score-P filter file not valid.')
 
     self.cur_filter_file = file_name
     u.set_env('SCOREP_FILTERING_FILE', self.cur_filter_file)

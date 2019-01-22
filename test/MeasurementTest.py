@@ -60,8 +60,8 @@ class TestMeasurement(unittest.TestCase):
     s_mh.set_up('/this/is/top_dir', 'item01', 'item01-flavor01', 0, True)
 
     self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
-    self.assertRaises(Exception, s_mh.set_scorep_exp_dir, '+/invalid/path/haha', 'item01-flavor01', 0)
-    self.assertRaises(Exception, s_mh.set_scorep_exp_dir, '/inv?alid/path/haha', 'item01-flavor01', 0)
+    self.assertRaises(m.MeasurementSystemException, s_mh.set_scorep_exp_dir, '+/invalid/path/haha', 'item01-flavor01', 0)
+    self.assertRaises(m.MeasurementSystemException, s_mh.set_scorep_exp_dir, '/inv?alid/path/haha', 'item01-flavor01', 0)
    
 
 if __name__ == '__main__':
