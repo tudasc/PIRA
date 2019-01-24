@@ -23,7 +23,7 @@ class TestMeasurement(unittest.TestCase):
 
 
   def test_scorep_mh_init(self):
-    s_mh = m.ScorepSystemHelper(cln.ConfigurationNew())
+    s_mh = m.ScorepSystemHelper(cln.PiraConfiguration())
     self.assertIn('.cubex', s_mh.known_files)
     self.assertDictEqual(s_mh.data, {})
     self.assertEqual('False', s_mh.cur_overwrite_exp_dir)

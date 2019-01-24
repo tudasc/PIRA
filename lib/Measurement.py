@@ -10,6 +10,23 @@ class MeasurementSystemException(Exception):
     super().__init__(message)
 
 
+class RunResult:
+  """Holds the result of a measurement execution with potentially multiple iterations."""
+
+  def __init__(self, accumulated_runtime, nr_of_iterations, average):
+    """Initializes the class
+
+    :accumulated_runtime: TODO
+    :nr_of_iterations: TODO
+    :average: TODO
+
+    """
+    super().__init__(self)
+
+    self._accumulated_runtime = accumulated_runtime
+    self._nr_of_iterations = nr_of_iterations
+    self._average = average
+
 
 class RunConfiguration:
 
@@ -51,11 +68,11 @@ class RunConfiguration:
     :returns: TODO
     """
     return self._is_instr_run
-    
+
 
 class ScorepSystemHelper:
 
-  def __init__(self, config: cln.ConfigurationNew) -> None:
+  def __init__(self, config: cln.PiraConfiguration) -> None:
     self.known_files = ['.cubex']
     self.config = config
     self.data = {}
@@ -69,10 +86,10 @@ class ScorepSystemHelper:
     try:
       if key in self.data.keys():
         return self.data[key]
-  
+
     except KeyError as ke:
       pass
-    
+
     log.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
     return ''
 

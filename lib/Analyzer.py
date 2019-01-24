@@ -1,5 +1,6 @@
 import lib.Utility as util
 import lib.Logging as logging
+import lib.TimeTracking as tt
 
 
 class Analyzer:
@@ -19,6 +20,7 @@ class Analyzer:
     # TODO Refactor these code pieces.
 
     analyse_functor = util.load_functor(config.get_analyse_func(build, benchmark), anal_func_filename)
+
     if analyse_functor.get_method()['active']:
       analyse_functor.active(benchmark, **kwargs)
 
@@ -43,6 +45,7 @@ class Analyzer:
 
         if util.check_file(instr_files):
           util.rename(instr_files, prev_instr_file)
+          #tt.m_track('analysis', util, 'run_analyser_command', command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber-1)
           util.run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir,
                                     iterationNumber-1)
           logging.get_logger().log('Analyzer command finished', level='debug')
@@ -81,7 +84,7 @@ class Analyzer:
       try:
         util.change_cwd(self.old_cwd)
       except Exception as e:
-        logging.get_logger().log(e.message, level='error')
+        logging.get_logger().log(str(e), level='error')
 
   def analyse_detail(self, config, build, benchmark, flavor, iterationNumber) -> str:
     kwargs = {'compiler': ''}

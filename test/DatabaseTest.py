@@ -12,7 +12,11 @@ class TestDatabaseBasic(unittest.TestCase):
 
   """Tests the data base. Maybe"""
 
+  def setUp(self):
+    d.DBManager.instance = None
+
   def test_create_db(self):
+    self.assertIsNone(d.DBManager.instance)
     dbm = d.DBManager('test.sqlite')
     self.assertIsNotNone(dbm)
     self.assertIsNotNone(dbm.instance.conn)
@@ -25,6 +29,10 @@ class TestDatabaseBasic(unittest.TestCase):
   def test_create_db_fail(self):
     self.assertRaises(d.DBException, d.DBManager, None) #XXX Why does not raise?
 
+  def test_fail_create_table_wo_cursor(self):
+    dbm = d.DBManager('test.sqlite')
+    self.assertRaises(d.DBException, d.DBManager.instance.create_table, tbls.create_items_table)
+
 class TestDatabaseManip(unittest.TestCase):
 
   """ Tests the manipulating functions of the DB implementation """
@@ -34,7 +42,9 @@ class TestDatabaseManip(unittest.TestCase):
     os.remove('test.sqlite')
 
   def setUp(self):
+    d.DBManager.instance = None
     self.dbm = d.DBManager('test.sqlite') 
+    self.dbm.create_cursor()
 
   def test_create_app_table(self):
     self.dbm.create_table(tbls.create_application_table)
@@ -55,4 +65,3 @@ class TestDatabaseManip(unittest.TestCase):
 
 if __name__ == '__main__':
   unittest.main()
-  # XXX How to remove the generated sqlite file?

@@ -1,5 +1,6 @@
 import os
 from lib.ConfigLoaderNew import ConfigurationLoader as CLoader
+from lib.ConfigLoaderNew import TargetConfiguration as TargetConfiguration
 from lib.Builder import Builder as B
 from lib.Analyzer import Analyzer as A
 from lib.db import database as db
@@ -9,6 +10,9 @@ import lib.tables as tables
 import lib.BatchSystemHelper as bat_sys
 import lib.FunctorManagement as fm
 import lib.Measurement as ms
+import lib.TimeTracking as tt
+import lib.Database as d
+import lib.ConfigLoaderNew as cln
 
 import typing
 
@@ -93,35 +97,65 @@ def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_ru
   log.get_logger().log('Submitted job. Exiting. Re-invoke when job is finished.')
   exit(0)
 
-def run_streamline(configuration, build, item, flavor, itemID, database, cur) -> None:
+
+def do_baseline_run(configuration, build, item, flavor, iterations, db_item_id):
+  """Executes the vanilla binary for a specific number of times and returns a dict with the timings gathered.
+
+  :configuration: The PIRA configuration
+  :build: Current top-level build
+  :item: TODO
+  :flavor: TODO
+  :iteration: TODO
+  :db_item_id: TODO
+  :returns: TODO
+
+  """
+  log.get_logger().log('Running the baseline binary.')
+  accu_runtime = .0
+  num_vanilla_repetitions = iterations # XXX This should be a command line argument?
+  # Baseline run. TODO Better evaluation of the obtained timings.
+  for y in range(0, num_vanilla_repetitions):
+    accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
+
+  vanilla_avg_rt = accu_runtime / num_vanilla_repetitions
+  log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
+
+  return ms.RunResult(accu_runtime, iterations, vanilla_avg_rt)
+
+
+def run_on_config(target_config: TargetConfiguration) -> None:
   try:
     log.get_logger().log('run_setup phase.', level='debug')
-    log.get_logger().dump_tape(cli=True)
     no_instrumentation = True
-    configuration.is_first_iteration[build + item + flavor] = True
+    # XXX Let's see if this code is unnecessary
+    #configuration.is_first_iteration[build + item + flavor] = no_instrumentation
+    
     # Build and run without any instrumentation
-    vanilla_build = B(build, configuration, no_instrumentation)
-    vanilla_build.build(configuration, build, item, flavor)
+    #build = target_config.get_target()
+    #vanilla_builder = B(build, configuration, no_instrumentation)
+    vanilla_builder = B(target_config, no_instrumentation)
+    #log.get_logger().log('done run_setup phase.', level='debug')
 
-    log.get_logger().log('Running the baseline binary.')
-    accu_runtime = .0
-    num_vanilla_repetitions = 1
-    # Baseline run. TODO Better evaluation of the obtained timings.
-    for y in range(0, num_vanilla_repetitions):
-      accu_runtime += run_detail(configuration, build, item, flavor, no_instrumentation, y, itemID, database, cur)
+    tracker = tt.TimeTracker()
+    #tracker.m_track('Vanilla Build', vanilla_builder, 'build', configuration, build, item, flavor)
+    tracker.m_track('Vanilla Build', vanilla_builder, 'build')
+    # vanilla_build.build(configuration, build, item, flavor)
 
-    vanilla_avg_rt = accu_runtime / num_vanilla_repetitions
-    log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(vanilla_avg_rt), level='perf')
+    # XXX This should eventually be part of a Runner class.
+    do_baseline_run(configuration, build, item, flavor, num_vanilla_repetitions, db_item_id)
 
     analyser_dir = configuration.get_analyser_dir(build, item)
     util.remove_from_pgoe_out_dir(analyser_dir)
 
-#    analyser = A(configuration, build, item)
-#    instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
-#    log.get_logger().log('[WHITELIST] $0$ ' + str(util.lines_in_file(instr_file)), level='perf')
-    
+    log.get_logger().dump_tape(cli=True)
+    #    analyser = A(configuration, build, item)
+    #    instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
+    #    log.get_logger().log('[WHITELIST] $0$ ' + str(util.lines_in_file(instr_file)), level='perf')
+
     #configuration.is_first_iteration[build + item + flavor] = True
     for x in range(0, 15):
+      run_cfg = ms.RunConfiguration(x, True, db_item_id)
+
       log.get_logger().toggle_state('info')
       log.get_logger().log('Running iteration ' + str(x), level='info')
       log.get_logger().toggle_state('info')
@@ -129,22 +163,95 @@ def run_streamline(configuration, build, item, flavor, itemID, database, cur) ->
       # Only run the pgoe to get the functions name
       log.get_logger().log('Starting with the profiler run', level='debug')
       iteration_timer_start = os.times()
-      
+
       #Analysis Phase
       analyser = A(configuration, build, item)
       instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
       log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
       util.shell('stat ' + instr_file)
-      
+
       # After baseline measurement is complete, do the instrumented build/run
       no_instrumentation = False
       builder = B(build, configuration, no_instrumentation)
-      builder_timer_start = os.times()
-      builder.build(configuration, build, item, flavor)
-      builder_timer_stop = os.times()
-      user_time = builder_timer_stop[2] - builder_timer_start[2]
-      system_time = builder_timer_stop[3] - builder_timer_start[3]
-      log.get_logger().log('[BUILDTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+      tracker.m_track('Instrument Build', builder, 'build', configuration, build, item, flavor)
+#      builder_timer_start = os.times()
+#      builder.build(configuration, build, item, flavor)
+#      builder_timer_stop = os.times()
+#      user_time = builder_timer_stop[2] - builder_timer_start[2]
+#      system_time = builder_timer_stop[3] - builder_timer_start[3]
+#      log.get_logger().log('[BUILDTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+
+      #Run Phase
+      instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
+
+      # Compute overhead of instrumentation
+      ovh_percentage = instr_rt / vanilla_avg_rt
+      log.get_logger().log('[RUNTIME] $' + str(x) + '$ ' + str(instr_rt), level='perf')
+      log.get_logger().log('[OVERHEAD] $' + str(x) + '$ ' + str(ovh_percentage), level='perf')
+
+      iteration_timer_stop = os.times()
+      user_time = iteration_timer_stop[2] - iteration_timer_start[2]
+      system_time = iteration_timer_stop[3] - iteration_timer_start[3]
+      log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+      log.get_logger().dump_tape(cli=True)
+
+  except Exception as e:
+    log.get_logger().log('Problem during preparation of run.\nMessage:\n' + str(e), level='debug')
+    raise RuntimeError(str(e))
+
+def run_streamline(configuration, build, item, flavor, itemID, database, cur) -> None:
+  try:
+    log.get_logger().log('run_setup phase.', level='debug')
+    log.get_logger().dump_tape(cli=True)
+    no_instrumentation = True
+    # XXX Let's see if this code is unnecessary
+    #configuration.is_first_iteration[build + item + flavor] = no_instrumentation
+
+    # Build and run without any instrumentation
+    vanilla_builder = B(build, configuration, no_instrumentation)
+
+    tracker = tt.TimeTracker()
+    tracker.m_track('Vanilla Build', vanilla_builder, 'build', configuration, build, item, flavor)
+    # vanilla_build.build(configuration, build, item, flavor)
+
+    # XXX This should eventually be part of a Runner class.
+    do_baseline_run(configuration, build, item, flavor, num_vanilla_repetitions, db_item_id)
+
+    analyser_dir = configuration.get_analyser_dir(build, item)
+    util.remove_from_pgoe_out_dir(analyser_dir)
+
+    #    analyser = A(configuration, build, item)
+    #    instr_file = analyser.analyse_detail(configuration, build, item, flavor, y)
+    #    log.get_logger().log('[WHITELIST] $0$ ' + str(util.lines_in_file(instr_file)), level='perf')
+
+    #configuration.is_first_iteration[build + item + flavor] = True
+    for x in range(0, 15):
+      run_cfg = ms.RunConfiguration(x, True, db_item_id)
+
+      log.get_logger().toggle_state('info')
+      log.get_logger().log('Running iteration ' + str(x), level='info')
+      log.get_logger().toggle_state('info')
+      instr_file = ''
+      # Only run the pgoe to get the functions name
+      log.get_logger().log('Starting with the profiler run', level='debug')
+      iteration_timer_start = os.times()
+
+      #Analysis Phase
+      analyser = A(configuration, build, item)
+      instr_file = analyser.analyse_detail(configuration, build, item, flavor, x)
+      log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
+      util.shell('stat ' + instr_file)
+
+      # After baseline measurement is complete, do the instrumented build/run
+      no_instrumentation = False
+      builder = B(build, configuration, no_instrumentation)
+      tracker.m_track('Instrument Build', builder, 'build', configuration, build, item, flavor)
+#      builder_timer_start = os.times()
+#      builder.build(configuration, build, item, flavor)
+#      builder_timer_stop = os.times()
+#      user_time = builder_timer_stop[2] - builder_timer_start[2]
+#      system_time = builder_timer_stop[3] - builder_timer_start[3]
+#      log.get_logger().log('[BUILDTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
       #Run Phase
       instr_rt = run_detail(configuration, build, item, flavor, no_instrumentation, x, itemID, database, cur)
@@ -250,7 +357,9 @@ def run_setup(configuration, build, item, flavor, itemID, database, cur) -> None
     raise RuntimeError(str(e))
 
 
-def run(path_to_config) -> None:
+def main(path_to_config) -> None:
+  """ Main function for pira framework. Used to invoke the various components. """
+
   #log.get_logger().set_state('info')
   log.get_logger().log('Running with configuration: ' + str(path_to_config))
   home_dir = util.get_cwd()
@@ -264,16 +373,16 @@ def run(path_to_config) -> None:
     '''
         Initialize Database
     '''
-    database = db("BenchPressDB.sqlite")
-    cur = database.create_cursor(database.conn)
+    #database = db("BenchPressDB.sqlite")
+    #db_cur = database.create_cursor(database.conn)
     '''
        Create tables if not exists
     '''
-    database.create_table(cur, tables.sql_create_application_table)
-    database.create_table(cur, tables.sql_create_builds_table)
-    database.create_table(cur, tables.sql_create_items_table)
-    database.create_table(cur, tables.sql_create_experiment_table)
-    log.get_logger().log('Created necessary tables in database')
+    #database.create_table(db_cur, tables.sql_create_application_table)
+    #database.create_table(db_cur, tables.sql_create_builds_table)
+    #database.create_table(db_cur, tables.sql_create_items_table)
+    #database.create_table(db_cur, tables.sql_create_experiment_table)
+    #log.get_logger().log('Created necessary tables in database')
 
     # Flow for submitter
     # FIXME: Refactor this code!
@@ -290,7 +399,7 @@ def run(path_to_config) -> None:
       experiment_data = (util.generate_random_string(), job_details[BENCHMARKNAME],
                          job_details[ITERATIONNUMBER], job_details[ISWITHINSTR], job_details[CUBEFILEPATH],
                          runtime, job_details[ITEMID])
-      database.insert_data_experiment(cur, experiment_data)
+      database.insert_data_experiment(db_cur, experiment_data)
 
       if (int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) < 4):
 
@@ -301,7 +410,7 @@ def run(path_to_config) -> None:
 
         # Run - this binary does not contain any instrumentation.
         run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], True,
-                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, cur)
+                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, db_cur)
 
       if (int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) == 4):
         analyser_dir = configuration.get_analyser_dir(job_details[BUILDNAME], job_details[ITEM])
@@ -316,7 +425,7 @@ def run(path_to_config) -> None:
         builder = B(job_details[BUILDNAME], configuration)
         builder.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
         run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], False, 0,
-                   job_details[ITEMID], database, cur)
+                   job_details[ITEMID], database, db_cur)
 
       if (int(job_details[ISWITHINSTR]) == 1):
         analyser = A(configuration, job_details[BUILDNAME], job_details[ITEM])
@@ -328,54 +437,71 @@ def run(path_to_config) -> None:
 
         # Run Phase
         run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], False,
-                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, cur)
+                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, db_cur)
     else:
+      '''
+      This is running PIRA actively on the local machine.
+      It is blocking, and the user can track the progress in the terminal.
+      '''
       log.get_logger().log('Running the local case')
 
+      # The FunctorManager manages loaded functors and generates the respective names
+      func_manager = fm.FunctorManager(configuration)
+      dbm = d.DBManager(d.DBManager.db_name + '.' + d.DBManager.db_ext)
+      dbm.create_cursor()
+
+      # A build is a top-level directory
       for build in configuration.get_builds():
         log.get_logger().log('Build: ' + str(build))
-        application = (util.generate_random_string(), build, '', '')
-        database.insert_data_application(cur, application)
+        app_tuple = (util.generate_random_string(), build, '', '')
+        dbm.insert_data_application(app_tuple)
 
-      for item in configuration.get_items(build):
-        log.get_logger().log('Running for item ' + str(item))
+        # An item is a software in that directory
+        for item in configuration.get_items(build):
+          log.get_logger().log('Running for item ' + str(item))
+          benchmark_name = cln.PiraConfiguration.get_benchmark_name(item)
+          log.get_logger().log('benchmark_name: ' + benchmark_name, level='debug')
 
-        if configuration.has_local_flavors(build, item):
-          for flavor in configuration.get_flavors(build, item):
-            log.get_logger().log('Running for local flavor ' + flavor, level='debug')
+          # A flavor is a specific version to build.
+          if configuration.has_local_flavors(build, item):
+            for flavor in configuration.get_flavors(build, item):
+              log.get_logger().log('Running for local flavor ' + flavor, level='debug')
 
-            dbbuild = (util.generate_random_string(), build, '', flavor, build)
-            database.insert_data_builds(cur, dbbuild)
+            # XXX DB code [remove when tested to work with new design]
+            #            build_tuple = (util.generate_random_string(), build, '', flavor, build)
+            #            database.insert_data_builds(db_cur, build_tuple)
+            #            # XXX My implementation returns the full path, including the file extension.
+            #            #     In case something in the database goes wild, this could be it.
+            #            analyse_functor = func_manager.get_analyzer_file(build, item, flavor)
+            #            build_functor = func_manager.get_builder_file(build, item, flavor)
+            #            run_functor = func_manager.get_runner_file(build, item, flavor)
+            #            # TODO implement the get_submitter_file(build, item, flavor) method!
+            #
+            #            submitter_functor = configuration.get_runner_func(
+            #                build, item) + '/slurm_submitter_' + benchmark_name + flavor
+            #            exp_dir = configuration.get_analyser_exp_dir(build, item)
+            #
+            #            db_item_id = util.generate_random_string()
+            #            db_item_data = (db_item_id, benchmark_name, analyse_functor, build_functor, '', run_functor,
+            #                          submitter_functor, exp_dir, build)
+            #            database.insert_data_items(db_cur, db_item_data)
+            # XXX DB code end.
 
-            # Insert into DB the benchmark data
-            benchmark_name = configuration.get_benchmark_name(item)
-            log.get_logger().log('benchmark_name: ' + benchmark_name, level='debug')
-            # The FunctorManager manages loaded functors and generates the respective names
-            func_manager = fm.FunctorManager(configuration)
+              db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
 
-            # XXX My implementation returns the full path, including the file extension.
-            #     In case something in the database goes wild, this could be it.
-            analyse_functor = func_manager.get_analyzer_file(build, item, flavor)
-            build_functor = func_manager.get_builder_file(build, item, flavor)
-            run_functor = func_manager.get_runner_file(build, item, flavor)
-            # TODO implement the get_submitter_file(build, item, flavor) method!
-
-            submitter_functor = configuration.get_runner_func(
-                build, item) + '/slurm_submitter_' + benchmark_name + flavor
-            exp_dir = configuration.get_analyser_exp_dir(build, item)
-
-            itemID = util.generate_random_string()
-            itemDBData = (itemID, benchmark_name, analyse_functor, build_functor, '', run_functor,
-                          submitter_functor, exp_dir, build)
-            database.insert_data_items(cur, itemDBData)
-
-            #run_setup(configuration, build, item, flavor, itemID, database, cur)
-            run_streamline(configuration, build, item, flavor, itemID, database, cur)
+              # Create configuration object for the item currently processed.
+              t_config = TargetConfiguration(build, item, flavor, db_item_id)
+            # XXX Old: run_setup(configuration, build, item, flavor, db_item_id, database, db_cur)
+              #run_streamline(configuration, build, item, flavor, db_item_id, database, db_cur)
+              run_on_config(t_config)
 
         # If global flavor
-        else:
-          for flavor in configuration.global_flavors:
-            run_setup(configuration, build, item, flavor, itemID, database, cur)
+          else:
+            '''
+            FIXME So far no db_item_id generated for global flavor items
+            '''
+            for flavor in configuration.global_flavors:
+              run_setup(configuration, build, item, flavor, db_item_id, database, db_cur)
     util.change_cwd(home_dir)
 
   except RuntimeError as rt_err:

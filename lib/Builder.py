@@ -2,29 +2,37 @@ import lib.Utility as util
 import lib.Logging as log
 import lib.FunctorManagement as fm
 
+# XXX Remove this once it is refactored.
+import lib.ConfigLoaderNew as CL
+
 import typing
 
 
 class Builder:
   """
-    Class which builds a benchmark and the run configuration.
-    """
+  Class which builds a benchmark and the run configuration.
+  """
 
-  def __init__(self, dir_key, configuration, no_instrumentation=False) -> None:
-    self.directory = dir_key
-    self.config = configuration
+  #def __init__(self, dir_key, configuration, no_instrumentation=False) -> None:
+  def __init__(self, target_config: CL.TargetConfiguration, instrument: bool):
+    self.target_config = target_config
+    self.directory = target_config.get_build()
+    #self.directory = dir_key
+    #self.config = configuration
     self.old_cwd = ''
-    self.build_no_instr = no_instrumentation
+    self.build_no_instr = not instrument
     self.error = None
 
-  def build(self, config, build, benchmark, flavor):
+  #def build(self, config, build, benchmark, flavor):
+  def build(self):
     try:
       self.set_up()
-      self.build_detail(build, benchmark, flavor)
+      #self.build_detail(build, benchmark, flavor)
+      self.build_detail()
       self.tear_down()
 
     except Exception as e:
-      log.get_logger().log('Caught exception ' + e.message, level='info')
+      log.get_logger().log('Caught exception ' + str(e), level='info')
       if self.error:
         raise Exception('Severe Problem in Builder.build')
 
@@ -41,16 +49,22 @@ class Builder:
   def tear_down(self) -> None:
     util.change_cwd(self.old_cwd)
 
-  def build_detail(self, build, benchmark, flavor) -> None:
+  def build_detail(self) -> None:
     kwargs = {'compiler': 'clang++'}
-    self.build_flavours(flavor, build, benchmark, kwargs)
+    #self.build_flavours(flavor, build, benchmark, kwargs)
+    self.build_flavours(kwargs)
 
-  def build_flavours(self, flavor: str, build: str, benchmark: str, kwargs) -> None:
-    log.get_logger().log('Building for ' + flavor, level='debug')
+  #def build_flavours(self, flavor: str, build: str, benchmark: str, kwargs) -> None:
+  def build_flavours(self, kwargs) -> None:
+    log.get_logger().log('Building for ' + self.target_config.get_flavor(), level='debug')
     # benchmark == item
-    benchmark_name = self.config.get_benchmark_name(benchmark)
+    benchmark_name = CL.PiraConfiguration.get_benchmark_name(self.target_config.get_target())
     log.get_logger().log('Obtained benchmark_name: ' + benchmark_name, level='debug')
-    f_man = fm.FunctorManager(self.config)
+    build = self.target_config.get_build()
+    benchmark = self.target_config.get_target()
+    flavor = self.target_config.get_flavor()
+    #f_man = fm.FunctorManager(self.config)
+    f_man = fm.FunctorManager() # Returns the currently loaded FM
     clean_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'clean')
     log.get_logger().log('Retrieved clean_functor')
 

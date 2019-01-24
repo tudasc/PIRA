@@ -3,6 +3,7 @@ import argparse
 from lib.db import database as db
 import lib.tables as tables
 import lib.Logging as log
+import lib.Pira as pira
 
 '''
 trying DB
@@ -32,7 +33,8 @@ args = parser.parse_args()
 try:
   log.get_logger().log('Starting', level='debug')
   log.get_logger().dump_tape(cli=True)
-  runner.run(args.config)
+  #runner.run(args.config)
+  pira.main(args.config)
 
 finally:
   if args.tape is not None:

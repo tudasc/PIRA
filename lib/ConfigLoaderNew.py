@@ -4,9 +4,9 @@ import json
 import typing
 
 
-class ConfigurationNew:
+class PiraConfiguration:
   """
-    A configuration for the Runner.
+    A configuration for PIRA
 
     TODO: Rename.
           Test the actual internal data structure.
@@ -138,7 +138,8 @@ class ConfigurationNew:
   def get_batch_script_func(self, build, item) -> str:
     return self.items[build][item]['batch_script']
 
-  def get_benchmark_name(self, benchmark) -> str:
+  @staticmethod
+  def get_benchmark_name(benchmark) -> str:
     return benchmark.split('/')[-1:][0]
 
   def initialize_stopping_iterator(self) -> None:
@@ -154,6 +155,57 @@ class ConfigurationNew:
           self.is_first_iteration[build + item + flavor] = False
 
 
+class TargetConfiguration:
+  """The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. Using TargetConfiguration all steps of building and executing are possible."""
+
+  def __init__(self, place: str, target: str, flavor: str, db_item_id: str):
+    """Initializes the TargetConfiguration with its necessary parameters.
+
+    :place: str: TODO
+    :target: str: TODO
+    :flavor: str: TODO
+    :db_item_id: str: The unique ID for this target
+
+    """
+    self._place: str = place
+    self._target: str = target
+    self._flavor: str = flavor
+    self._db_item_id: str = db_item_id
+
+  def get_build(self):
+    """Return the place / build stored in this TargetConfiguration
+
+    :lf: TODO
+    :returns: TODO
+
+    """
+    return self._place
+
+  def get_target(self):
+    """Return the target / item stored in this TargetConfiguration
+    :returns: TODO
+
+    """
+    return self._target
+
+  def get_flavor(self):
+    """Return the flavor stored in this TargetConfiguration
+    :returns: TODO
+
+    """
+    return self._flavor
+
+    def get_db_item_id(self):
+      """Return the DB item id stored in this TargetConfiguration
+
+      :f: TODO
+      :returns: TODO
+
+      """
+      return self._db_item_id
+
+    
+
 class ConfigurationLoader:
   """
     Loads a provided configuration file. May be static in the future.
@@ -163,7 +215,7 @@ class ConfigurationLoader:
   def __init__(self):
     self.config_cache = {}
 
-  def load_conf(self, config_file: str) -> ConfigurationNew:
+  def load_conf(self, config_file: str) -> PiraConfiguration:
     if config_file in self.config_cache:
       return self.config_cache[config_file]
 
@@ -178,7 +230,7 @@ class ConfigurationLoader:
       print('Exception occured ' + str(e))
 
   def construct_from_json(self, json_tree):
-    conf = ConfigurationNew()
+    conf = PiraConfiguration()
     conf.set_build_directories(util.json_to_canonic(json_tree['description']['directories']))
     conf.initialize_build_dict(conf.directories)
     conf.set_glob_flavors(util.json_to_canonic(json_tree['description']['glob-flavors']))
