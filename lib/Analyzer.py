@@ -1,3 +1,11 @@
+"""
+File: Analyzer.py
+Author: JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module to encapsulate the underlying analysis engine.
+"""
+
 import lib.Utility as util
 import lib.Logging as logging
 import lib.TimeTracking as tt

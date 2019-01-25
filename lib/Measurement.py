@@ -1,3 +1,11 @@
+"""
+File: Measurement.py
+Author: JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module hosts measurement support infrastructure.
+"""
+
 import lib.Utility as u
 import lib.Logging as log
 from lib.Configuration import PiraConfiguration
@@ -6,12 +14,13 @@ import typing
 
 
 class MeasurementSystemException(Exception):
+  """  This exception is thrown if problems in the runtime occur.  """
   def __init__(self, message):
     super().__init__(message)
 
 
 class RunResult:
-  """Holds the result of a measurement execution with potentially multiple iterations."""
+  """  Holds the result of a measurement execution with potentially multiple iterations.  """
 
   def __init__(self, accumulated_runtime, nr_of_iterations, rt_trace = None):
     """Initializes the class
@@ -35,6 +44,7 @@ class RunResult:
 
 
 class ScorepSystemHelper:
+  """  Takes care of setting necessary environment variables appropriately.  """
 
   def __init__(self, config: PiraConfiguration) -> None:
     self.known_files = ['.cubex']

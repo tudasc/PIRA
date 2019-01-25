@@ -1,3 +1,11 @@
+"""
+File: Builder.py
+Author: JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module to build the target software.
+"""
+
 import lib.Utility as util
 import lib.Logging as log
 import lib.FunctorManagement as fm
@@ -6,27 +14,20 @@ from lib.Configuration import TargetConfiguration, PiraConfiguration
 
 import typing
 
-
 class Builder:
   """
   Class which builds a benchmark and the run configuration.
   """
-
-  #def __init__(self, dir_key, configuration, no_instrumentation=False) -> None:
-  def __init__(self, target_config: TargetConfiguration, instrument: bool):
+  def __init__(self, target_config: TargetConfiguration, instrument: bool) -> None:
     self.target_config = target_config
     self.directory = target_config.get_build()
-    #self.directory = dir_key
-    #self.config = configuration
     self.old_cwd = ''
     self.build_no_instr = not instrument
     self.error = None
 
-  #def build(self, config, build, benchmark, flavor):
   def build(self):
     try:
       self.set_up()
-      #self.build_detail(build, benchmark, flavor)
       self.build_detail()
       self.tear_down()
 
@@ -50,10 +51,8 @@ class Builder:
 
   def build_detail(self) -> None:
     kwargs = {'compiler': 'clang++'}
-    #self.build_flavours(flavor, build, benchmark, kwargs)
     self.build_flavours(kwargs)
 
-  #def build_flavours(self, flavor: str, build: str, benchmark: str, kwargs) -> None:
   def build_flavours(self, kwargs) -> None:
     log.get_logger().log('Building for ' + self.target_config.get_flavor(), level='debug')
     # benchmark == item
@@ -62,7 +61,6 @@ class Builder:
     build = self.target_config.get_build()
     benchmark = self.target_config.get_target()
     flavor = self.target_config.get_flavor()
-    #f_man = fm.FunctorManager(self.config)
     f_man = fm.FunctorManager() # Returns the currently loaded FM
     clean_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'clean')
     log.get_logger().log('Retrieved clean_functor')

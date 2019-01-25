@@ -1,3 +1,11 @@
+"""
+File: ConfigLoaderNew.py
+Author: Sachin Manawadi
+Email: ?
+Github: https://github.com/jplehr
+Description: Module to read the PIRA configuration from file.
+"""
+
 import lib.Utility as util
 import lib.Logging as log
 import lib.Configuration as C
@@ -5,12 +13,12 @@ import json
 import typing
 
 
-
 class ConfigurationLoader:
   """
-    Loads a provided configuration file. May be static in the future.
-
-    """
+    Loads a provided configuration file. 
+    
+    XXX: May be static in the future.
+  """
 
   def __init__(self):
     self.config_cache = {}

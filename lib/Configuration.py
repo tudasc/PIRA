@@ -1,3 +1,11 @@
+"""
+File: Configuration.py
+Author: JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module that provides to main data structures.
+"""
+
 import sys
 sys.path.append('..')
 import lib.Logging as log
@@ -9,9 +17,9 @@ class PiraConfiguration:
   """
     A configuration for PIRA
 
-    TODO: Rename.
-          Test the actual internal data structure.
+    TODO: Test the actual internal data structure.
           Remove unnecessary functions from this interface.
+          Get rid of direct dependency on this data structure as much as possible.
     """
 
   def __init__(self) -> None:
@@ -157,10 +165,11 @@ class PiraConfiguration:
 
 
 class TargetConfiguration:
-  """The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. Using TargetConfiguration all steps of building and executing are possible."""
+  """  The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. 
+  Using TargetConfiguration all steps of building and executing are possible.  """
 
   def __init__(self, place: str, target: str, flavor: str, db_item_id: str):
-    """Initializes the TargetConfiguration with its necessary parameters.
+    """  Initializes the TargetConfiguration with its necessary parameters.
 
     :place: str: TODO
     :target: str: TODO
@@ -177,14 +186,14 @@ class TargetConfiguration:
     """Return the place / build stored in this TargetConfiguration
 
     :lf: TODO
-    :returns: TODO
+    :returns: The top-level items, i.e., "builds"
 
     """
     return self._place
 
   def get_target(self):
     """Return the target / item stored in this TargetConfiguration
-    :returns: TODO
+    :returns: the targets / items (children of build)
 
     """
     return self._target
@@ -196,11 +205,11 @@ class TargetConfiguration:
     """
     return self._flavor
 
-    def get_db_item_id(self):
-      """Return the DB item id stored in this TargetConfiguration
+  def get_db_item_id(self):
+    """Return the DB item id stored in this TargetConfiguration
 
-      :f: TODO
-      :returns: TODO
+    :f: TODO
+    :returns: TODO
 
-      """
-      return self._db_item_id
+    """
+    return self._db_item_id

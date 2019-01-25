@@ -1,3 +1,11 @@
+"""
+File: Utility.py
+Author: JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module to support other tasks.
+"""
+
 import sys
 import os
 import subprocess

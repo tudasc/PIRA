@@ -1,3 +1,11 @@
+"""
+File: FunctorManagement.py
+Author: JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module to load and manage the user-supplied functors.
+"""
+
 import typing
 import lib.Utility as u
 from lib.Configuration import PiraConfiguration
@@ -18,6 +26,8 @@ class FunctorManagementException(Exception):
 
 
 class FunctorManager:
+  """ Entity to query for functors. Needs to be initialized with a PiraConfiguration once per PIRA configuration file.  """
+
   class __FunctorManagerImpl:
     def __init__(self, cfg: PiraConfiguration) -> None:
       self.config = cfg
@@ -146,6 +156,7 @@ class FunctorManager:
 
   @classmethod
   def from_config(cls, p_config: PiraConfiguration):
+    """  Needs to be called once per configuration.  """
     return cls(p_config)
 
   def __getattr__(self, name):
