@@ -37,34 +37,6 @@ ITEM = 7
 FLAVOR = 8
 
 
-
-def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
-              database, cur) -> None:
-  benchmark_name = config.get_benchmark_name(benchmark)
-  submitter_functor = util.load_functor(
-      config.get_runner_func(build, benchmark), 'slurm_submitter_' + benchmark_name + '_' + flavor)
-  exp_dir = config.get_analyser_exp_dir(build, benchmark)
-  # TODO These functions are now part of the ScorepHelper
-  DBCubeFilePath = util.build_cube_file_path_for_db(exp_dir, flavor, iteration_number)
-  util.set_scorep_exp_dir(exp_dir, flavor, iteration_number)
-  util.set_overwrite_scorep_exp_dir()
-
-  if is_no_instrumentation_run:
-    DBIntVal = 0
-
-  else:
-    DBIntVal = 1
-    util.set_scorep_profiling_basename(flavor, benchmark_name)
-
-  tup = [(flavor, config.get_batch_script_func(build, benchmark))]
-  kwargs = {"util": util, "runs_per_job": 1, "dependent": 0}
-  job_id = submitter_functor.dispatch(tup, **kwargs)
-  # TODO: Create new BatchSystemJob instance instead
-  bat_sys.create_batch_queued_temp_file(job_id, benchmark_name, iteration_number, DBIntVal, DBCubeFilePath,
-                                     itemID, build, benchmark, flavor)
-  log.get_logger().log('Submitted job. Exiting. Re-invoke when job is finished.')
-  exit(0)
-
 def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfiguration) -> None:
   try:
     log.get_logger().log('run_setup phase.', level='debug')
@@ -111,98 +83,31 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       iteration_tracker.stop()
       user_time, system_time = iteration_tracker.get_time()
       log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
-      log.get_logger().dump_tape(cli=True)
 
   except Exception as e:
     log.get_logger().log('Problem during preparation of run.\nMessage:\n' + str(e), level='debug')
     raise RuntimeError(str(e))
 
 
-def run_detail(target_config, is_no_instrumentation_run, iteration_number) -> float:
-  kwargs = {'compiler': ''}
-  try:
-    if config.is_submitter(build, benchmark):
-      submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
-              database, cur)
-    else:
-      return runner(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
-           database, cur)
-
-  except Exception as e:
-    log.get_logger().log('Unwinding')
-    raise Exception('run_detail(' + str(build) + ', ' + str(benchmark) + ', ' + str(flavor) + ', ' +
-                    str(is_no_instrumentation_run) + ', ' + str(iteration_number) + ', ' + str(itemID) +
-                    ',...')
-
-
 def main(path_to_config: str) -> None:
   """ Main function for pira framework. Used to invoke the various components. """
 
   #log.get_logger().set_state('info')
-  log.get_logger().log('Running with configuration: ' + str(path_to_config))
+  log.get_logger().log('Pira::main: Running PIRA with configuration\n ' + str(path_to_config))
   home_dir = util.get_cwd()
 
   try:
     config_loader = CLoader()
     configuration = config_loader.load_conf(path_to_config)
-    configuration.initialize_stopping_iterator()
-    configuration.initialize_first_iteration()
-    log.get_logger().log('Loaded configuration')
+    #configuration.initialize_stopping_iterator()
+    #configuration.initialize_first_iteration()
+
 
     # Flow for submitter
     # FIXME: Refactor this code!
     if bat_sys.check_queued_job():
-      log.get_logger().log('Running the submitter case.')
-      # read file to get build, item, flavor, iteration, itemID, and runtime
-      job_details = bat_sys.read_batch_queued_job()
+      assert(False)
 
-      # get run-time of the submitted job
-      runtime = bat_sys.get_runtime_of_submitted_job(job_details[JOBID])
-      bat_sys.read_batch_queued_job()
-
-      # Insert into DB
-      experiment_data = (util.generate_random_string(), job_details[BENCHMARKNAME],
-                         job_details[ITERATIONNUMBER], job_details[ISWITHINSTR], job_details[CUBEFILEPATH],
-                         runtime, job_details[ITEMID])
-      database.insert_data_experiment(db_cur, experiment_data)
-
-      if (int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) < 4):
-
-        # Build and run without any instrumentation
-        vanilla_build = B(job_details[BUILDNAME], configuration)
-        vanilla_build.build_no_instr = True
-        vanilla_build.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
-
-        # Run - this binary does not contain any instrumentation.
-        run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], True,
-                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, db_cur)
-
-      if (int(job_details[ISWITHINSTR]) == 0 and int(job_details[ITERATIONNUMBER]) == 4):
-        analyser_dir = configuration.get_analyser_dir(job_details[BUILDNAME], job_details[ITEM])
-        # Remove anything in the output dir of the analysis tool
-        util.remove_from_pgoe_out_dir(analyser_dir)
-
-        # Generate white-list functions
-        analyser = A(configuration, job_details[BUILDNAME], job_details[ITEM])
-        analyser.analyse_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR],
-                                0)
-
-        builder = B(job_details[BUILDNAME], configuration)
-        builder.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
-        run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], False, 0,
-                   job_details[ITEMID], database, db_cur)
-
-      if (int(job_details[ISWITHINSTR]) == 1):
-        analyser = A(configuration, job_details[BUILDNAME], job_details[ITEM])
-        analyser.analyse_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR],
-                                int(job_details[ITERATIONNUMBER]))
-
-        builder = B(job_details[BUILDNAME], configuration)
-        builder.build(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR])
-
-        # Run Phase
-        run_detail(configuration, job_details[BUILDNAME], job_details[ITEM], job_details[FLAVOR], False,
-                   int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, db_cur)
     else:
       '''
       This branch is running PIRA actively on the local machine.
@@ -245,7 +150,7 @@ def main(path_to_config: str) -> None:
             '''
             FIXME So far no db_item_id generated for global flavor items
             '''
-            assert(False and 'Using a global flavor is not yet implemented!')
+            assert(False)
 
     util.change_cwd(home_dir)
 
