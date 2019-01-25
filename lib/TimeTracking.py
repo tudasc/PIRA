@@ -21,7 +21,7 @@ class TimeTracker():
   def f_track(self, sec_name, function, *args):
     self._start()
     res = function(*args)
-    self._stop()
+    self.stop()
     time_tuple = self.get_time()
     log.get_logger().log(sec_name + ' took %.3f seconds' % time_tuple[0], level='perf')
     return (res, time_tuple)
@@ -30,7 +30,7 @@ class TimeTracker():
     obj_method = self._get_callable(obj, method_name)
     self._start()
     res = obj_method(*args)
-    self._stop()
+    self.stop()
     time_tuple = self.get_time()
     log.get_logger().log(sec_name + ' took %.3f seconds' % time_tuple[0], level='perf')
     return (res, time_tuple)
@@ -43,7 +43,7 @@ class TimeTracker():
   def _start(self):
     self._s = os.times()
 
-  def _stop(self):
+  def stop(self):
     self._e = os.times()
 
   def _get_callable(self, obj, name):

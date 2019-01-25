@@ -1,6 +1,6 @@
 import lib.Utility as u
 import lib.Logging as log
-import lib.ConfigLoaderNew as cln
+from lib.Configuration import PiraConfiguration
 
 import typing
 
@@ -28,10 +28,15 @@ class RunResult:
   def get_average(self):
     return self._accumulated_runtime / self._nr_of_iterations
 
+  def compute_overhead(self, base_line):
+    base_line_avg = base_line.get_average()
+    result = self.get_average() / base_line_avg
+    return result
+
 
 class ScorepSystemHelper:
 
-  def __init__(self, config: cln.PiraConfiguration) -> None:
+  def __init__(self, config: PiraConfiguration) -> None:
     self.known_files = ['.cubex']
     self.config = config
     self.data = {}

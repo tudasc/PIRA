@@ -1,9 +1,8 @@
 import lib.Utility as util
 import lib.Logging as log
 import lib.FunctorManagement as fm
-
 # XXX Remove this once it is refactored.
-import lib.ConfigLoaderNew as CL
+from lib.Configuration import TargetConfiguration, PiraConfiguration
 
 import typing
 
@@ -14,7 +13,7 @@ class Builder:
   """
 
   #def __init__(self, dir_key, configuration, no_instrumentation=False) -> None:
-  def __init__(self, target_config: CL.TargetConfiguration, instrument: bool):
+  def __init__(self, target_config: TargetConfiguration, instrument: bool):
     self.target_config = target_config
     self.directory = target_config.get_build()
     #self.directory = dir_key
@@ -58,7 +57,7 @@ class Builder:
   def build_flavours(self, kwargs) -> None:
     log.get_logger().log('Building for ' + self.target_config.get_flavor(), level='debug')
     # benchmark == item
-    benchmark_name = CL.PiraConfiguration.get_benchmark_name(self.target_config.get_target())
+    benchmark_name = PiraConfiguration.get_benchmark_name(self.target_config.get_target())
     log.get_logger().log('Obtained benchmark_name: ' + benchmark_name, level='debug')
     build = self.target_config.get_build()
     benchmark = self.target_config.get_target()

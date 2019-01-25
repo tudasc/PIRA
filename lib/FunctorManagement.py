@@ -1,6 +1,6 @@
 import typing
 import lib.Utility as u
-from lib.ConfigLoaderNew import PiraConfiguration
+from lib.Configuration import PiraConfiguration
 import lib.Logging as log
 
 

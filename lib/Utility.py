@@ -135,7 +135,11 @@ def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
   t2 = os.times()  # end time
   cutime = t2[2] - t1[2]
   cstime = t2[3] - t1[3]
+  elapsed = t2[4] - t1[4]
+  # FIXME: How to actually compute this? Make it configurable?
+  # Problem is: util.shell('sleep 4s') returns cutime + cstime == 0
   runtime = cutime + cstime
+  runtime = elapsed
   return out, runtime
 
 
@@ -152,6 +156,7 @@ def shell(command: str, silent: bool = True, dry: bool = False,
 
     if time_invoc:
       out, rt = timed_invocation(command, stderr_fd)
+      log.get_logger().log('Util::shell:timed_invocation: ' + str(rt), level='debug')
       return str(out.decode('utf-8')), rt
 
     else:
