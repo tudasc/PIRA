@@ -204,7 +204,6 @@ class TargetConfiguration:
       """
       return self._db_item_id
 
-    
 
 class ConfigurationLoader:
   """

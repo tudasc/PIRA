@@ -1,58 +1,53 @@
 import lib.Utility as util
 import lib.Logging as logging
 import lib.TimeTracking as tt
+import lib.FunctorManagement as fmg
 
 
 class Analyzer:
 
-  def __init__(self, configuration, build, benchmark) -> None:
-    self.directory = build
+  def __init__(self, configuration) -> None:
     self.config = configuration
-    self.benchmark = benchmark
-    self.old_cwd = build
     self.error = None
 
-  def analyse(self, flavor, build, benchmark, kwargs, config, iterationNumber) -> str:
-    benchmark_name = config.get_benchmark_name(benchmark)
-    anal_func_filename = util.build_analyse_functor_filename(False, benchmark_name, flavor)
-    logging.get_logger().log('Loading analysis functor at: ' + anal_func_filename)
+  def analyze_local(self, flavor, build, benchmark, kwargs, iterationNumber) -> str:
+    fm = fmg.FunctorManager()
+    analyze_functor = fm.get_or_load_functor(build, benchmark, flavor, 'analyze')
 
-    # TODO Refactor these code pieces.
-
-    analyse_functor = util.load_functor(config.get_analyse_func(build, benchmark), anal_func_filename)
-
-    if analyse_functor.get_method()['active']:
-      analyse_functor.active(benchmark, **kwargs)
+    if analyze_functor.get_method()['active']:
+      analyze_functor.active(benchmark, **kwargs)
 
     else:
       logging.get_logger().log('Using passive mode')
       try:
-        exp_dir = config.get_analyser_exp_dir(build, benchmark)
-        analyser_dir = config.get_analyser_dir(build, benchmark)
-        isdirectory_good = util.check_provided_directory(analyser_dir)
+        exp_dir = self.config.get_analyser_exp_dir(build, benchmark)
+        analyzer_dir = self.config.get_analyser_dir(build, benchmark)
+        isdirectory_good = util.check_provided_directory(analyzer_dir)
         # XXX We need to identify a 'needed set of variables' that can be relied on begin passed
-        kwargs = {'analyzer_dir': analyser_dir}
-        command = analyse_functor.passive(benchmark, **kwargs)
+        kwargs = {'analyzer_dir': analyzer_dir}
+        command = analyze_functor.passive(benchmark, **kwargs)
 
         logging.get_logger().log('Analyzer with command: ' + command)
-        logging.get_logger().log('Checking ' + analyser_dir + ' | is good: ' + str(isdirectory_good))
+        logging.get_logger().log('Checking ' + analyzer_dir + ' | is good: ' + str(isdirectory_good))
+
+        benchmark_name = self.config.get_benchmark_name(benchmark)
 
         if isdirectory_good:
-          util.change_cwd(analyser_dir)
-          instr_files = util.build_instr_file_path(analyser_dir, flavor, benchmark_name)
+          util.change_cwd(analyzer_dir)
+          instr_files = util.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
           logging.get_logger().log('The built instrumentation file path is: ' + instr_files)
-          prev_instr_file = util.build_previous_instr_file_path(analyser_dir, flavor, benchmark_name)
+          prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
         if util.check_file(instr_files):
           util.rename(instr_files, prev_instr_file)
           #tt.m_track('analysis', util, 'run_analyser_command', command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber-1)
-          util.run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir,
+          util.run_analyser_command(command, analyzer_dir, flavor, benchmark_name, exp_dir,
                                     iterationNumber-1)
           logging.get_logger().log('Analyzer command finished', level='debug')
         else:
-          util.run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name)
+          util.run_analyser_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
 
-        self.tear_down(exp_dir)
+        self.tear_down(build, exp_dir)
         return instr_files
 
       except Exception as e:
@@ -78,15 +73,16 @@ class Analyzer:
   def set_up(self):
     pass
 
-  def tear_down(self, exp_dir):
+  def tear_down(self, old_dir, exp_dir):
     isdirectory_good = util.check_provided_directory(exp_dir)
     if isdirectory_good:
       try:
-        util.change_cwd(self.old_cwd)
+        util.change_cwd(old_dir)
       except Exception as e:
         logging.get_logger().log(str(e), level='error')
 
-  def analyse_detail(self, config, build, benchmark, flavor, iterationNumber) -> str:
+  #def analyse_detail(self, config, build, benchmark, flavor, iterationNumber) -> str:
+  def analyze(self, target_config, iteration_number: int) -> str:
     kwargs = {'compiler': ''}
     # No need to analyse on the slurm. May be a future extension
     '''
@@ -94,7 +90,10 @@ class Analyzer:
             self.analyse_slurm(flavor,build,benchmark,kwargs,config)
         else:
         '''
-    return self.analyse(flavor, build, benchmark, kwargs, config, iterationNumber)
+    flavor = target_config.get_flavor()
+    build = target_config.get_build()
+    benchmark = target_config.get_target()
+    return self.analyze_local(flavor, build, benchmark, kwargs, iteration_number)
 
   def run_analyzer(self, flavors, build, benchmark, kwargs):
     pass

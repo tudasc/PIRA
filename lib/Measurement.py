@@ -13,7 +13,7 @@ class MeasurementSystemException(Exception):
 class RunResult:
   """Holds the result of a measurement execution with potentially multiple iterations."""
 
-  def __init__(self, accumulated_runtime, nr_of_iterations, average):
+  def __init__(self, accumulated_runtime, nr_of_iterations, rt_trace = None):
     """Initializes the class
 
     :accumulated_runtime: TODO
@@ -21,53 +21,12 @@ class RunResult:
     :average: TODO
 
     """
-    super().__init__(self)
-
     self._accumulated_runtime = accumulated_runtime
     self._nr_of_iterations = nr_of_iterations
-    self._average = average
+    self._rt_trace = rt_trace
 
-
-class RunConfiguration:
-
-  """This class holds information required for one specific experiment run"""
-
-  def __init__(self, iteration, is_instr_run, db_item_id) -> None:
-    """TODO: Implement
-
-    :iteration: The number of the iteration of this invocation
-    :is_instr_run: Whether this iteration does instrumentation
-
-    """
-    self._iteration = iteration
-    self._is_instr_run = is_instr_run
-    self._db_item_id = db_item_id
-
-
-  def get_iteration(self):
-    """Returns the current iteration saved in this instance
-
-    :f: TODO
-    :returns: TODO
-    """
-    return self._iteration
-
-
-  def get_db_item_id(self):
-    """Returns the db item id associated with this instance
-
-    :f: TODO
-    :returns: TODO
-
-    """
-    return self._db_item_id
-
-
-  def is_instr(self):
-    """Returns true iff this instance is meant for instrumentation
-    :returns: TODO
-    """
-    return self._is_instr_run
+  def get_average(self):
+    return self._accumulated_runtime / self._nr_of_iterations
 
 
 class ScorepSystemHelper:
@@ -93,7 +52,10 @@ class ScorepSystemHelper:
     log.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
     return ''
 
-  def set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
+  def set_up(self, target_config, instrumentation_config) -> None:
+    self._set_up(target_config.get_build(), target_config.get_target(), target_config.get_flavor(), instrumentation_config.get_instrumentation_iteration(), instrumentation_config.is_instrumentation_run())
+
+  def _set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
     log.get_logger().log('ScorepSystemHelper.set_up: is_instr_run: ' + str(is_instr_run), level='debug')
     if not is_instr_run:
       return
