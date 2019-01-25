@@ -35,48 +35,7 @@ ITEMID = 5
 BUILDNAME = 6
 ITEM = 7
 FLAVOR = 8
-   
 
-def runner(flavor: str, build: str, benchmark: str, kwargs, config: CLoader, is_no_instrumentation_run: bool,
-           iteration_number: int, itemID: str, database, cur) -> float:
-  benchmark_name = config.get_benchmark_name(benchmark)
-  is_for_db = False
-  f_man = fm.FunctorManager(config)
-  run_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'run')
-
-  if run_functor.get_method()['active']:
-    kwargs['util'] = util
-    run_functor.active(benchmark, **kwargs)
-    log.get_logger().log('For the active functor we cannot measure runtime', level='warn')
-    return .0
-
-  else:
-    try:
-      util.change_cwd(build)
-      scorep_helper = ms.ScorepSystemHelper(config)
-      scorep_helper._set_up(build, benchmark, flavor, iteration_number, not is_no_instrumentation_run)
-      DBCubeFilePath = scorep_helper.get_data_elem('cube_dir')
-
-      # The integer is only a bool for the database to show if no_instrumentation is set.
-      if is_no_instrumentation_run:
-        DBIntVal = 0
-      else:
-        DBIntVal = 1
-
-      # Run the actual command
-      command = run_functor.passive(benchmark, **kwargs)
-      out, runtime = util.shell(command, time_invoc=True)
-      # Insert into DB
-      experiment_data = (util.generate_random_string(), benchmark_name, iteration_number, DBIntVal,
-                           DBCubeFilePath, str(runtime), itemID)
-      database.insert_data_experiment(cur, experiment_data)
-
-      return runtime
-
-    except Exception as e:
-      log.get_logger().log(str(e), level='warn')
-
-      raise Exception('Runner encountered problem.')
 
 
 def submitter(flavor, build, benchmark, kwargs, config, is_no_instrumentation_run, iteration_number, itemID,
@@ -176,7 +135,7 @@ def run_detail(target_config, is_no_instrumentation_run, iteration_number) -> fl
                     ',...')
 
 
-def main(path_to_config) -> None:
+def main(path_to_config: str) -> None:
   """ Main function for pira framework. Used to invoke the various components. """
 
   #log.get_logger().set_state('info')
@@ -246,7 +205,7 @@ def main(path_to_config) -> None:
                    int(job_details[ITERATIONNUMBER]) + 1, job_details[ITEMID], database, db_cur)
     else:
       '''
-      This is running PIRA actively on the local machine.
+      This branch is running PIRA actively on the local machine.
       It is blocking, and the user can track the progress in the terminal.
       '''
       log.get_logger().log('Running the local case')
@@ -286,8 +245,8 @@ def main(path_to_config) -> None:
             '''
             FIXME So far no db_item_id generated for global flavor items
             '''
-            for flavor in configuration.global_flavors:
-              run_setup(configuration, build, item, flavor, db_item_id, database, db_cur)
+            assert(False and 'Using a global flavor is not yet implemented!')
+
     util.change_cwd(home_dir)
 
   except RuntimeError as rt_err:

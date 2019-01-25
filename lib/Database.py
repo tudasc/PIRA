@@ -88,7 +88,6 @@ class DBManager:
       :returns: unique ID for current item
   
       """
-      # XXX DB code
       build_tuple = (u.generate_random_string(), build, '', flavor, build)
       self.insert_data_builds(build_tuple)
       # XXX My implementation returns the full path, including the file extension.
@@ -106,9 +105,11 @@ class DBManager:
       db_item_id = u.generate_random_string()
       db_item_data = (db_item_id, benchmark_name, analyse_functor, build_functor, '', run_functor, submitter_functor, exp_dir, build)
       self.insert_data_items(db_item_data)
-      # XXX DB code end.
 
       return db_item_id
+
+    def enter_run_data(self, unique_id: str, item_name: str, iteration_no: int, is_instrumented_run: bool, path_to_cube: str, runtime: float, db_item_id) -> None:
+      pass
 
   #### END OF INNER CLASS ###
 

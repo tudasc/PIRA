@@ -63,7 +63,7 @@ class LocalRunner(Runner):
       log.get_logger().log('LocalRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
     
     except Exception as e:
-      log.get_logger().log('Problem in LocalRunner::run\n' + str(e))
+      log.get_logger().log('LocalRunner::run Exception\n' + str(e))
     
     # TODO: Insert the data into the database
     return runtime
@@ -90,4 +90,8 @@ class LocalRunner(Runner):
     run_result = ms.RunResult(runtime, 1)
     log.get_logger().log('[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' + str(run_result.get_average()), level='perf')
     return run_result
- 
+
+
+class SlurmRunner(Runner):
+  """  TODO This runner executes the measurements on a slurm allocated job. """
+  pass

@@ -89,15 +89,9 @@ class Analyzer:
       except Exception as e:
         logging.get_logger().log(str(e), level='error')
 
-  #def analyse_detail(self, config, build, benchmark, flavor, iterationNumber) -> str:
   def analyze(self, target_config, iteration_number: int) -> str:
     kwargs = {'compiler': ''}
-    # No need to analyse on the slurm. May be a future extension
-    '''
-        if config.is_submitter(build,benchmark):
-            self.analyse_slurm(flavor,build,benchmark,kwargs,config)
-        else:
-        '''
+
     flavor = target_config.get_flavor()
     build = target_config.get_build()
     benchmark = target_config.get_target()

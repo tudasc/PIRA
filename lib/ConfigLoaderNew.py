@@ -15,9 +15,7 @@ import typing
 
 class ConfigurationLoader:
   """
-    Loads a provided configuration file. 
-    
-    XXX: May be static in the future.
+    Loads a provided configuration file.
   """
 
   def __init__(self):
