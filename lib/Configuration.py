@@ -213,3 +213,15 @@ class TargetConfiguration:
 
     """
     return self._db_item_id
+
+class InstrumentConfig:
+  """  Holds information how instrumentation is handled in the different run phases.  """
+  def __init__(self, is_instrumentation_run=False, instrumentation_iteration=None):
+    self._is_instrumentation_run = is_instrumentation_run
+    self._instrumentation_iteration = instrumentation_iteration
+    
+  def get_instrumentation_iteration(self):
+    return self._instrumentation_iteration
+    
+  def is_instrumentation_run(self):
+    return self._is_instrumentation_run

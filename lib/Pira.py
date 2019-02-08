@@ -6,22 +6,18 @@ Github: https://github.com/jplehr
 Description: Module implementing the main workflow of PIRA.
 """
 
-import os
 from lib.ConfigLoaderNew import ConfigurationLoader as CLoader
 from lib.Configuration import TargetConfiguration, PiraConfiguration
 from lib.Runner import Runner, LocalRunner
 from lib.Builder import Builder as B
 from lib.Analyzer import Analyzer as A
-from lib.db import database as db
 import lib.Logging as log
 import lib.Utility as util
-import lib.tables as tables
 import lib.BatchSystemHelper as bat_sys
 import lib.FunctorManagement as fm 
 import lib.Measurement as ms
 import lib.TimeTracking as tt
 import lib.Database as d
-import lib.ConfigLoaderNew as cln
 
 import typing
 
@@ -92,20 +88,15 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
 def main(path_to_config: str) -> None:
   """ Main function for pira framework. Used to invoke the various components. """
 
-  #log.get_logger().set_state('info')
-  log.get_logger().log('Pira::main: Running PIRA with configuration\n ' + str(path_to_config))
+  log.get_logger().log('Pira::main: Running PIRA with configuration\n ' + str(path_to_config), level='info')
   home_dir = util.get_cwd()
 
   try:
     config_loader = CLoader()
     configuration = config_loader.load_conf(path_to_config)
-    #configuration.initialize_stopping_iterator()
-    #configuration.initialize_first_iteration()
-
-
-    # Flow for submitter
-    # FIXME: Refactor this code!
+    
     if bat_sys.check_queued_job():
+      # TODO: Implement
       assert(False)
 
     else:
@@ -147,9 +138,7 @@ def main(path_to_config: str) -> None:
 
           # If global flavor
           else:
-            '''
-            FIXME So far no db_item_id generated for global flavor items
-            '''
+            # TODO: Implement
             assert(False)
 
     util.change_cwd(home_dir)

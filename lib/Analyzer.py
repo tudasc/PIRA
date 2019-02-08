@@ -97,5 +97,3 @@ class Analyzer:
     benchmark = target_config.get_target()
     return self.analyze_local(flavor, build, benchmark, kwargs, iteration_number)
 
-  def run_analyzer(self, flavors, build, benchmark, kwargs):
-    pass

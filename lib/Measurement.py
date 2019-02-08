@@ -75,10 +75,11 @@ class ScorepSystemHelper:
       return
 
     exp_dir = self.config.get_analyser_exp_dir(build, item)
+    # FIXME: The exp_dir is broken!
     log.get_logger().log('ScorepSystemHelper::_set_up: Retrieved analyser experiment directory: ' + exp_dir, level='debug')
     effective_dir = u.get_cube_file_path(exp_dir, flavor, it_nr)
     if not u.check_provided_directory(effective_dir):
-      log.get_logger().log('ScorepSystemHelper::_set_up: Experiment directory does not exist. Creating', level='debug')
+      log.get_logger().log('ScorepSystemHelper::_set_up: Experiment directory does not exist.  \nCreating path: ' + effective_dir, level='debug')
       u.create_directory(effective_dir)
 
     db_exp_dir = u.build_cube_file_path_for_db(exp_dir, flavor, it_nr)

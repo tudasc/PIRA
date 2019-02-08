@@ -11,7 +11,7 @@ sys.path.append('..')
 
 import lib.Utility as util
 import lib.Logging as log
-from lib.Configuration import PiraConfiguration, TargetConfiguration
+from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
 import lib.FunctorManagement as fm
 import lib.Measurement as ms
 
@@ -22,20 +22,7 @@ class Runner:
 
 class LocalRunner(Runner):
 
-  """This is the new runner class. It implements the original idea of the entity being responsible for executing the target.
-  TODO: Move this class to its own file, once it is working.
-  """
-  class InstrumentConfig:
-    """  Holds information how instrumentation is handled in the different run phases.  """
-    def __init__(self, is_instrumentation_run=False, instrumentation_iteration=None):
-      self._is_instrumentation_run = is_instrumentation_run
-      self._instrumentation_iteration = instrumentation_iteration
-    
-    def get_instrumentation_iteration(self):
-      return self._instrumentation_iteration
-    
-    def is_instrumentation_run(self):
-      return self._is_instrumentation_run
+  """  This is the new runner class. It implements the original idea of the entity being responsible for executing the target.  """
     
   def __init__(self, configuration: PiraConfiguration):
     """ Runner are initialized once with a PiraConfiguration """
@@ -76,7 +63,7 @@ class LocalRunner(Runner):
     # Baseline run. TODO Better evaluation of the obtained timings.
     for y in range(0, num_vanilla_repetitions):
       log.get_logger().log('Running iteration ' + str(y), level='debug')
-      accu_runtime += self.run(target_config, LocalRunner.InstrumentConfig())
+      accu_runtime += self.run(target_config, InstrumentConfig())
 
     run_result = ms.RunResult(accu_runtime, iterations)
     log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()), level='perf')
@@ -85,7 +72,7 @@ class LocalRunner(Runner):
   
   def do_profile_run(self, target_config: TargetConfiguration, instr_iteration: int) -> ms.RunResult:
     log.get_logger().log('LocalRunner::do_profile_run')
-    runtime = self.run(target_config, LocalRunner.InstrumentConfig(True, instr_iteration))
+    runtime = self.run(target_config, InstrumentConfig(True, instr_iteration))
 
     run_result = ms.RunResult(runtime, 1)
     log.get_logger().log('[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' + str(run_result.get_average()), level='perf')
