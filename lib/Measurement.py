@@ -8,6 +8,7 @@ Description: Module hosts measurement support infrastructure.
 
 import lib.Utility as u
 import lib.Logging as log
+import lib.DefaultFlags as defaults
 from lib.Configuration import PiraConfiguration
 
 import typing
@@ -128,3 +129,23 @@ class ScorepSystemHelper:
   @classmethod
   def get_additional_libs(cls) -> str:
     return '-lscorep_adapter_memory_event_cxx_L64 -lscorep_adapter_memory_mgmt -lscorep_alloc_metric'
+
+  @classmethod
+  def get_instrumentation_flags(cls, instr_file: str) -> str:
+    flags = defaults.get_default_instrumentation_flag() + ' ' + defaults.get_default_instrumentation_selection_flag() + '=' + instr_file
+    return flags
+
+  @classmethod
+  def get_scorep_compliant_CC_command(cls, instr_file: str) -> str:
+    log.get_logger().log('ScorepSystemHelper::get_scorep_compliant_CC_command: ', level='debug')
+    cc_str = defaults.get_default_c_compiler_name() + ' ' + cls.get_instrumentation_flags(instr_file)
+    return cc_str
+
+  @classmethod
+  def get_scorep_compliant_CXX_command(cls, instr_file: str) -> str:
+    cxx_str = defaults.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(instr_file)
+    return cxx_str
+
+  @classmethod
+  def get_scorep_needed_libs(cls) -> str:
+    return cls.get_config_libs() + ' ' + cls.get_config_ldflags() + ' ' + cls.get_additional_libs()

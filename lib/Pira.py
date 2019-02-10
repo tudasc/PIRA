@@ -36,7 +36,7 @@ FLAVOR = 8
 def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfiguration) -> None:
   try:
     log.get_logger().log('run_setup phase.', level='debug')
-    no_instrumentation = True
+    no_instrumentation = False
 
     # Build without any instrumentation
     vanilla_builder = B(target_config, no_instrumentation)
@@ -49,7 +49,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     log.get_logger().log('RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()), level='debug')
     instr_file = ''
 
-    for x in range(0, 15):
+    for x in range(0, 2):
       log.get_logger().toggle_state('info')
       log.get_logger().log('Running instrumentation iteration ' + str(x), level='info')
       log.get_logger().toggle_state('info')
@@ -64,8 +64,8 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       util.shell('stat ' + instr_file)
 
       # After baseline measurement is complete, do the instrumented build/run
-      no_instrumentation = False
-      instr_builder = B(target_config, no_instrumentation)
+      no_instrumentation = True
+      instr_builder = B(target_config, no_instrumentation, instr_file)
       tracker.m_track('Instrument Build', instr_builder, 'build')
 
       #Run Phase
