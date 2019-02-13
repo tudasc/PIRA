@@ -157,5 +157,5 @@ class ScorepSystemHelper:
 
   @classmethod
   def get_scorep_needed_libs(cls) -> str:
-    return '\"' + cls.get_config_libs() + ' ' + cls.get_config_ldflags() + ' ' + cls.get_additional_libs(
-    ) + '\"'
+    return '\" scorep.init.o ' + cls.get_config_libs() + ' ' + cls.get_config_ldflags(
+    ) + ' ' + cls.get_additional_libs() + '\"'
