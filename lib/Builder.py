@@ -16,10 +16,12 @@ import lib.DefaultFlags as defaults
 
 import typing
 
+
 class Builder:
   """
   Class which builds the benchmark executable, given a TargetConfiguration
   """
+
   def __init__(self, target_config: TargetConfiguration, instrument: bool, instr_file: str = None) -> None:
     self.target_config = target_config
     self.directory = target_config.get_build()
@@ -62,36 +64,37 @@ class Builder:
     pira_cxx = ScorepSystemHelper.get_scorep_compliant_CXX_command(self.instrumentation_file)
     pira_clflags = ScorepSystemHelper.get_scorep_needed_libs()
     pira_cxxlflags = ScorepSystemHelper.get_scorep_needed_libs()
+    pira_name = 'pira.built.exe'
 
     pira_kwargs = {
-      'CC': pira_cc,
-      'CXX': pira_cxx,
-      'CLFLAGS': pira_clflags,
-      'CXXLFLAGS': pira_cxxlflags
+        'CC': pira_cc,
+        'CXX': pira_cxx,
+        'CLFLAGS': pira_clflags,
+        'CXXLFLAGS': pira_cxxlflags,
+        'PIRANAME': pira_name
     }
     log.get_logger().log('Builder::construct_pira_instr_keywords Returning.', level='debug')
     return pira_kwargs
-  
+
   def construct_pira_kwargs(self):
     log.get_logger().log('Builder::construct_pira_keywords', level='debug')
     pira_cc = defaults.get_default_c_compiler_name()
     pira_cxx = defaults.get_default_cpp_compiler_name()
+    pira_name = 'pira.built.exe'
 
-    kwargs = {
-      'CC': pira_cc,
-      'CXX': pira_cxx,
-      'CLFLAGS': '',
-      'CXXLFLAGS': ''
-    }
+    kwargs = {'CC': pira_cc, 'CXX': pira_cxx, 'CLFLAGS': '', 'CXXLFLAGS': '', 'PIRANAME': pira_name}
     log.get_logger().log('Builder::construct_pira_keywords Returning.', level='debug')
     return kwargs
 
   def build_flavors(self, kwargs) -> None:
-    log.get_logger().log('Builder::build_flavors: Building for ' + self.target_config.get_target() + ' in ' + self.target_config.get_flavor(), level='debug')
+    log.get_logger().log(
+        'Builder::build_flavors: Building for ' + self.target_config.get_target() + ' in ' +
+        self.target_config.get_flavor(),
+        level='debug')
     build = self.target_config.get_build()
     benchmark = self.target_config.get_target()
     flavor = self.target_config.get_flavor()
-    f_man = fm.FunctorManager() # Returns the currently loaded FM
+    f_man = fm.FunctorManager()  # Returns the currently loaded FM
     clean_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'clean')
     kwargs = {}
 
@@ -113,7 +116,8 @@ class Builder:
         ''' TODO The build command uses CC and CXX to pass flags that are needed by PIRA for the given toolchain. '''
         build_command = build_functor.passive(benchmark, **kwargs)
         clean_command = clean_functor.passive(benchmark, **kwargs)
-        log.get_logger().log('Builder::build_flavors: Clean in ' + benchmark + '\n  Using ' + clean_command, level='debug')
+        log.get_logger().log(
+            'Builder::build_flavors: Clean in ' + benchmark + '\n  Using ' + clean_command, level='debug')
         util.shell(clean_command)
         log.get_logger().log('Builder::build_flavors: Building: ' + build_command, level='debug')
         util.shell(build_command)
