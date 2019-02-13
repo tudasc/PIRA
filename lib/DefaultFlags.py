@@ -9,16 +9,20 @@ import typing
 
 
 def get_default_c_compiler_name() -> str:
-    return 'clang'
+  return 'clang'
+
 
 def get_default_cpp_compiler_name() -> str:
-    return 'clang++'
+  return 'clang++'
+
 
 def get_default_instrumentation_flag() -> str:
-    return '-finstrument-functions'
+  return '-finstrument-functions'
+
 
 def get_default_instrumentation_selection_flag() -> str:
-    return '-finstrument-functions-whitelist-inputile'
+  return '-finstrument-functions-whitelist-inputfile'
+
 
 def get_default_number_of_processes() -> int:
-    return 8
+  return 8
