@@ -6,7 +6,9 @@ However, the goal is to be as flexibel w.r.t. the used toolchain as possible.
 The full paper can be found [here](https://dl.acm.org/citation.cfm?id=3281071).
 
 ## Approach
+
 The framework uses four or five phases to automatically:
+
 * Build the target application and perform a baseline measurement.
 * Generate an initial performance instrumentation, based on the statement aggregation selection strategy (cf. [this paper](https://ieeexplore.ieee.org/document/7530067)), and link to the Score-P measurement infrastructure.
 * Run the target application to generate a profile in the CUBEX format.
@@ -14,6 +16,7 @@ The framework uses four or five phases to automatically:
 * Iterate the latter two steps to find a well-suited instrumentation.
 
 ## Configuration
+
 PIRA requires the user to provide the configuration as a `json` file.
 The file specifies the target codes and the necessary information to build the different flavors.
 In addition, the configuration holds the paths and names to *functors*, i.e., Python files that implement a specified set of functions and are loaded at runtime.
@@ -23,6 +26,7 @@ In a configuration, the user lists a base directory. This directory, holds, so c
 Adding this additional layer of indirection, the user can perform multiple tests on the same target application within a single configuration file - maybe use two different measurement strategies.
 
 ## Implementing Functors
+
 Functors support two modes of invocation: *active* and *passive*.
 
 In the active mode, the functor itself invokes the required commands, for example to build the software.
