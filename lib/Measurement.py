@@ -153,7 +153,7 @@ class ScorepSystemHelper:
   @classmethod
   def get_scorep_compliant_CXX_command(cls, instr_file: str) -> str:
     cxx_str = defaults.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(instr_file)
-    return cxx_str
+    return '\"' + cxx_str + '\"'
 
   @classmethod
   def get_scorep_needed_libs(cls) -> str:
