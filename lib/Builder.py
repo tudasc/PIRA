@@ -17,6 +17,13 @@ import lib.DefaultFlags as defaults
 import typing
 
 
+class BuilderException(Exception):
+
+  def __init__(self, message):
+    super().__init__()
+    self.message = message
+
+
 class Builder:
   """
   Class which builds the benchmark executable, given a TargetConfiguration
@@ -86,6 +93,13 @@ class Builder:
     log.get_logger().log('Builder::construct_pira_keywords Returning.', level='debug')
     return kwargs
 
+  def check_build_prerequisites(self):
+    scorep_init_file_name = 'scorep.init.c'
+    if util.check_file(scorep_init_file_name):
+      util.shell('gcc -c ' + scorep_init_file_name)
+    else:
+      raise BuilderException('Builder::check_build_prerequisites: Missing ' + scorep_init_file_name)
+
   def build_flavors(self, kwargs) -> None:
     log.get_logger().log(
         'Builder::build_flavors: Building for ' + self.target_config.get_target() + ' in ' +
@@ -100,6 +114,11 @@ class Builder:
 
     if self.build_instr:
       log.get_logger().log('Builder::build_flavors: Instrumentation', level='debug')
+      try:
+        self.check_build_prerequisites()
+      except Exception as e:
+        raise e
+
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'build')
       kwargs = self.construct_pira_instr_kwargs()
     else:
@@ -108,11 +127,14 @@ class Builder:
       kwargs = self.construct_pira_kwargs()
 
     if build_functor.get_method()['active']:
+      log.get_logger().log('Builder::build_flavors: Running the passive functor.', level='debug')
+      # util.change_cwd(build)
       build_functor.active(benchmark, **kwargs)
+
     else:
       try:
         log.get_logger().log('Builder::build_flavors: Running the passive functor.', level='debug')
-        util.change_cwd(build)
+        # util.change_cwd(build)
         ''' TODO The build command uses CC and CXX to pass flags that are needed by PIRA for the given toolchain. '''
         build_command = build_functor.passive(benchmark, **kwargs)
         clean_command = clean_functor.passive(benchmark, **kwargs)
