@@ -42,15 +42,17 @@ class Analyzer:
 
         if isdirectory_good:
           util.change_cwd(analyzer_dir)
+          logging.get_logger().log('flavor: ' + flavor + ' | benchmark_name: ' + benchmark_name)
           instr_files = util.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
           logging.get_logger().log('The built instrumentation file path is: ' + instr_files)
           prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
         if util.check_file(instr_files):
+          logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
           #tt.m_track('analysis', util, 'run_analyser_command', command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber-1)
           util.run_analyser_command(command, analyzer_dir, flavor, benchmark_name, exp_dir,
-                                    iterationNumber-1)
+                                    iterationNumber - 1)
           logging.get_logger().log('Analyzer command finished', level='debug')
         else:
           util.run_analyser_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
@@ -96,4 +98,3 @@ class Analyzer:
     build = target_config.get_build()
     benchmark = target_config.get_target()
     return self.analyze_local(flavor, build, benchmark, kwargs, iteration_number)
-
