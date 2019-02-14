@@ -71,8 +71,8 @@ class Builder:
                                                                  self._compile_time_filtering)
     pira_cxx = ScorepSystemHelper.get_scorep_compliant_CXX_command(self.instrumentation_file,
                                                                    self._compile_time_filtering)
-    pira_clflags = ScorepSystemHelper.get_scorep_needed_libs()
-    pira_cxxlflags = ScorepSystemHelper.get_scorep_needed_libs()
+    pira_clflags = ScorepSystemHelper.get_scorep_needed_libs_c()
+    pira_cxxlflags = ScorepSystemHelper.get_scorep_needed_libs_cxx()
     pira_name = 'pira.built.exe'
 
     pira_kwargs = {

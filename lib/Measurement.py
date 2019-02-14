@@ -141,7 +141,7 @@ class ScorepSystemHelper:
 
   @classmethod
   def get_additional_libs(cls) -> str:
-    return '-lscorep_adapter_memory_event_cxx_L64 -lscorep_adapter_memory_mgmt -lscorep_alloc_metric'
+    return '-lscorep_adapter_memory_mgmt -lscorep_alloc_metric'
 
   @classmethod
   def get_instrumentation_flags(cls, instr_file: str, compile_time_filter: bool) -> str:
@@ -174,9 +174,14 @@ class ScorepSystemHelper:
     return '\"' + cxx_str + '\"'
 
   @classmethod
-  def get_scorep_needed_libs(cls) -> str:
+  def get_scorep_needed_libs_c(cls) -> str:
     return '\" scorep.init.o ' + cls.get_config_libs() + ' ' + cls.get_config_ldflags() + ' ' + cls.get_additional_libs(
     ) + '\"'
+
+  @classmethod
+  def get_scorep_needed_libs_cxx(cls) -> str:
+    return '\" scorep.init.o ' + cls.get_config_libs() + ' ' + cls.get_config_ldflags(
+    ) + ' -lscorep_adapter_memory_event_cxx_L64 ' + cls.get_additional_libs() + '\"'
 
   @classmethod
   def check_build_prerequisites(cls) -> None:
