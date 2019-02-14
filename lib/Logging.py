@@ -4,11 +4,11 @@ class Logger:
     """
 
   def __init__(self):
-    self.state = {'debug': False, 'info': False, 'warn': False, 'error': True, 'perf': True}
+    self.state = {'debug': False, 'info': True, 'warn': True, 'error': True, 'perf': True}
     self.tape = []
     self.perf_tape = []
 
-  def log(self, msg, level='info'):
+  def log(self, msg, level='debug'):
     if self.state[level]:
       self.print_level(level, msg)
 
@@ -57,7 +57,7 @@ class Logger:
       print(p)
 
   def get_last_msg(self) -> str:
-    return self.tape[len(self.tape)-1]
+    return self.tape[len(self.tape) - 1]
 
   def dump_tape(self, out_file=None, cli=False):
     if out_file is not None:
