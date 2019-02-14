@@ -301,7 +301,7 @@ def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
 def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
                          iterationNumber: int) -> None:
   ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
-  cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber)
+  cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber-1)
   cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
 
   sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file

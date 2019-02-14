@@ -48,15 +48,15 @@ class FunctorManager:
         raise Exception('No such option available to load functor for. Value = ' + func)
 
       try:
-        _ = self.functor_cache[wnm]
+        _ = self.functor_cache[name]
       except KeyError:
-        self.functor_cache[wnm] = u.load_functor(path, name)
+        self.functor_cache[name] = u.load_functor(path, name)
 
       log.get_logger().log(
-          'FunctorManager::get_or_load: The retrieved ' + func + ' functor: ' + str(self.functor_cache[wnm]),
+          'FunctorManager::get_or_load: The retrieved ' + func + ' functor: ' + str(self.functor_cache[name]),
           level='debug')
 
-      return self.functor_cache[wnm]
+      return self.functor_cache[name]
 
     def get_builder(self, build: str, item: str, flavor: str, base: bool = False) -> typing.Tuple[str, str, str]:
       p = self.config.get_builder_path(build, item)
