@@ -29,7 +29,7 @@ class TestMeasurement(unittest.TestCase):
 
   def test_scorep_mh_set_up_instr(self):
     s_mh = m.ScorepSystemHelper(self.cfg)
-    s_mh.set_up(self.target_cfg, self.instr_cfg)
+    s_mh.set_up(self.target_cfg, self.instr_cfg, True)
 
     self.assertIn('cube_dir', s_mh.data)
     self.assertEqual('500M', s_mh.cur_mem_size)
@@ -40,7 +40,7 @@ class TestMeasurement(unittest.TestCase):
   def test_scorep_mh_set_up_no_instr(self):
     s_mh = m.ScorepSystemHelper(self.cfg)
     self.instr_cfg._is_instrumentation_run = False
-    s_mh.set_up(self.target_cfg, self.instr_cfg)
+    s_mh.set_up(self.target_cfg, self.instr_cfg, True)
 
     self.assertDictEqual({}, s_mh.data)
     self.assertEqual('', s_mh.cur_mem_size)
@@ -50,13 +50,11 @@ class TestMeasurement(unittest.TestCase):
 
   def test_scorep_mh_dir_invalid(self):
     s_mh = m.ScorepSystemHelper(self.cfg)
-    s_mh.set_up(self.target_cfg, self.instr_cfg)
+    s_mh.set_up(self.target_cfg, self.instr_cfg, True)
 
     self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
-    self.assertRaises(m.MeasurementSystemException, s_mh.set_exp_dir, '+/invalid/path/haha',
-                      'item01-flavor01', 0)
-    self.assertRaises(m.MeasurementSystemException, s_mh.set_exp_dir, '/inv?alid/path/haha',
-                      'item01-flavor01', 0)
+    self.assertRaises(m.MeasurementSystemException, s_mh.set_exp_dir, '+/invalid/path/haha', 'item01-flavor01', 0)
+    self.assertRaises(m.MeasurementSystemException, s_mh.set_exp_dir, '/inv?alid/path/haha', 'item01-flavor01', 0)
 
 
 if __name__ == '__main__':

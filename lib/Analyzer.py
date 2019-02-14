@@ -51,8 +51,7 @@ class Analyzer:
           logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
           #tt.m_track('analysis', util, 'run_analyser_command', command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber-1)
-          util.run_analyser_command(command, analyzer_dir, flavor, benchmark_name, exp_dir,
-                                    iterationNumber - 1)
+          util.run_analyser_command(command, analyzer_dir, flavor, benchmark_name, exp_dir, iterationNumber)
           logging.get_logger().log('Analyzer command finished', level='debug')
         else:
           util.run_analyser_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
