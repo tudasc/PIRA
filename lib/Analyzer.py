@@ -48,7 +48,7 @@ class Analyzer:
           logging.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
           prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
-        if util.check_file(instr_files):
+        if iterationNumber > 0 and util.check_file(instr_files):
           logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
           #tt.m_track('analysis', util, 'run_analyser_command', command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber-1)
