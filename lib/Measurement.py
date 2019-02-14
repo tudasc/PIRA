@@ -145,9 +145,10 @@ class ScorepSystemHelper:
 
   @classmethod
   def get_instrumentation_flags(cls, instr_file: str, compile_time_filter: bool) -> str:
-    flags = defaults.get_default_instrumentation_flag() + ' '
+    default_provider = defaults.BackendDefaults()
+    flags = default_provider.get_default_instrumentation_flag() + ' '
     if compile_time_filter:
-      flags += defaults.get_default_instrumentation_selection_flag() + '=' + instr_file
+      flags += default_provider.get_default_instrumentation_selection_flag() + '=' + instr_file
     return flags
 
   @classmethod
@@ -157,8 +158,9 @@ class ScorepSystemHelper:
     :instr_file: str: The file name to use for filtering
     :compile_time_filter: bool: Should compile-time filtering be used (default)
     """
+    default_provider = defaults.BackendDefaults()
     log.get_logger().log('ScorepSystemHelper::get_scorep_compliant_CC_command: ', level='debug')
-    cc_str = defaults.get_default_c_compiler_name() + ' ' + cls.get_instrumentation_flags(
+    cc_str = default_provider.get_default_c_compiler_name() + ' ' + cls.get_instrumentation_flags(
         instr_file, compile_time_filter)
     return '\"' + cc_str + '\"'
 
@@ -169,7 +171,8 @@ class ScorepSystemHelper:
     :instr_file: str: The file name to use for filtering
     :compile_time_filter: bool: Should compile-time filtering be used (default)
     """
-    cxx_str = defaults.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(
+    default_provider = defaults.BackendDefaults()
+    cxx_str = default_provider.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(
         instr_file, compile_time_filter)
     return '\"' + cxx_str + '\"'
 

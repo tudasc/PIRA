@@ -10,6 +10,7 @@ import lib.Utility as util
 import lib.Logging as logging
 import lib.TimeTracking as tt
 import lib.FunctorManagement as fmg
+import lib.DefaultFlags as defaults
 
 
 class Analyzer:
@@ -26,25 +27,25 @@ class Analyzer:
       analyze_functor.active(benchmark, **kwargs)
 
     else:
-      logging.get_logger().log('Using passive mode')
+      logging.get_logger().log('Analyzer::analyze_local: Using passive mode')
       try:
         exp_dir = self.config.get_analyser_exp_dir(build, benchmark)
         analyzer_dir = self.config.get_analyser_dir(build, benchmark)
         isdirectory_good = util.check_provided_directory(analyzer_dir)
         # XXX We need to identify a 'needed set of variables' that can be relied on begin passed
-        kwargs = {'analyzer_dir': analyzer_dir}
+        kwargs['analyzer_dir'] = analyzer_dir
         command = analyze_functor.passive(benchmark, **kwargs)
 
-        logging.get_logger().log('Analyzer with command: ' + command)
-        logging.get_logger().log('Checking ' + analyzer_dir + ' | is good: ' + str(isdirectory_good))
+        logging.get_logger().log('Analyzer::analyze_local: Command = ' + command)
 
         benchmark_name = self.config.get_benchmark_name(benchmark)
 
         if isdirectory_good:
           util.change_cwd(analyzer_dir)
-          logging.get_logger().log('flavor: ' + flavor + ' | benchmark_name: ' + benchmark_name)
+          logging.get_logger().log('Analyzer::analyzer_local: Flavor = ' + flavor + ' | benchmark_name = ' +
+                                   benchmark_name)
           instr_files = util.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
-          logging.get_logger().log('The built instrumentation file path is: ' + instr_files)
+          logging.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
           prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
         if util.check_file(instr_files):
@@ -52,7 +53,7 @@ class Analyzer:
           util.rename(instr_files, prev_instr_file)
           #tt.m_track('analysis', util, 'run_analyser_command', command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber-1)
           util.run_analyser_command(command, analyzer_dir, flavor, benchmark_name, exp_dir, iterationNumber)
-          logging.get_logger().log('Analyzer command finished', level='debug')
+          logging.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
         else:
           util.run_analyser_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
 
@@ -91,7 +92,8 @@ class Analyzer:
         logging.get_logger().log(str(e), level='error')
 
   def analyze(self, target_config, iteration_number: int) -> str:
-    kwargs = {'compiler': ''}
+    default_provider = defaults.BackendDefaults()
+    kwargs = default_provider.get_default_kwargs()
 
     flavor = target_config.get_flavor()
     build = target_config.get_build()

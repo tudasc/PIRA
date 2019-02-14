@@ -14,6 +14,7 @@ import lib.Logging as log
 from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
 import lib.FunctorManagement as fm
 import lib.Measurement as ms
+import lib.DefaultFlags as defaults
 
 import typing
 
@@ -34,11 +35,12 @@ class LocalRunner(Runner):
     functor_manager = fm.FunctorManager()
     run_functor = functor_manager.get_or_load_functor(target_config.get_build(), target_config.get_target(),
                                                       target_config.get_flavor(), 'run')
-    kwargs = {}
+    default_provider = defaults.BackendDefaults()
+    kwargs = default_provider.get_default_kwargs()
+    kwargs['util'] = util
     runtime = .0
 
     if run_functor.get_method()['active']:
-      kwargs['util'] = util
       run_functor.active(target_config.get_target(), **kwargs)
       log.get_logger().log('For the active functor we can barely measure runtime', level='warn')
       runtime = 1.0
