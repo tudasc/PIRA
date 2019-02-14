@@ -1,6 +1,6 @@
 """
 File: Configuration.py
-Author: JP Lehr
+Author: Sachin Manawadi, JP Lehr
 Email: jan.lehr@sc.tu-darmstadt.de
 Github: https://github.com/jplehr
 Description: Module that provides to main data structures.

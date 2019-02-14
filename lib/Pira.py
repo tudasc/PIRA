@@ -1,6 +1,6 @@
 """
 File: Pira.py
-Author: JP Lehr
+Author: JP Lehr, Sachin Manawadi
 Email: jan.lehr@sc.tu-darmstadt.de
 Github: https://github.com/jplehr
 Description: Module implementing the main workflow of PIRA.

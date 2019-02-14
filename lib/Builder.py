@@ -1,6 +1,6 @@
 """
 File: Builder.py
-Author: JP Lehr
+Author: JP Lehr, Sachin Manawadi
 Email: jan.lehr@sc.tu-darmstadt.de
 Github: https://github.com/jplehr
 Description: Module to build the target software.

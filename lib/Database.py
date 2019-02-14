@@ -1,3 +1,11 @@
+"""
+File: Database.py
+Author: JP Lehr, Sachin Manawadi 
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module to run the target software.
+"""
+
 import sys
 sys.path.append('..')
 

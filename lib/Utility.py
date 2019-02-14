@@ -1,6 +1,6 @@
 """
 File: Utility.py
-Author: JP Lehr
+Author: Sachin Manawadi, JP Lehr
 Email: jan.lehr@sc.tu-darmstadt.de
 Github: https://github.com/jplehr
 Description: Module to support other tasks.

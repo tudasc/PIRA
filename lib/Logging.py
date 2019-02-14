@@ -1,7 +1,16 @@
+"""
+File: Runner.py
+Author: JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module to handle output of PIRA.
+"""
+
+
 class Logger:
   """
     Class to steer output
-    """
+  """
 
   def __init__(self):
     self.state = {'debug': False, 'info': True, 'warn': True, 'error': True, 'perf': True}
