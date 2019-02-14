@@ -13,15 +13,15 @@ import lib.FunctorManagement as fm
 from lib.Configuration import TargetConfiguration, PiraConfiguration
 from lib.Measurement import ScorepSystemHelper
 import lib.DefaultFlags as defaults
+from lib.Exception import PiraException
 
 import typing
 
 
-class BuilderException(Exception):
+class BuilderException(PiraException):
 
   def __init__(self, message):
-    super().__init__()
-    self.message = message
+    super().__init__(message)
 
 
 class Builder:
@@ -35,6 +35,7 @@ class Builder:
     self.old_cwd = ''
     self.build_instr = instrument
     self.instrumentation_file = instr_file
+    self._compile_time_filtering = target_config.is_compile_time_filtering()
     self.error = None
 
   def build(self):
@@ -43,8 +44,8 @@ class Builder:
       self.build_detail()
       self.tear_down()
 
-    except Exception as e:
-      log.get_logger().log('Builder::build: Caught exception ' + str(e), level='info')
+    except BuilderException as e:
+      log.get_logger().log('Builder::build: Caught exception ' + str(e), level='warn')
       if self.error:
         raise Exception('Severe Problem in Builder::build')
 
@@ -67,8 +68,10 @@ class Builder:
 
   def construct_pira_instr_kwargs(self):
     log.get_logger().log('Builder::construct_pira_instr_keywords', level='debug')
-    pira_cc = ScorepSystemHelper.get_scorep_compliant_CC_command(self.instrumentation_file)
-    pira_cxx = ScorepSystemHelper.get_scorep_compliant_CXX_command(self.instrumentation_file)
+    pira_cc = ScorepSystemHelper.get_scorep_compliant_CC_command(self.instrumentation_file,
+                                                                 self._compile_time_filtering)
+    pira_cxx = ScorepSystemHelper.get_scorep_compliant_CXX_command(self.instrumentation_file,
+                                                                   self._compile_time_filtering)
     pira_clflags = ScorepSystemHelper.get_scorep_needed_libs()
     pira_cxxlflags = ScorepSystemHelper.get_scorep_needed_libs()
     pira_name = 'pira.built.exe'
@@ -94,11 +97,7 @@ class Builder:
     return kwargs
 
   def check_build_prerequisites(self):
-    scorep_init_file_name = 'scorep.init.c'
-    if util.check_file(scorep_init_file_name):
-      util.shell('gcc -c ' + scorep_init_file_name)
-    else:
-      raise BuilderException('Builder::check_build_prerequisites: Missing ' + scorep_init_file_name)
+    ScorepSystemHelper.check_build_prerequisites()
 
   def build_flavors(self, kwargs) -> None:
     log.get_logger().log(
@@ -117,7 +116,11 @@ class Builder:
       try:
         self.check_build_prerequisites()
       except Exception as e:
-        raise e
+        raise BuilderException('Precheck failed.\n' + str(e))
+
+      log.get_logger().log('Builder::build_flavors: Prerequisite check successfull.')
+      if not self.target_config.is_compile_time_filtering():
+        self.target_config.set_instr_file(self.instrumentation_file)
 
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'build')
       kwargs = self.construct_pira_instr_kwargs()
@@ -128,14 +131,12 @@ class Builder:
 
     if build_functor.get_method()['active']:
       log.get_logger().log('Builder::build_flavors: Running the passive functor.', level='debug')
-      # util.change_cwd(build)
       build_functor.active(benchmark, **kwargs)
 
     else:
       try:
         log.get_logger().log('Builder::build_flavors: Running the passive functor.', level='debug')
-        # util.change_cwd(build)
-        ''' TODO The build command uses CC and CXX to pass flags that are needed by PIRA for the given toolchain. '''
+        ''' The build command uses CC and CXX to pass flags that are needed by PIRA for the given toolchain. '''
         build_command = build_functor.passive(benchmark, **kwargs)
         clean_command = clean_functor.passive(benchmark, **kwargs)
         log.get_logger().log(
@@ -145,4 +146,4 @@ class Builder:
         util.shell(build_command)
 
       except Exception as e:
-        log.get_logger().log('Builder::build_flavors: ' + str(e), level='warn')
+        log.get_logger().log('Builder::build_flavors: ' + str(e), level='error')

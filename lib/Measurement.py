@@ -9,12 +9,13 @@ Description: Module hosts measurement support infrastructure.
 import lib.Utility as u
 import lib.Logging as log
 import lib.DefaultFlags as defaults
-from lib.Configuration import PiraConfiguration
+from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
+from lib.Exception import PiraException
 
 import typing
 
 
-class MeasurementSystemException(Exception):
+class MeasurementSystemException(PiraException):
   """  This exception is thrown if problems in the runtime occur.  """
 
   def __init__(self, message):
@@ -69,12 +70,13 @@ class ScorepSystemHelper:
     log.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
     return ''
 
-  def set_up(self, target_config, instrumentation_config) -> None:
+  def set_up(self, target_config: TargetConfiguration, instrumentation_config: InstrumentConfig,
+             compile_time_filter: bool) -> None:
     self._set_up(target_config.get_build(), target_config.get_target(), target_config.get_flavor(),
                  instrumentation_config.get_instrumentation_iteration(),
-                 instrumentation_config.is_instrumentation_run())
+                 instrumentation_config.is_instrumentation_run(), compile_time_filter)
 
-  def _set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
+  def _set_up(self, build, item, flavor, it_nr, is_instr_run, comp_t_filter) -> None:
     log.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run), level='debug')
     if not is_instr_run:
       return
@@ -86,8 +88,7 @@ class ScorepSystemHelper:
     effective_dir = u.get_cube_file_path(exp_dir, flavor, it_nr)
     if not u.check_provided_directory(effective_dir):
       log.get_logger().log(
-          'ScorepSystemHelper::_set_up: Experiment directory does not exist.  \nCreating path: ' +
-          effective_dir,
+          'ScorepSystemHelper::_set_up: Experiment directory does not exist.  \nCreating path: ' + effective_dir,
           level='debug')
       u.create_directory(effective_dir)
 
@@ -97,6 +98,9 @@ class ScorepSystemHelper:
     self.set_memory_size('500M')
     self.set_overwrite_exp_dir()
     self.set_profiling_basename(flavor, build, item)
+
+    if not comp_t_filter:
+      self.set_filter_file('scorep-filter-file.txt')
 
   def set_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
@@ -139,23 +143,51 @@ class ScorepSystemHelper:
     return '-lscorep_adapter_memory_event_cxx_L64 -lscorep_adapter_memory_mgmt -lscorep_alloc_metric'
 
   @classmethod
-  def get_instrumentation_flags(cls, instr_file: str) -> str:
-    flags = defaults.get_default_instrumentation_flag(
-    ) + ' ' + defaults.get_default_instrumentation_selection_flag() + '=' + instr_file
+  def get_instrumentation_flags(cls, instr_file: str, compile_time_filter: bool) -> str:
+    flags = defaults.get_default_instrumentation_flag() + ' '
+    if compile_time_filter:
+      flags += defaults.get_default_instrumentation_selection_flag() + '=' + instr_file
     return flags
 
   @classmethod
-  def get_scorep_compliant_CC_command(cls, instr_file: str) -> str:
+  def get_scorep_compliant_CC_command(cls, instr_file: str, compile_time_filter: bool = True) -> str:
+    """ Returns instrumentation flags for the C compiler.
+
+    :instr_file: str: The file name to use for filtering
+    :compile_time_filter: bool: Should compile-time filtering be used (default)
+    """
     log.get_logger().log('ScorepSystemHelper::get_scorep_compliant_CC_command: ', level='debug')
-    cc_str = defaults.get_default_c_compiler_name() + ' ' + cls.get_instrumentation_flags(instr_file)
+    cc_str = defaults.get_default_c_compiler_name() + ' ' + cls.get_instrumentation_flags(
+        instr_file, compile_time_filter)
     return '\"' + cc_str + '\"'
 
   @classmethod
-  def get_scorep_compliant_CXX_command(cls, instr_file: str) -> str:
-    cxx_str = defaults.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(instr_file)
+  def get_scorep_compliant_CXX_command(cls, instr_file: str, compile_time_filter: bool = True) -> str:
+    """ Returns instrumentation flags for the C++ compiler.
+
+    :instr_file: str: The file name to use for filtering
+    :compile_time_filter: bool: Should compile-time filtering be used (default)
+    """
+    cxx_str = defaults.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(
+        instr_file, compile_time_filter)
     return '\"' + cxx_str + '\"'
 
   @classmethod
   def get_scorep_needed_libs(cls) -> str:
-    return '\" scorep.init.o ' + cls.get_config_libs() + ' ' + cls.get_config_ldflags(
-    ) + ' ' + cls.get_additional_libs() + '\"'
+    return '\" scorep.init.o ' + cls.get_config_libs() + ' ' + cls.get_config_ldflags() + ' ' + cls.get_additional_libs(
+    ) + '\"'
+
+  @classmethod
+  def check_build_prerequisites(cls) -> None:
+    scorep_init_file_name = 'scorep.init.c'
+    log.get_logger().log('ScorepMeasurementSystem::check_build_prerequisites: global home dir: ' + u.get_home_dir())
+    pira_scorep_resource = u.get_home_dir() + '/resources/scorep.init.c'
+    if not u.check_file(scorep_init_file_name):
+      u.copy_file(pira_scorep_resource, u.get_cwd() + '/' + scorep_init_file_name)
+
+    # In case something goes wrong with copying
+    if u.check_file(scorep_init_file_name):
+      u.shell('gcc -c ' + scorep_init_file_name)
+    else:
+      raise MeasurementSystemException('ScorepMeasurementSystem::check_build_prerequisites: Missing ' +
+                                       scorep_init_file_name)

@@ -4,7 +4,6 @@ from lib.db import database as db
 import lib.tables as tables
 import lib.Logging as log
 import lib.Pira as pira
-
 '''
 trying DB
 
@@ -28,13 +27,12 @@ for row in rows:
 parser = argparse.ArgumentParser()
 parser.add_argument('config', help='The configuration json file.')
 parser.add_argument('--tape', help='Path to tape file to dump.')
+parser.add_argument('--runtime-filter', help='Use run-time filtering', default=False, action='store_true')
 args = parser.parse_args()
 
 try:
   log.get_logger().log('Starting', level='debug')
-  log.get_logger().dump_tape(cli=True)
-  #runner.run(args.config)
-  pira.main(args.config)
+  pira.main(args)
 
 finally:
   if args.tape is not None:

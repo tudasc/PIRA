@@ -168,7 +168,7 @@ class TargetConfiguration:
   """  The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. 
   Using TargetConfiguration all steps of building and executing are possible.  """
 
-  def __init__(self, place: str, target: str, flavor: str, db_item_id: str):
+  def __init__(self, place: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True):
     """  Initializes the TargetConfiguration with its necessary parameters.
 
     :place: str: TODO
@@ -181,6 +181,8 @@ class TargetConfiguration:
     self._target: str = target
     self._flavor: str = flavor
     self._db_item_id: str = db_item_id
+    self._compile_time_filtering = compile_time_filter
+    self._instr_file = ''
 
   def get_build(self):
     """Return the place / build stored in this TargetConfiguration
@@ -214,14 +216,30 @@ class TargetConfiguration:
     """
     return self._db_item_id
 
+  def is_compile_time_filtering(self) -> bool:
+    """ Returns whether this PIRA instance uses compile-time filtering"""
+    return self._compile_time_filtering
+
+  def set_instr_file(self, instr_file: str) -> None:
+    self._instr_file = instr_file
+
+  def get_instr_file(self):
+    """
+    Only valid IFF is_compile_time_filtering returns False!
+    :returns: Iff this run is a runtime-filter run, returns the instrumentation file.
+    """
+    return self._instr_file
+
+
 class InstrumentConfig:
   """  Holds information how instrumentation is handled in the different run phases.  """
+
   def __init__(self, is_instrumentation_run=False, instrumentation_iteration=None):
     self._is_instrumentation_run = is_instrumentation_run
     self._instrumentation_iteration = instrumentation_iteration
-    
+
   def get_instrumentation_iteration(self):
     return self._instrumentation_iteration
-    
+
   def is_instrumentation_run(self):
     return self._is_instrumentation_run

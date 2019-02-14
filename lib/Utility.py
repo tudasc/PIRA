@@ -7,6 +7,8 @@ Description: Module to support other tasks.
 """
 
 import sys
+sys.path.append('..')
+from lib.Exception import PiraException
 import os
 import subprocess
 import lib.Logging as log
@@ -19,6 +21,19 @@ import shutil
 import typing
 
 queued_job_filename = './queued_job.tmp'
+home_directory = ''
+
+
+def set_home_dir(home_dir: str) -> None:
+  global home_directory
+  home_directory = home_dir
+
+
+def get_home_dir() -> str:
+  if home_directory == '':
+    raise PiraException('Utility: No Home Directory Set!')
+
+  return home_directory
 
 
 def read_file(file_name: str) -> str:
@@ -26,6 +41,11 @@ def read_file(file_name: str) -> str:
     content = f.read()
 
   return content
+
+
+def copy_file(source_file: str, target_file: str) -> None:
+  log.get_logger().log('Utility::copy_file: ' + source_file + ' -to- ' + target_file)
+  shutil.copyfile(source_file, target_file)
 
 
 def lines_in_file(file_name: str) -> int:
@@ -151,8 +171,7 @@ def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
   return out, runtime
 
 
-def shell(command: str, silent: bool = True, dry: bool = False,
-          time_invoc: bool = False) -> typing.Tuple[str, float]:
+def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool = False) -> typing.Tuple[str, float]:
   if dry:
     log.get_logger().log('DRY RUN SHELL CALL: ' + command, level='debug')
     return '', -1.0
@@ -287,7 +306,7 @@ def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark
 
   sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
   log.get_logger().log('  INSTR: Run cmd: ' + sh_cmd)
-  out, rt = shell(sh_cmd)
+  out, _ = shell(sh_cmd)
   log.get_logger().log('Output of analyzer:\n' + out, level='debug')
 
 
@@ -295,7 +314,7 @@ def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, b
   ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
   sh_cmd = command + ' ' + ipcg_file
   log.get_logger().log('  NO INSTR: Run cmd: ' + sh_cmd)
-  out, rt = shell(sh_cmd)
+  out, _ = shell(sh_cmd)
   log.get_logger().log('Output of analyzer:\n' + out, level='debug')
 
 
@@ -309,4 +328,3 @@ def build_cube_file_path_for_db(exp_dir: str, flavor: str, iterationNumber: int)
     return fp
 
   raise Exception('Built file path to Cube not valid. fp: ' + fp)
-

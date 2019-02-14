@@ -14,23 +14,12 @@ from lib.Analyzer import Analyzer as A
 import lib.Logging as log
 import lib.Utility as util
 import lib.BatchSystemHelper as bat_sys
-import lib.FunctorManagement as fm 
+import lib.FunctorManagement as fm
 import lib.Measurement as ms
 import lib.TimeTracking as tt
 import lib.Database as d
 
 import typing
-
-# Contants to manage slurm submitter tmp file read
-JOBID = 0
-BENCHMARKNAME = 1
-ITERATIONNUMBER = 2
-ISWITHINSTR = 3
-CUBEFILEPATH = 4
-ITEMID = 5
-BUILDNAME = 6
-ITEM = 7
-FLAVOR = 8
 
 
 def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfiguration) -> None:
@@ -44,7 +33,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     tracker.m_track('Vanilla Build', vanilla_builder, 'build')
 
     # Run without instrumentation for baseline
-    iterations = 1 # XXX Should be cmdline arg?
+    iterations = 1  # XXX Should be cmdline arg?
     vanilla_rr = runner.do_baseline_run(target_config, iterations)
     log.get_logger().log('RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()), level='debug')
     instr_file = ''
@@ -81,23 +70,31 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
   except Exception as e:
-    log.get_logger().log('Problem during preparation of run.\nMessage:\n' + str(e), level='debug')
+    log.get_logger().log('Problem during preparation of run.\nMessage:\n' + str(e), level='error')
     raise RuntimeError(str(e))
 
 
-def main(path_to_config: str) -> None:
+def main(arguments) -> None:
   """ Main function for pira framework. Used to invoke the various components. """
+  path_to_config = arguments.config
+  compile_time_filter = not arguments.runtime_filter
 
-  log.get_logger().log('Pira::main: Running PIRA with configuration\n ' + str(path_to_config), level='info')
+  cf_str = 'compile-time filtering'
+  if not compile_time_filter:
+    cf_str = 'runtime filtering'
+  log.get_logger().log(
+      'Pira::main: Running PIRA in ' + cf_str + ' with configuration\n ' + str(path_to_config), level='info')
+
   home_dir = util.get_cwd()
+  util.set_home_dir(home_dir)
 
   try:
     config_loader = CLoader()
     configuration = config_loader.load_conf(path_to_config)
-    
+
     if bat_sys.check_queued_job():
       # TODO: Implement
-      assert(False)
+      assert (False)
 
     else:
       '''
@@ -131,7 +128,7 @@ def main(path_to_config: str) -> None:
               # prepare database, and get a unique handle for current item.
               db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
               # Create configuration object for the item currently processed.
-              t_config = TargetConfiguration(build, item, flavor, db_item_id)
+              t_config = TargetConfiguration(build, item, flavor, db_item_id, compile_time_filter)
 
               # Execute using a local runner, given the generated target description
               execute_with_config(runner, analyzer, t_config)
@@ -139,12 +136,11 @@ def main(path_to_config: str) -> None:
           # If global flavor
           else:
             # TODO: Implement
-            assert(False)
+            assert (False)
 
     util.change_cwd(home_dir)
 
   except RuntimeError as rt_err:
     util.change_cwd(home_dir)
-    log.get_logger().log(
-        'Runner.run caught exception. Message: ' + str(rt_err), level='warn')
+    log.get_logger().log('Runner.run caught exception. Message: ' + str(rt_err), level='error')
     log.get_logger().dump_tape()
