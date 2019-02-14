@@ -4,47 +4,50 @@ sys.path.append('..')
 import lib.FunctorManagement as fm
 import lib.Utility as u
 import lib.tables as pirasql
+from lib.Exception import PiraException
 
 import sqlite3 as db
 
-class DBException(Exception):
+
+class DBException(PiraException):
+
   def __init__(self, message):
-    super().__init__()
-    self.message = message
+    super().__init__(message)
 
 
 class DBManager:
-
   """ This class is used to communicate with PIRA DB.
 
   It should be a singleton, at least was it my intention.
 
   """
+
   class DBImpl:
     """
     Inner class to implement singleton pattern.
 
     Takes care of the actual database connection.
     """
+
     def __init__(self, name):
       self.conn = None
       self.cursor = None
       try:
         self.conn = db.connect(name)
-      except Exception as e:
+      except Exception:
         raise DBException('Error in creating the database / connection')
 
     def create_cursor(self):
       try:
         self.cursor = self.conn.cursor()
         return self.cursor
-      except Exception as e:
+      except Exception:
         raise DBException('Error in creating cursor')
 
     def create_table(self, table_name):
       try:
         self.cursor.execute(table_name)
-      except Exception as e:
+      except Exception:
         raise DBException('Problem creating tables')
 
     def insert_data_application(self, values):
@@ -103,12 +106,14 @@ class DBManager:
       exp_dir = config.get_analyser_exp_dir(build, item)
 
       db_item_id = u.generate_random_string()
-      db_item_data = (db_item_id, benchmark_name, analyse_functor, build_functor, '', run_functor, submitter_functor, exp_dir, build)
+      db_item_data = (db_item_id, benchmark_name, analyse_functor, build_functor, '', run_functor, submitter_functor,
+                      exp_dir, build)
       self.insert_data_items(db_item_data)
 
       return db_item_id
 
-    def enter_run_data(self, unique_id: str, item_name: str, iteration_no: int, is_instrumented_run: bool, path_to_cube: str, runtime: float, db_item_id) -> None:
+    def enter_run_data(self, unique_id: str, item_name: str, iteration_no: int, is_instrumented_run: bool,
+                       path_to_cube: str, runtime: float, db_item_id) -> None:
       pass
 
   #### END OF INNER CLASS ###
@@ -117,6 +122,7 @@ class DBManager:
   db_ext = 'sqlite'
 
   instance = None
+
   def __init__(self, dbname):
     if not DBManager.instance:
       DBManager.instance = DBManager.DBImpl(dbname)

@@ -10,18 +10,13 @@ import typing
 import lib.Utility as u
 from lib.Configuration import PiraConfiguration
 import lib.Logging as log
+from lib.Exception import PiraException
 
 
-class FunctorManagementException(Exception):
-
+class FunctorManagementException(PiraException):
   """The exception indicates a problem with the funtor management"""
 
   def __init__(self, msg):
-    """Initializes the exception
-
-    :msg: TODO
-
-    """
     super().__init__(msg)
 
 
@@ -29,6 +24,7 @@ class FunctorManager:
   """ Entity to query for functors. Needs to be initialized with a PiraConfiguration once per PIRA configuration file.  """
 
   class __FunctorManagerImpl:
+
     def __init__(self, cfg: PiraConfiguration) -> None:
       self.config = cfg
       self.functor_cache = {}
@@ -52,16 +48,17 @@ class FunctorManager:
         raise Exception('No such option available to load functor for. Value = ' + func)
 
       try:
-        res = self.functor_cache[wnm]
+        _ = self.functor_cache[wnm]
       except KeyError:
         self.functor_cache[wnm] = u.load_functor(path, name)
 
-      log.get_logger().log('FunctorManager::get_or_load: The retrieved ' + func + ' functor: ' + str(self.functor_cache[wnm]), level='debug')
+      log.get_logger().log(
+          'FunctorManager::get_or_load: The retrieved ' + func + ' functor: ' + str(self.functor_cache[wnm]),
+          level='debug')
 
       return self.functor_cache[wnm]
 
-    def get_builder(self, build: str, item: str, flavor: str,
-                    base: bool = False) -> typing.Tuple[str, str, str]:
+    def get_builder(self, build: str, item: str, flavor: str, base: bool = False) -> typing.Tuple[str, str, str]:
       p = self.config.get_builder_path(build, item)
       n = self.get_builder_name(build, item, flavor)
       if base:
@@ -143,7 +140,8 @@ class FunctorManager:
       return full_path
 
   instance = None
-  def __init__(self, cfg = None):
+
+  def __init__(self, cfg=None):
     if not FunctorManager.instance:
       if cfg is None:
         raise FunctorManagementException('Cannot create from None')
