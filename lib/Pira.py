@@ -33,18 +33,16 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     tracker.m_track('Vanilla Build', vanilla_builder, 'build')
 
     # Run without instrumentation for baseline
+    log.get_logger().log('Running baseline measurements', level='info')
     iterations = 1  # XXX Should be cmdline arg?
     vanilla_rr = runner.do_baseline_run(target_config, iterations)
     log.get_logger().log('RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()), level='debug')
     instr_file = ''
 
     for x in range(0, 2):
-      log.get_logger().toggle_state('info')
       log.get_logger().log('Running instrumentation iteration ' + str(x), level='info')
-      log.get_logger().toggle_state('info')
 
       # Only run the pgoe to get the functions name
-      log.get_logger().log('Starting with the profiler run', level='debug')
       iteration_tracker = tt.TimeTracker()
 
       #Analysis Phase
@@ -58,6 +56,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       tracker.m_track('Instrument Build', instr_builder, 'build')
 
       #Run Phase
+      log.get_logger().log('Running profiling measurements', level='info')
       instr_rr = runner.do_profile_run(target_config, x)
 
       # Compute overhead of instrumentation
@@ -94,6 +93,7 @@ def main(arguments) -> None:
 
     if bat_sys.check_queued_job():
       # TODO: Implement
+      log.get_logger().log('In this version of PIRA it is not yet implemented', level='error')
       assert (False)
 
     else:
@@ -136,6 +136,7 @@ def main(arguments) -> None:
           # If global flavor
           else:
             # TODO: Implement
+            log.get_logger().log('In this version of PIRA it is not yet implemented', level='error')
             assert (False)
 
     util.change_cwd(home_dir)

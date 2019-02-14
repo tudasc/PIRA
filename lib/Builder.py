@@ -9,8 +9,7 @@ Description: Module to build the target software.
 import lib.Utility as util
 import lib.Logging as log
 import lib.FunctorManagement as fm
-# XXX Remove this once it is refactored.
-from lib.Configuration import TargetConfiguration, PiraConfiguration
+from lib.Configuration import TargetConfiguration
 from lib.Measurement import ScorepSystemHelper
 import lib.DefaultFlags as defaults
 from lib.Exception import PiraException

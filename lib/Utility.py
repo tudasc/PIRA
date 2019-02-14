@@ -77,7 +77,7 @@ def check_file(path: str) -> bool:
 
 def is_valid_file(file_name: str) -> bool:
   import re
-  search = re.compile(r'[^a-zA-z0-9/_-]').search
+  search = re.compile(r'[^a-zA-z0-9/\._-]').search
   return not bool(search(file_name))
 
 

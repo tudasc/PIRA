@@ -24,10 +24,8 @@ class DBException(PiraException):
 
 
 class DBManager:
-  """ This class is used to communicate with PIRA DB.
-
-  It should be a singleton, at least was it my intention.
-
+  """ 
+  This class is used to communicate with PIRA DB.
   """
 
   class DBImpl:

@@ -72,11 +72,14 @@ class ScorepSystemHelper:
 
   def set_up(self, target_config: TargetConfiguration, instrumentation_config: InstrumentConfig,
              compile_time_filter: bool) -> None:
+    if not target_config.is_compile_time_filtering():
+      self.set_filter_file(target_config.get_instr_file())
+
     self._set_up(target_config.get_build(), target_config.get_target(), target_config.get_flavor(),
                  instrumentation_config.get_instrumentation_iteration(),
-                 instrumentation_config.is_instrumentation_run(), compile_time_filter)
+                 instrumentation_config.is_instrumentation_run())
 
-  def _set_up(self, build, item, flavor, it_nr, is_instr_run, comp_t_filter) -> None:
+  def _set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
     log.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run), level='debug')
     if not is_instr_run:
       return
@@ -98,9 +101,6 @@ class ScorepSystemHelper:
     self.set_memory_size('500M')
     self.set_overwrite_exp_dir()
     self.set_profiling_basename(flavor, build, item)
-
-    if not comp_t_filter:
-      self.set_filter_file('scorep-filter-file.txt')
 
   def set_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
@@ -124,6 +124,7 @@ class ScorepSystemHelper:
     u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', self.cur_overwrite_exp_dir)
 
   def set_filter_file(self, file_name: str) -> None:
+    log.get_logger().log('ScorepMeasurementSystem::set_filter_file: File = ' + file_name)
     if not u.is_valid_file(file_name):
       raise MeasurementSystemException('Score-P filter file not valid.')
 
