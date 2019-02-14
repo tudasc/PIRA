@@ -144,7 +144,7 @@ def change_cwd(path: str) -> None:
 def load_functor(directory: str, module: str):
   if not check_provided_directory(directory):
     log.get_logger().log('Functor directory invalid', level='warn')
-  if not check_file(directory + '/' + module):
+  if not is_valid_file(directory + '/' + module):
     log.get_logger().log('Functor filename invalid', level='warn')
 
   # TODO: Add error if functor path does not exist!!!
