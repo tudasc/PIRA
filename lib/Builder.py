@@ -73,7 +73,8 @@ class Builder:
                                                                    self._compile_time_filtering)
     pira_clflags = ScorepSystemHelper.get_scorep_needed_libs_c()
     pira_cxxlflags = ScorepSystemHelper.get_scorep_needed_libs_cxx()
-    pira_name = 'pira.built.exe'
+    default_provider = defaults.BackendDefaults()
+    pira_name = default_provider.get_default_exe_name()
 
     pira_kwargs = {
         'CC': pira_cc,
@@ -87,11 +88,12 @@ class Builder:
 
   def construct_pira_kwargs(self):
     log.get_logger().log('Builder::construct_pira_keywords', level='debug')
-    pira_cc = defaults.get_default_c_compiler_name()
-    pira_cxx = defaults.get_default_cpp_compiler_name()
-    pira_name = 'pira.built.exe'
+    default_provider = defaults.BackendDefaults()
 
-    kwargs = {'CC': pira_cc, 'CXX': pira_cxx, 'CLFLAGS': '', 'CXXLFLAGS': '', 'PIRANAME': pira_name}
+    kwargs = default_provider.get_default_kwargs()
+    kwargs['CLFLAGS'] = ''
+    kwargs['CXXLFLAGS'] = ''
+
     log.get_logger().log('Builder::construct_pira_keywords Returning.', level='debug')
     return kwargs
 
