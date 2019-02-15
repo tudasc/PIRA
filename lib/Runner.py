@@ -47,8 +47,7 @@ class LocalRunner(Runner):
 
     try:
       util.change_cwd(target_config.get_build())
-      scorep_helper = ms.ScorepSystemHelper(self._config)
-      scorep_helper.set_up(target_config, instrument_config, compile_time_filtering)
+
       command = run_functor.passive(target_config.get_target(), **kwargs)
       _, runtime = util.shell(command, time_invoc=True)
       log.get_logger().log('LocalRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
@@ -80,7 +79,10 @@ class LocalRunner(Runner):
     log.get_logger().log('LocalRunner::do_profile_run')
     log.get_logger().log(
         'LocalRunner::do_profile_run: Received instrumentation file: ' + target_config.get_instr_file(), level='debug')
-    runtime = self.run(target_config, InstrumentConfig(True, instr_iteration), compile_time_filtering)
+    scorep_helper = ms.ScorepSystemHelper(self._config)
+    instrument_config = InstrumentConfig(True, instr_iteration)
+    scorep_helper.set_up(target_config, instrument_config, compile_time_filtering)
+    runtime = self.run(target_config, instrument_config, compile_time_filtering)
 
     run_result = ms.RunResult(runtime, 1)
     log.get_logger().log(

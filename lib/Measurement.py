@@ -73,11 +73,24 @@ class ScorepSystemHelper:
   def set_up(self, target_config: TargetConfiguration, instrumentation_config: InstrumentConfig,
              compile_time_filter: bool) -> None:
     if not target_config.is_compile_time_filtering():
-      self.set_filter_file(target_config.get_instr_file())
+      scorep_filter_file = self.prepare_scorep_filter_file(target_config.get_instr_file())
+      self.set_filter_file(scorep_filter_file)
 
     self._set_up(target_config.get_build(), target_config.get_target(), target_config.get_flavor(),
                  instrumentation_config.get_instrumentation_iteration(),
                  instrumentation_config.is_instrumentation_run())
+
+  def prepare_scorep_filter_file(self, filter_file: str) -> None:
+    ''' 
+        Prepares the file that Score-P uses to include or exclude. 
+        NOTE: The filter_file is a positive list! We want to include these functions!
+    '''
+    file_dir = u.get_base_dir(filter_file)
+    file_content = u.read_file(filter_file)
+    scorep_filter_file_content = self.append_scorep_footer(self.prepend_scorep_header(file_content))
+    scorep_filter_file_name = file_dir + '/scorep_filter_file.txt'
+    u.write_file(scorep_filter_file_name, scorep_filter_file_content)
+    return scorep_filter_file_name
 
   def _set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
     log.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run), level='debug')
@@ -124,12 +137,19 @@ class ScorepSystemHelper:
     u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', self.cur_overwrite_exp_dir)
 
   def set_filter_file(self, file_name: str) -> None:
-    log.get_logger().log('ScorepMeasurementSystem::set_filter_file: File = ' + file_name)
+    log.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' + file_name)
     if not u.is_valid_file(file_name):
       raise MeasurementSystemException('Score-P filter file not valid.')
 
     self.cur_filter_file = file_name
     u.set_env('SCOREP_FILTERING_FILE', self.cur_filter_file)
+
+  def append_scorep_footer(self, input_str: str) -> str:
+    return input_str + '\nSCOREP_REGION_NAMES_END'
+
+  def prepend_scorep_header(self, input_str: str) -> str:
+    line = 'SCOREP_REGION_NAMES_BEGIN\nEXCLUDE *\nINCLUDE '
+    return line + input_str
 
   @classmethod
   def get_config_libs(cls) -> str:

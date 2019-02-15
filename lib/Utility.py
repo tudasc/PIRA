@@ -69,6 +69,16 @@ def create_directory(path: str) -> None:
   os.makedirs(path)
 
 
+def write_file(file_path: str, file_content: str) -> str:
+  log.get_logger().log('Utility::write_file: file_path to write: ' + file_path)
+  with open(file_path, 'w+') as out_file:
+    out_file.write(file_content)
+
+
+def get_base_dir(file_path: str) -> str:
+  return os.path.dirname(file_path)
+
+
 def check_file(path: str) -> bool:
   if os.path.exists(path):
     return True
@@ -98,19 +108,6 @@ def remove_file(path: str) -> bool:
     os.remove(path)
     return True
   return False
-
-
-def append_scorep_footer(filename: str) -> None:
-  with open(filename, "a") as myfile:
-    myfile.write("SCOREP_REGION_NAMES_END")
-
-
-def append_scorep_header(filename: str) -> None:
-  line = "SCOREP_REGION_NAMES_BEGIN\nEXCLUDE *\nINCLUDE"
-  with open(filename, 'r+') as myfile:
-    content = myfile.read()
-    myfile.seek(0, 0)
-    myfile.write(line.rstrip('\r\n') + '\n' + content)
 
 
 def diff_inst_files(file1: str, file2: str) -> bool:
@@ -301,7 +298,7 @@ def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
 def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
                          iterationNumber: int) -> None:
   ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
-  cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber-1)
+  cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber - 1)
   cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
 
   sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file

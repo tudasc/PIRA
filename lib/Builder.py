@@ -116,11 +116,12 @@ class Builder:
       log.get_logger().log('Builder::build_flavors: Instrumentation', level='debug')
       try:
         self.check_build_prerequisites()
+        log.get_logger().log('Builder::build_flavors: Prerequisite check successfull.')
       except Exception as e:
         raise BuilderException('Precheck failed.\n' + str(e))
 
-      log.get_logger().log('Builder::build_flavors: Prerequisite check successfull.')
       if not self.target_config.is_compile_time_filtering():
+        log.get_logger().log('Builder::build_flavors: Runtime filtering enabled.')
         self.target_config.set_instr_file(self.instrumentation_file)
 
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'build')
