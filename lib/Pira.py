@@ -25,10 +25,10 @@ import typing
 def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfiguration) -> None:
   try:
     log.get_logger().log('run_setup phase.', level='debug')
-    no_instrumentation = False
+    instrument = False
 
     # Build without any instrumentation
-    vanilla_builder = B(target_config, no_instrumentation)
+    vanilla_builder = B(target_config, instrument)
     tracker = tt.TimeTracker()
     tracker.m_track('Vanilla Build', vanilla_builder, 'build')
 
@@ -51,9 +51,11 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       util.shell('stat ' + instr_file)
 
       # After baseline measurement is complete, do the instrumented build/run
-      no_instrumentation = True
-      instr_builder = B(target_config, no_instrumentation, instr_file)
-      tracker.m_track('Instrument Build', instr_builder, 'build')
+      # This is only necessary in every iteration when run in compile-time mode.
+      if x is 0 or target_config.is_compile_time_filtering():
+        instrument = True
+        instr_builder = B(target_config, instrument, instr_file)
+        tracker.m_track('Instrument Build', instr_builder, 'build')
 
       #Run Phase
       log.get_logger().log('Running profiling measurements', level='info')

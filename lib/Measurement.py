@@ -98,7 +98,6 @@ class ScorepSystemHelper:
       return
 
     exp_dir = self.config.get_analyser_exp_dir(build, item)
-    # FIXME: The exp_dir is broken!
     log.get_logger().log(
         'ScorepSystemHelper::_set_up: Retrieved analyser experiment directory: ' + exp_dir, level='debug')
     effective_dir = u.get_cube_file_path(exp_dir, flavor, it_nr)
@@ -148,7 +147,7 @@ class ScorepSystemHelper:
     return input_str + '\nSCOREP_REGION_NAMES_END'
 
   def prepend_scorep_header(self, input_str: str) -> str:
-    line = 'SCOREP_REGION_NAMES_BEGIN\nEXCLUDE *\nINCLUDE '
+    line = 'SCOREP_REGION_NAMES_BEGIN\nEXCLUDE *\nINCLUDE MANGLED '
     return line + input_str
 
   @classmethod
