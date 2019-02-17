@@ -124,7 +124,7 @@ class DBManager:
 
   #### END OF INNER CLASS ###
 
-  db_name = 'pira'
+  db_name = '_pira'
   db_ext = 'sqlite'
 
   instance = None
