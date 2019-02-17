@@ -22,6 +22,8 @@ class Analyzer:
   def analyze_local(self, flavor, build, benchmark, kwargs, iterationNumber) -> str:
     fm = fmg.FunctorManager()
     analyze_functor = fm.get_or_load_functor(build, benchmark, flavor, 'analyze')
+    analyzer_dir = self.config.get_analyser_dir(build, benchmark)
+    kwargs['analyzer_dir'] = analyzer_dir
 
     if analyze_functor.get_method()['active']:
       analyze_functor.active(benchmark, **kwargs)
@@ -30,10 +32,7 @@ class Analyzer:
       logging.get_logger().log('Analyzer::analyze_local: Using passive mode')
       try:
         exp_dir = self.config.get_analyser_exp_dir(build, benchmark)
-        analyzer_dir = self.config.get_analyser_dir(build, benchmark)
         isdirectory_good = util.check_provided_directory(analyzer_dir)
-        # XXX We need to identify a 'needed set of variables' that can be relied on begin passed
-        kwargs['analyzer_dir'] = analyzer_dir
         command = analyze_functor.passive(benchmark, **kwargs)
 
         logging.get_logger().log('Analyzer::analyze_local: Command = ' + command)

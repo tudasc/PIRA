@@ -81,7 +81,8 @@ class Builder:
         'CXX': pira_cxx,
         'CLFLAGS': pira_clflags,
         'CXXLFLAGS': pira_cxxlflags,
-        'PIRANAME': pira_name
+        'PIRANAME': pira_name,
+        'NUMPROCS': default_provider.get_default_number_of_processes()
     }
     log.get_logger().log('Builder::construct_pira_instr_keywords Returning.', level='debug')
     return pira_kwargs

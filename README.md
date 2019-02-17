@@ -55,8 +55,6 @@ In addition, different PIRA components may pass additional arguments.
 
 * ***CC***: C compiler. For example, as used in $(CC) in Makefiles.
 * ***CXX***: C++ compiler. For example, as used $(CXX) in Makefiles.
-* ***CLFLAGS***: Additionally needed linker flags for C.
-* ***CXXLFLAGS***: Additionally needed linker flags for C++.
 * ***PIRANAME***: The name of the executable that PIRA expects to be generated and callable.
 
 #### Analysis Functor
@@ -65,7 +63,8 @@ In addition, different PIRA components may pass additional arguments.
 
 #### Build Functor
 
-Currently none.
+* ***CLFLAGS***: Additionally needed linker flags for C.
+* ***CXXLFLAGS***: Additionally needed linker flags for C++.
 
 #### Run Functor
 

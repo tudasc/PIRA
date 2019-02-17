@@ -144,7 +144,7 @@ class ScorepSystemHelper:
     u.set_env('SCOREP_FILTERING_FILE', self.cur_filter_file)
 
   def append_scorep_footer(self, input_str: str) -> str:
-    return input_str + '\nSCOREP_REGION_NAMES_END'
+    return input_str + '\nSCOREP_REGION_NAMES_END\n'
 
   def prepend_scorep_header(self, input_str: str) -> str:
     line = 'SCOREP_REGION_NAMES_BEGIN\nEXCLUDE *\nINCLUDE MANGLED '

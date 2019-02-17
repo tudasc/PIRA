@@ -45,7 +45,8 @@ class BackendDefaults:
       kwargs = {
           'CC': self.get_default_c_compiler_name(),
           'CXX': self.get_default_cpp_compiler_name(),
-          'PIRANAME': self.get_default_exe_name()
+          'PIRANAME': self.get_default_exe_name(),
+          'NUMPROCS': self._num_compile_procs
       }
       return kwargs
 
