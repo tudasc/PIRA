@@ -6,7 +6,7 @@ Github: https://github.com/jplehr
 Description: Module implementing the main workflow of PIRA.
 """
 
-from lib.ConfigLoaderNew import ConfigurationLoader as CLoader
+from lib.ConfigurationLoader import ConfigurationLoader as CLoader
 from lib.Configuration import TargetConfiguration, PiraConfiguration
 from lib.Runner import Runner, LocalRunner
 from lib.Builder import Builder as B

@@ -4,7 +4,7 @@ sys.path.append('../')
 import unittest
 import typing
 
-from lib.ConfigLoaderNew import ConfigurationLoader as CL
+from lib.ConfigurationLoader import ConfigurationLoader as CL
 import lib.Logging as logging
 import lib.Utility as util
 

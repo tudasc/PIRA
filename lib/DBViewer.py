@@ -9,7 +9,7 @@ Description: @deprecated Module to inspect the database entries.
 import sys
 sys.path.append('..')
 import sqlite3 as dbviewer
-from lib.ConfigLoaderNew import ConfigurationLoader as Conf
+from lib.ConfigurationLoader import ConfigurationLoader as Conf
 from sqlite3 import Error
 
 config_loader = Conf()

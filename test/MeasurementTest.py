@@ -5,7 +5,7 @@ import unittest
 import typing
 
 import lib.Measurement as m
-import lib.ConfigLoaderNew as cln
+import lib.ConfigurationLoader as cln
 from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
 
 

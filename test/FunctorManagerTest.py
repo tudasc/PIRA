@@ -4,23 +4,17 @@ sys.path.append('../')
 import unittest
 import typing
 
-import lib.ConfigLoaderNew as CL
+import lib.ConfigurationLoader as CL
 import lib.FunctorManagement as FM
 
 
 class TestFunctorManagerConstruction(unittest.TestCase):
-
   """These tests consider the construction and correct return of singleton functor managers"""
-  
+
   def test_construction_from_None(self):
     FM.FunctorManager.instance = None
     self.assertIsNone(FM.FunctorManager.instance)
     self.assertRaises(FM.FunctorManagementException, FM.FunctorManager, None)
-
-  def test_construction_from_None(self):
-    self.assertIsNotNone(FM.FunctorManager.instance)
-    fm = FM.FunctorManager()
-    self.assertIsNotNone(fm)
 
   def test_construction_from_config(self):
     cfg_loader = CL.ConfigurationLoader()
@@ -133,7 +127,6 @@ class TestFunctorManager(unittest.TestCase):
 
   def test_get_or_load_functor(self):
     self.assertFalse('We need to test actually loading functors!')
-
 
 
 if __name__ == "__main__":
