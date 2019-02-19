@@ -41,8 +41,11 @@ class PiraConfiguration:
   def set_build_directories(self, dirs) -> None:
     self.directories = dirs
 
-  def set_glob_flavors(self, glob_flavors) -> None:
+  def set_global_flavors(self, glob_flavors) -> None:
     self.global_flavors = glob_flavors
+
+  def get_global_flavors(self):
+    return self.global_flavors
 
   def set_glob_submitter(self, glob_submitter, glob_flavor) -> None:
     self.global_submitter.update({glob_flavor: glob_submitter})
@@ -56,7 +59,7 @@ class PiraConfiguration:
   def set_flavours(self, flavours, dir) -> None:
     self.builds[dir].update({'flavours': flavours})
 
-  def initialize_build_dict(self, dir) -> None:
+  def populate_build_dict(self, dir) -> None:
     for dirs in dir:
       self.builds.update({dirs: {}})
       self.items.update({dirs: {}})
