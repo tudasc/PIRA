@@ -124,12 +124,16 @@ class ScorepSystemHelper:
 
   def set_exp_dir(self, exp_dir: str, flavor: str, iterationNumber: int) -> None:
     effective_dir = u.get_cube_file_path(exp_dir, flavor, iterationNumber)
-    if not u.is_valid_file(effective_dir):
+    if not u.is_valid_file_name(effective_dir):
       raise MeasurementSystemException('Score-p experiment directory invalid.')
 
     self.cur_exp_directory = effective_dir
     u.set_env('SCOREP_EXPERIMENT_DIRECTORY', self.cur_exp_directory)
     return
+
+  def get_exp_dir(self) -> str:
+    assert (self.cur_exp_directory is not '')
+    return self.cur_exp_directory
 
   def set_overwrite_exp_dir(self) -> None:
     self.cur_overwrite_exp_dir = 'True'
@@ -137,7 +141,7 @@ class ScorepSystemHelper:
 
   def set_filter_file(self, file_name: str) -> None:
     log.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' + file_name)
-    if not u.is_valid_file(file_name):
+    if not u.is_valid_file_name(file_name):
       raise MeasurementSystemException('Score-P filter file not valid.')
 
     self.cur_filter_file = file_name

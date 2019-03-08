@@ -26,9 +26,10 @@ class Runner:
 class LocalRunner(Runner):
   """  This is the new runner class. It implements the original idea of the entity being responsible for executing the target.  """
 
-  def __init__(self, configuration: PiraConfiguration):
+  def __init__(self, configuration: PiraConfiguration, sink):
     """ Runner are initialized once with a PiraConfiguration """
     self._config = configuration
+    self._sink = sink
 
   def run(self, target_config: TargetConfiguration, instrument_config: InstrumentConfig, compile_time_filtering: bool):
     """ Implements the actual invocation """
@@ -75,6 +76,7 @@ class LocalRunner(Runner):
   def do_profile_run(self,
                      target_config: TargetConfiguration,
                      instr_iteration: int,
+                     num_repetitions: int,
                      compile_time_filtering: bool = True) -> ms.RunResult:
     log.get_logger().log('LocalRunner::do_profile_run')
     log.get_logger().log(
@@ -82,7 +84,12 @@ class LocalRunner(Runner):
     scorep_helper = ms.ScorepSystemHelper(self._config)
     instrument_config = InstrumentConfig(True, instr_iteration)
     scorep_helper.set_up(target_config, instrument_config, compile_time_filtering)
-    runtime = self.run(target_config, instrument_config, compile_time_filtering)
+
+    for y in range(0, num_repetitions):
+      log.get_logger().log('Running instrumentation iteration ' + str(y), level='debug')
+      runtime = self.run(target_config, instrument_config, compile_time_filtering)
+      # Enable further processing of the resulting profile
+      self._sink.process(scorep_helper.get_exp_dir(), target_config, instrument_config)
 
     run_result = ms.RunResult(runtime, 1)
     log.get_logger().log(

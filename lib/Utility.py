@@ -85,7 +85,7 @@ def check_file(path: str) -> bool:
   return False
 
 
-def is_valid_file(file_name: str) -> bool:
+def is_valid_file_name(file_name: str) -> bool:
   import re
   search = re.compile(r'[^a-zA-z0-9/\._-]').search
   return not bool(search(file_name))
@@ -141,7 +141,7 @@ def change_cwd(path: str) -> None:
 def load_functor(directory: str, module: str):
   if not check_provided_directory(directory):
     log.get_logger().log('Functor directory invalid', level='warn')
-  if not is_valid_file(directory + '/' + module):
+  if not is_valid_file_name(directory + '/' + module):
     log.get_logger().log('Functor filename invalid', level='warn')
 
   # TODO: Add error if functor path does not exist!!!
@@ -316,12 +316,13 @@ def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, b
 
 
 def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:
+  log.get_logger().log('Utility::get_cube_file_path: ' + experiment_dir + '-' + flavor + '-' + str(iter_nr))
   return experiment_dir + '-' + flavor + '-' + str(iter_nr)
 
 
 def build_cube_file_path_for_db(exp_dir: str, flavor: str, iterationNumber: int) -> str:
   fp = get_cube_file_path(exp_dir, flavor, iterationNumber)
-  if is_valid_file(fp):
+  if is_valid_file_name(fp):
     return fp
 
   raise Exception('Built file path to Cube not valid. fp: ' + fp)

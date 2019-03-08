@@ -18,6 +18,7 @@ import lib.FunctorManagement as fm
 import lib.Measurement as ms
 import lib.TimeTracking as tt
 import lib.Database as d
+import lib.ProfileSink as sinks
 
 import typing
 
@@ -58,8 +59,9 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
         tracker.m_track('Instrument Build', instr_builder, 'build')
 
       #Run Phase
+      num_repetitions = 2
       log.get_logger().log('Running profiling measurements', level='info')
-      instr_rr = runner.do_profile_run(target_config, x)
+      instr_rr = runner.do_profile_run(target_config, x, num_repetitions)
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rr.compute_overhead(vanilla_rr)
@@ -110,7 +112,10 @@ def main(arguments) -> None:
       dbm = d.DBManager(d.DBManager.db_name + '.' + d.DBManager.db_ext)
       dbm.create_cursor()
       analyzer = A(configuration)
-      runner = LocalRunner(configuration)
+      attached_sink = sinks.NopSink()
+      if True:
+        attached_sink = sinks.ExtrapProfileSink('/tmp/extrap', 'param', 'weak', '', 'profile.cubex')
+      runner = LocalRunner(configuration, attached_sink)
 
       # A build/place is a top-level directory
       for build in configuration.get_builds():
