@@ -7,7 +7,7 @@ Description: Module implementing the main workflow of PIRA.
 """
 
 from lib.ConfigurationLoader import ConfigurationLoader as CLoader
-from lib.Configuration import TargetConfiguration, PiraConfiguration
+from lib.Configuration import TargetConfiguration, PiraConfiguration, ExtrapConfiguration, InvocationConfiguration
 from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as B
 from lib.Analyzer import Analyzer as A
@@ -19,6 +19,7 @@ import lib.Measurement as ms
 import lib.TimeTracking as tt
 import lib.Database as d
 import lib.ProfileSink as sinks
+from lib.RunnerFactory import PiraRunnerFactory
 
 import typing
 
@@ -77,30 +78,49 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     raise RuntimeError(str(e))
 
 
-def main(arguments) -> None:
-  """ Main function for pira framework. Used to invoke the various components. """
-  path_to_config = arguments.config
-  compile_time_filter = not arguments.runtime_filter
+def process_args_for_extrap(cmdline_args):
+  use_extra_p = False
+  if cmdline_args.extrap_dir is not '':
+    use_extra_p = True
+    extrap_config = ExtrapConfiguration(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
+  return use_extra_p, extrap_config
 
+
+def show_pira_invoc_info(cmdline_args):
+  invoc_cfg = process_args_for_invoc(cmdline_args)
   cf_str = 'compile-time filtering'
-  if not compile_time_filter:
+  if not invoc_cfg.is_compile_time_filtering():
     cf_str = 'runtime filtering'
   log.get_logger().log(
-      'Pira::main: Running PIRA in ' + cf_str + ' with configuration\n ' + str(path_to_config), level='info')
+      'Pira::main: Running PIRA in ' + cf_str + ' with configuration\n ' + str(invoc_cfg.get_path_to_cfg()),
+      level='info')
 
-  use_extra_p = False
-  if arguments.extrap_dir is not '':
-    use_extra_p = True
+
+def process_args_for_invoc(cmdline_args):
+  path_to_config = cmdline_args.config
+  compile_time_filter = not cmdline_args.runtime_filter
+
+  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter)
+
+  return invoc_cfg
+
+
+def main(arguments) -> None:
+  """ Main function for pira framework. Used to invoke the various components. """
+  show_pira_invoc_info(arguments)
+
+  invoc_cfg = process_args_for_invoc(arguments)
+  use_extra_p, extrap_config = process_args_for_extrap(arguments)
 
   home_dir = util.get_cwd()
   util.set_home_dir(home_dir)
 
   try:
     config_loader = CLoader()
-    configuration = config_loader.load_conf(path_to_config)
+    configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
 
     if bat_sys.check_queued_job():
-      # TODO: Implement
+      # FIXME: Implement
       log.get_logger().log('In this version of PIRA it is not yet implemented', level='error')
       assert (False)
 
@@ -117,15 +137,10 @@ def main(arguments) -> None:
       dbm.create_cursor()
       analyzer = A(configuration)
 
-      # TODO: We want to factor out this preparation code into a factory
-      attached_sink = sinks.NopSink()
-      prepare_runner = LocalRunner(configuration, attached_sink)
+      runner_factory = PiraRunnerFactory(configuration)
+      runner = runner_factory.get_simple_local_runner()
       if use_extra_p:
-        attached_sink = sinks.ExtrapProfileSink(arguments.extrap_dir, 'param', arguments.extrap_prefix, '',
-                                                'profile.cubex')
-        prepare_runner = LocalScalingRunner(configuration, attached_sink)
-
-      final_runner = prepare_runner
+        runner = runner_factory.get_scalability_runner(extrap_config)
 
       # A build/place is a top-level directory
       for build in configuration.get_builds():
@@ -145,10 +160,10 @@ def main(arguments) -> None:
               # prepare database, and get a unique handle for current item.
               db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
               # Create configuration object for the item currently processed.
-              t_config = TargetConfiguration(build, item, flavor, db_item_id, compile_time_filter)
+              t_config = TargetConfiguration(build, item, flavor, db_item_id, invoc_cfg.is_compile_time_filtering())
 
               # Execute using a local runner, given the generated target description
-              execute_with_config(final_runner, analyzer, t_config)
+              execute_with_config(runner, analyzer, t_config)
 
           # If global flavor
           else:

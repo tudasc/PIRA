@@ -224,7 +224,9 @@ class TargetConfiguration:
     return self._args_for_invocation is not None
 
   def get_args_for_invocation(self):
-    log.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
+    if self._args_for_invocation:
+      log.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
+
     return self._args_for_invocation
 
   def set_args_for_invocation(self, args):
@@ -257,3 +259,30 @@ class InstrumentConfig:
 
   def is_instrumentation_run(self):
     return self._is_instrumentation_run
+
+
+class ExtrapConfiguration:
+
+  def __init__(self, dir: str, prefix: str, postfix: str):
+    self._dir = dir
+    self._prefix = prefix
+    self._postfix = postfix
+
+  def get_dir(self):
+    return self._dir
+
+  def get_prefix(self):
+    return self._prefix
+
+
+class InvocationConfiguration:
+
+  def __init__(self, path_to_config: str, compile_time_filter: bool):
+    self._path_to_cfg = path_to_config
+    self._compile_time_filtering = compile_time_filter
+
+  def get_path_to_cfg(self):
+    return self._path_to_cfg
+
+  def is_compile_time_filtering(self):
+    return self._compile_time_filtering
