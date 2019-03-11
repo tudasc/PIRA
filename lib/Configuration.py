@@ -224,7 +224,7 @@ class TargetConfiguration:
     return self._args_for_invocation is not None
 
   def get_args_for_invocation(self):
-    if self._args_for_invocation:
+    if self._args_for_invocation is None:
       log.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
 
     return self._args_for_invocation

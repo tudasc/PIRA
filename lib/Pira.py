@@ -80,6 +80,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
 
 def process_args_for_extrap(cmdline_args):
   use_extra_p = False
+  extrap_config = ExtrapConfiguration('', '', '')
   if cmdline_args.extrap_dir is not '':
     use_extra_p = True
     extrap_config = ExtrapConfiguration(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
