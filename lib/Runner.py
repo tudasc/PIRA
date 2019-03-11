@@ -23,8 +23,10 @@ class Runner:
   pass
 
 
-class LocalRunner(Runner):
-  """  This is the new runner class. It implements the original idea of the entity being responsible for executing the target.  """
+class LocalBaseRunner(Runner):
+  """
+  The base class for execution on the same machine. It implements the basic *run* method, which invokes the target.
+  """
 
   def __init__(self, configuration: PiraConfiguration, sink):
     """ Runner are initialized once with a PiraConfiguration """
@@ -64,11 +66,28 @@ class LocalRunner(Runner):
     # TODO: Insert the data into the database
     return runtime
 
+
+class LocalRunner(LocalBaseRunner):
+  """
+  The LocalRunner invokes the target application with the first argument string given in the config.
+  For scalability studies, i.e., iterate over all given input sizes, use the LocalScalingRunner.
+  """
+
+  def __init__(self, configuration: PiraConfiguration, sink):
+    """ Runner are initialized once with a PiraConfiguration """
+    self._config = configuration
+    self._sink = sink
+
   def do_baseline_run(self, target_config: TargetConfiguration, iterations: int) -> ms.RunResult:
     log.get_logger().log('LocalRunner::do_baseline_run')
     accu_runtime = .0
-    num_vanilla_repetitions = iterations  # XXX This should be a command line argument?
-    # Baseline run. TODO Better evaluation of the obtained timings.
+    num_vanilla_repetitions = iterations
+
+    # This runner only takes into account the first argument string
+    args = self._config.get_args(target_config.get_build(), target_config.get_target())
+    target_config.set_args_for_invocation(args[0])
+
+    # TODO Better evaluation of the obtained timings.
     for y in range(0, num_vanilla_repetitions):
       log.get_logger().log('Running iteration ' + str(y), level='debug')
       accu_runtime += self.run(target_config, InstrumentConfig(), True)
@@ -90,6 +109,10 @@ class LocalRunner(Runner):
     instrument_config = InstrumentConfig(True, instr_iteration)
     scorep_helper.set_up(target_config, instrument_config, compile_time_filtering)
     runtime = .0
+
+    # This runner only takes into account the first argument string
+    args = self._config.get_args(target_config.get_build(), target_config.get_target())
+    target_config.set_args_for_invocation(args[0])
 
     for y in range(0, num_repetitions):
       log.get_logger().log('Running instrumentation iteration ' + str(y), level='debug')
