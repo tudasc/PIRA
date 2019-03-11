@@ -49,6 +49,10 @@ class LocalRunner(Runner):
     try:
       util.change_cwd(target_config.get_build())
 
+      invoke_arguments = target_config.get_args_for_invocation()
+      kwargs['args'] = invoke_arguments
+      log.get_logger().log('LocalRunner::run: (args) ' + invoke_arguments)
+
       command = run_functor.passive(target_config.get_target(), **kwargs)
       _, runtime = util.shell(command, time_invoc=True)
       log.get_logger().log('LocalRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
@@ -84,17 +88,55 @@ class LocalRunner(Runner):
     scorep_helper = ms.ScorepSystemHelper(self._config)
     instrument_config = InstrumentConfig(True, instr_iteration)
     scorep_helper.set_up(target_config, instrument_config, compile_time_filtering)
+    runtime = .0
 
     for y in range(0, num_repetitions):
       log.get_logger().log('Running instrumentation iteration ' + str(y), level='debug')
-      runtime = self.run(target_config, instrument_config, compile_time_filtering)
+      runtime = runtime + self.run(target_config, instrument_config, compile_time_filtering)
       # Enable further processing of the resulting profile
       self._sink.process(scorep_helper.get_exp_dir(), target_config, instrument_config)
 
-    run_result = ms.RunResult(runtime, 1)
+    run_result = ms.RunResult(runtime, num_repetitions)
     log.get_logger().log(
         '[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' + str(run_result.get_average()), level='perf')
     return run_result
+
+
+class LocalScalingRunner(LocalRunner):
+  """
+  The LocalScalingRunner performs measurements related to Extra-P modelling. 
+  The arguments given in the configuration are treated as the different input sizes, i.e.,
+  the first string is the smallest input configuration, the second is the next larger configuration, etc.
+  """
+
+  def __init__(self, configuration: PiraConfiguration, sink):
+    super().__init__(configuration, sink)
+
+  def do_profile_run(self,
+                     target_config: TargetConfiguration,
+                     instr_iteration: int,
+                     num_repetitions: int,
+                     compile_time_filtering: bool = True) -> ms.RunResult:
+    log.get_logger().log('LocalScalingRunner::do_profile_run')
+    # We run as many experiments as we have input data configs
+    # TODO: How to handle the model parameter <-> input parameter relation, do we care?
+    args = self._config.get_args(target_config.get_build(), target_config.get_target())
+    # TODO: How to handle multiple MeasurementResult items? We get a vector of these after this function.
+    for arg_cfg in args:
+      # Call the runner method with the correct arguments.
+      target_config.set_args_for_invocation(arg_cfg)
+      super().do_profile_run(target_config, instr_iteration, num_repetitions, compile_time_filtering)
+
+    return ms.RunResult(3.0, 1)
+
+  def do_baseline_run(self, target_config: TargetConfiguration, iterations: int) -> ms.RunResult:
+    log.get_logger().log('LocalScalingRunner::do_baseline_run')
+    args = self._config.get_args(target_config.get_build(), target_config.get_target())
+    for arg_cfg in args:
+      target_config.set_args_for_invocation(arg_cfg)
+      super().do_baseline_run(target_config, iterations)
+
+    return ms.RunResult(3.0, 1)
 
 
 class SlurmRunner(Runner):

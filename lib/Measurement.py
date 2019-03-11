@@ -25,7 +25,7 @@ class MeasurementSystemException(PiraException):
 class RunResult:
   """  Holds the result of a measurement execution with potentially multiple iterations.  """
 
-  def __init__(self, accumulated_runtime, nr_of_iterations, rt_trace=None):
+  def __init__(self, accumulated_runtime: float, nr_of_iterations: int, rt_trace=None):
     """Initializes the class
 
     :accumulated_runtime: TODO
@@ -37,10 +37,10 @@ class RunResult:
     self._nr_of_iterations = nr_of_iterations
     self._rt_trace = rt_trace
 
-  def get_average(self):
+  def get_average(self) -> float:
     return self._accumulated_runtime / self._nr_of_iterations
 
-  def compute_overhead(self, base_line):
+  def compute_overhead(self, base_line) -> float:
     base_line_avg = base_line.get_average()
     result = self.get_average() / base_line_avg
     return result

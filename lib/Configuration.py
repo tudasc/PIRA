@@ -186,6 +186,7 @@ class TargetConfiguration:
     self._db_item_id: str = db_item_id
     self._compile_time_filtering = compile_time_filter
     self._instr_file = ''
+    self._args_for_invocation = None
 
   def get_build(self):
     """Return the place / build stored in this TargetConfiguration
@@ -218,6 +219,13 @@ class TargetConfiguration:
 
     """
     return self._db_item_id
+
+  def get_args_for_invocation(self):
+    assert (self._args_for_invocation is not None)
+    return self._args_for_invocation
+
+  def set_args_for_invocation(self, args):
+    self._args_for_invocation = args
 
   def is_compile_time_filtering(self) -> bool:
     """ Returns whether this PIRA instance uses compile-time filtering"""

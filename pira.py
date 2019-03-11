@@ -1,7 +1,4 @@
-import lib.Runner as runner
 import argparse
-from lib.db import database as db
-import lib.tables as tables
 import lib.Logging as log
 import lib.Pira as pira
 '''
@@ -28,6 +25,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('config', help='The configuration json file.')
 parser.add_argument('--tape', help='Path to tape file to dump.')
 parser.add_argument('--runtime-filter', help='Use run-time filtering', default=False, action='store_true')
+group = parser.add_argument_group('ExP')
+group.add_argument(
+    '--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
+group.add_argument('--extrap-prefix', help='The prefix in extra-p naming scheme', type=str)
 args = parser.parse_args()
 
 try:

@@ -8,7 +8,7 @@ Description: Module implementing the main workflow of PIRA.
 
 from lib.ConfigurationLoader import ConfigurationLoader as CLoader
 from lib.Configuration import TargetConfiguration, PiraConfiguration
-from lib.Runner import Runner, LocalRunner
+from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as B
 from lib.Analyzer import Analyzer as A
 import lib.Logging as log
@@ -88,6 +88,10 @@ def main(arguments) -> None:
   log.get_logger().log(
       'Pira::main: Running PIRA in ' + cf_str + ' with configuration\n ' + str(path_to_config), level='info')
 
+  use_extra_p = False
+  if arguments.extrap_dir is not '':
+    use_extra_p = True
+
   home_dir = util.get_cwd()
   util.set_home_dir(home_dir)
 
@@ -112,10 +116,16 @@ def main(arguments) -> None:
       dbm = d.DBManager(d.DBManager.db_name + '.' + d.DBManager.db_ext)
       dbm.create_cursor()
       analyzer = A(configuration)
+
+      # TODO: We probably want to factor out this preparation code into a factory
       attached_sink = sinks.NopSink()
-      if True:
-        attached_sink = sinks.ExtrapProfileSink('/tmp/extrap', 'param', 'weak', '', 'profile.cubex')
-      runner = LocalRunner(configuration, attached_sink)
+      prepare_runner = LocalRunner(configuration, attached_sink)
+      if use_extra_p:
+        attached_sink = sinks.ExtrapProfileSink(arguments.extrap_dir, 'param', arguments.extrap_prefix, '',
+                                                'profile.cubex')
+        prepare_runner = LocalScalingRunner(configuration, attached_sink)
+
+      final_runner = prepare_runner
 
       # A build/place is a top-level directory
       for build in configuration.get_builds():
@@ -138,7 +148,7 @@ def main(arguments) -> None:
               t_config = TargetConfiguration(build, item, flavor, db_item_id, compile_time_filter)
 
               # Execute using a local runner, given the generated target description
-              execute_with_config(runner, analyzer, t_config)
+              execute_with_config(final_runner, analyzer, t_config)
 
           # If global flavor
           else:
