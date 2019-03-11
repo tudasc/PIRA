@@ -51,7 +51,8 @@ class LocalRunner(Runner):
 
       invoke_arguments = target_config.get_args_for_invocation()
       kwargs['args'] = invoke_arguments
-      log.get_logger().log('LocalRunner::run: (args) ' + invoke_arguments)
+      if invoke_arguments is not None:
+        log.get_logger().log('LocalRunner::run: (args) ' + invoke_arguments)
 
       command = run_functor.passive(target_config.get_target(), **kwargs)
       _, runtime = util.shell(command, time_invoc=True)
