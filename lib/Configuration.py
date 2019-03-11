@@ -220,6 +220,9 @@ class TargetConfiguration:
     """
     return self._db_item_id
 
+  def has_args_for_invocation(self):
+    return self._args_for_invocation is not None
+
   def get_args_for_invocation(self):
     log.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
     return self._args_for_invocation

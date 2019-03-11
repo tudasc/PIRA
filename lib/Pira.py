@@ -35,7 +35,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
 
     # Run without instrumentation for baseline
     log.get_logger().log('Running baseline measurements', level='info')
-    iterations = 1  # XXX Should be cmdline arg?
+    iterations = 1  # XXX Should be cmdline arg!
     vanilla_rr = runner.do_baseline_run(target_config, iterations)
     log.get_logger().log('RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()), level='debug')
     instr_file = ''
@@ -117,7 +117,7 @@ def main(arguments) -> None:
       dbm.create_cursor()
       analyzer = A(configuration)
 
-      # TODO: We probably want to factor out this preparation code into a factory
+      # TODO: We want to factor out this preparation code into a factory
       attached_sink = sinks.NopSink()
       prepare_runner = LocalRunner(configuration, attached_sink)
       if use_extra_p:

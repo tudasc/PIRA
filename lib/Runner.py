@@ -75,17 +75,17 @@ class LocalRunner(LocalBaseRunner):
 
   def __init__(self, configuration: PiraConfiguration, sink):
     """ Runner are initialized once with a PiraConfiguration """
-    self._config = configuration
-    self._sink = sink
+    super().__init__(configuration, sink)
 
   def do_baseline_run(self, target_config: TargetConfiguration, iterations: int) -> ms.RunResult:
     log.get_logger().log('LocalRunner::do_baseline_run')
     accu_runtime = .0
     num_vanilla_repetitions = iterations
 
-    # This runner only takes into account the first argument string
-    args = self._config.get_args(target_config.get_build(), target_config.get_target())
-    target_config.set_args_for_invocation(args[0])
+    if not target_config.has_args_for_invocation():
+      # This runner only takes into account the first argument string (if not already set)
+      args = self._config.get_args(target_config.get_build(), target_config.get_target())
+      target_config.set_args_for_invocation(args[0])
 
     # TODO Better evaluation of the obtained timings.
     for y in range(0, num_vanilla_repetitions):
@@ -110,9 +110,10 @@ class LocalRunner(LocalBaseRunner):
     scorep_helper.set_up(target_config, instrument_config, compile_time_filtering)
     runtime = .0
 
-    # This runner only takes into account the first argument string
-    args = self._config.get_args(target_config.get_build(), target_config.get_target())
-    target_config.set_args_for_invocation(args[0])
+    if not target_config.has_args_for_invocation():
+      # This runner only takes into account the first argument string (if not already set)
+      args = self._config.get_args(target_config.get_build(), target_config.get_target())
+      target_config.set_args_for_invocation(args[0])
 
     for y in range(0, num_repetitions):
       log.get_logger().log('Running instrumentation iteration ' + str(y), level='debug')
