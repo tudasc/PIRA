@@ -188,7 +188,7 @@ class TargetConfiguration:
     self._instr_file = ''
     self._args_for_invocation = None
 
-  def get_build(self):
+  def get_build(self) -> str:
     """Return the place / build stored in this TargetConfiguration
 
     :lf: TODO
@@ -197,21 +197,21 @@ class TargetConfiguration:
     """
     return self._place
 
-  def get_target(self):
+  def get_target(self) -> str:
     """Return the target / item stored in this TargetConfiguration
     :returns: the targets / items (children of build)
 
     """
     return self._target
 
-  def get_flavor(self):
+  def get_flavor(self) -> str:
     """Return the flavor stored in this TargetConfiguration
     :returns: TODO
 
     """
     return self._flavor
 
-  def get_db_item_id(self):
+  def get_db_item_id(self) -> str:
     """Return the DB item id stored in this TargetConfiguration
 
     :f: TODO
@@ -220,16 +220,16 @@ class TargetConfiguration:
     """
     return self._db_item_id
 
-  def has_args_for_invocation(self):
+  def has_args_for_invocation(self) -> bool:
     return self._args_for_invocation is not None
 
-  def get_args_for_invocation(self):
+  def get_args_for_invocation(self) -> str:
     if self._args_for_invocation is None:
       log.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
 
     return self._args_for_invocation
 
-  def set_args_for_invocation(self, args):
+  def set_args_for_invocation(self, args) -> None:
     self._args_for_invocation = args
 
   def is_compile_time_filtering(self) -> bool:
@@ -239,7 +239,7 @@ class TargetConfiguration:
   def set_instr_file(self, instr_file: str) -> None:
     self._instr_file = instr_file
 
-  def get_instr_file(self):
+  def get_instr_file(self) -> str:
     """
     Only valid IFF is_compile_time_filtering returns False!
     :returns: Iff this run is a runtime-filter run, returns the instrumentation file.
@@ -254,10 +254,10 @@ class InstrumentConfig:
     self._is_instrumentation_run = is_instrumentation_run
     self._instrumentation_iteration = instrumentation_iteration
 
-  def get_instrumentation_iteration(self):
+  def get_instrumentation_iteration(self) -> int:
     return self._instrumentation_iteration
 
-  def is_instrumentation_run(self):
+  def is_instrumentation_run(self) -> bool:
     return self._is_instrumentation_run
 
 
@@ -268,10 +268,10 @@ class ExtrapConfiguration:
     self._prefix = prefix
     self._postfix = postfix
 
-  def get_dir(self):
+  def get_dir(self) -> str:
     return self._dir
 
-  def get_prefix(self):
+  def get_prefix(self) -> str:
     return self._prefix
 
 
@@ -281,8 +281,8 @@ class InvocationConfiguration:
     self._path_to_cfg = path_to_config
     self._compile_time_filtering = compile_time_filter
 
-  def get_path_to_cfg(self):
+  def get_path_to_cfg(self) -> str:
     return self._path_to_cfg
 
-  def is_compile_time_filtering(self):
+  def is_compile_time_filtering(self) -> bool:
     return self._compile_time_filtering

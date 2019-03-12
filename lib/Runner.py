@@ -33,7 +33,8 @@ class LocalBaseRunner(Runner):
     self._config = configuration
     self._sink = sink
 
-  def run(self, target_config: TargetConfiguration, instrument_config: InstrumentConfig, compile_time_filtering: bool):
+  def run(self, target_config: TargetConfiguration, instrument_config: InstrumentConfig,
+          compile_time_filtering: bool) -> float:
     """ Implements the actual invocation """
     functor_manager = fm.FunctorManager()
     run_functor = functor_manager.get_or_load_functor(target_config.get_build(), target_config.get_target(),
@@ -89,7 +90,7 @@ class LocalRunner(LocalBaseRunner):
 
     # TODO Better evaluation of the obtained timings.
     for y in range(0, num_vanilla_repetitions):
-      log.get_logger().log('Running iteration ' + str(y), level='debug')
+      log.get_logger().log('LocalRunner::do_baseline_run: Running iteration ' + str(y), level='debug')
       accu_runtime += self.run(target_config, InstrumentConfig(), True)
 
     run_result = ms.RunResult(accu_runtime, iterations)
@@ -116,7 +117,7 @@ class LocalRunner(LocalBaseRunner):
       target_config.set_args_for_invocation(args[0])
 
     for y in range(0, num_repetitions):
-      log.get_logger().log('Running instrumentation iteration ' + str(y), level='debug')
+      log.get_logger().log('LocalRunner::do_profile_run: Running instrumentation iteration ' + str(y), level='debug')
       runtime = runtime + self.run(target_config, instrument_config, compile_time_filtering)
       # Enable further processing of the resulting profile
       self._sink.process(scorep_helper.get_exp_dir(), target_config, instrument_config)

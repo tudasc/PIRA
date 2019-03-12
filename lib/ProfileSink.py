@@ -52,13 +52,14 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._repetition = 0
     self._VALUE = 1234  # FIXME Implement how to get this data
 
-  def get_extrap_dir_name(self, instr_config: InstrumentConfig):
+  def get_extrap_dir_name(self, instr_config: InstrumentConfig) -> str:
     dir_name = self._base_dir + '/' + self._prefix + '.'
     dir_name += self._paramname + str(self._VALUE)
     dir_name += '.' + self._postfix + '.r' + str(self._repetition)
     return dir_name
 
-  def check_and_prepare(self, experiment_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig):
+  def check_and_prepare(self, experiment_dir: str, target_config: TargetConfiguration,
+                        instr_config: InstrumentConfig) -> str:
     cur_ep_dir = self.get_extrap_dir_name(instr_config)
     if not u.is_valid_file_name(cur_ep_dir):
       log.get_logger().log(
@@ -76,12 +77,12 @@ class ExtrapProfileSink(ProfileSinkBase):
 
     raise ProfileSinkException('Could not create target directory')
 
-  def do_copy(self, src_cube_name: str, dest_dir: str):
+  def do_copy(self, src_cube_name: str, dest_dir: str) -> None:
     log.get_logger().log('ExtrapProfileSink::do_copy: ' + src_cube_name + ' => ' + dest_dir + '/' + self._filename)
     # return  # TODO make this actually work
     u.copy_file(src_cube_name, dest_dir + '/' + self._filename)
 
-  def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig):
+  def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig) -> None:
     log.get_logger().log('ExtrapProfileSink::process.')
     if instr_config.get_instrumentation_iteration() > self._iteration:
       self._iteration = instr_config.get_instrumentation_iteration()

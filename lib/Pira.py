@@ -78,7 +78,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     raise RuntimeError(str(e))
 
 
-def process_args_for_extrap(cmdline_args):
+def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
   use_extra_p = False
   extrap_config = ExtrapConfiguration('', '', '')
   if cmdline_args.extrap_dir is not '':
@@ -87,7 +87,7 @@ def process_args_for_extrap(cmdline_args):
   return use_extra_p, extrap_config
 
 
-def show_pira_invoc_info(cmdline_args):
+def show_pira_invoc_info(cmdline_args) -> None:
   invoc_cfg = process_args_for_invoc(cmdline_args)
   cf_str = 'compile-time filtering'
   if not invoc_cfg.is_compile_time_filtering():
@@ -97,7 +97,7 @@ def show_pira_invoc_info(cmdline_args):
       level='info')
 
 
-def process_args_for_invoc(cmdline_args):
+def process_args_for_invoc(cmdline_args) -> None:
   path_to_config = cmdline_args.config
   compile_time_filter = not cmdline_args.runtime_filter
 
