@@ -17,19 +17,19 @@ class Logger:
     self.tape = []
     self.perf_tape = []
 
-  def log(self, msg, level='debug'):
+  def log(self, msg, level='debug') -> None:
     if self.state[level]:
       self.print_level(level, msg)
 
     self.record(level, msg)
 
-  def set_state(self, state_id, val='True'):
+  def set_state(self, state_id, val='True') -> None:
     self.state[state_id] = val
 
-  def toggle_state(self, state_id):
+  def toggle_state(self, state_id) -> None:
     self.state[state_id] = not self.state[state_id]
 
-  def print_level(self, level, msg):
+  def print_level(self, level, msg) -> None:
     if level is 'debug':
       self.print_debug(msg)
     elif level is 'info':
@@ -39,36 +39,36 @@ class Logger:
     elif level is 'error':
       self.print_error(msg)
 
-  def print_debug(self, msg):
+  def print_debug(self, msg) -> None:
     msg_str = '[Debug] // Start\n' + str(msg) + '\n[Debug] // End'
     print(msg_str)
 
-  def print_info(self, msg):
+  def print_info(self, msg) -> None:
     msg_str = '[Info] ' + str(msg)
     print(msg_str)
 
-  def print_warn(self, msg):
+  def print_warn(self, msg) -> None:
     msg_str = '[Warning!] ' + str(msg)
     print(msg_str)
 
-  def print_error(self, msg):
+  def print_error(self, msg) -> None:
     msg_str = '[Error] ' + str(msg)
     print(msg_str)
 
-  def record(self, level, msg):
+  def record(self, level, msg) -> None:
     msg_str = '[' + level + '] ' + str(msg)
     self.tape.append(msg_str)
     if level == 'perf':
       self.perf_tape.append('[PERF] ' + str(msg))
 
-  def show_perf(self):
+  def show_perf(self) -> None:
     for p in self.perf_tape:
       print(p)
 
   def get_last_msg(self) -> str:
     return self.tape[len(self.tape) - 1]
 
-  def dump_tape(self, out_file=None, cli=False):
+  def dump_tape(self, out_file=None, cli=False) -> None:
     if out_file is not None:
       of = open(str(out_file), 'w')
       for m in self.tape:

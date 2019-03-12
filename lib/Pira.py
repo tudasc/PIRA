@@ -84,6 +84,12 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
   if cmdline_args.extrap_dir is not '':
     use_extra_p = True
     extrap_config = ExtrapConfiguration(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
+
+  num_reps = cmdline_args.num_reps
+  if num_reps < 5:
+    log.get_logger().log('At least 5 repetitions are needed for Extra-P modelling.', level='error')
+    raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
+
   return use_extra_p, extrap_config
 
 
@@ -100,8 +106,9 @@ def show_pira_invoc_info(cmdline_args) -> None:
 def process_args_for_invoc(cmdline_args) -> None:
   path_to_config = cmdline_args.config
   compile_time_filter = not cmdline_args.runtime_filter
+  num_reps = cmdline_args.num_reps
 
-  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter)
+  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter, num_reps)
 
   return invoc_cfg
 
@@ -138,7 +145,7 @@ def main(arguments) -> None:
       dbm.create_cursor()
       analyzer = A(configuration)
 
-      runner_factory = PiraRunnerFactory(configuration)
+      runner_factory = PiraRunnerFactory(invoc_cfg, configuration)
       runner = runner_factory.get_simple_local_runner()
       if use_extra_p:
         runner = runner_factory.get_scalability_runner(extrap_config)

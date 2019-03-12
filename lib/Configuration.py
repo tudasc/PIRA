@@ -277,12 +277,16 @@ class ExtrapConfiguration:
 
 class InvocationConfiguration:
 
-  def __init__(self, path_to_config: str, compile_time_filter: bool):
+  def __init__(self, path_to_config: str, compile_time_filter: bool, num_reps: int):
     self._path_to_cfg = path_to_config
     self._compile_time_filtering = compile_time_filter
+    self._num_repetitions = num_reps
 
   def get_path_to_cfg(self) -> str:
     return self._path_to_cfg
 
   def is_compile_time_filtering(self) -> bool:
     return self._compile_time_filtering
+
+  def get_num_repetitions(self) -> int:
+    return self._num_repetitions

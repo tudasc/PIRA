@@ -37,7 +37,7 @@ class Builder:
     self._compile_time_filtering = target_config.is_compile_time_filtering()
     self.error = None
 
-  def build(self):
+  def build(self) -> None:
     try:
       self.set_up()
       self.build_detail()
@@ -65,7 +65,7 @@ class Builder:
     kwargs = {'compiler': 'clang++'}
     self.build_flavors(kwargs)
 
-  def construct_pira_instr_kwargs(self):
+  def construct_pira_instr_kwargs(self) -> typing.Dict:
     log.get_logger().log('Builder::construct_pira_instr_keywords', level='debug')
     pira_cc = ScorepSystemHelper.get_scorep_compliant_CC_command(self.instrumentation_file,
                                                                  self._compile_time_filtering)
@@ -87,7 +87,7 @@ class Builder:
     log.get_logger().log('Builder::construct_pira_instr_keywords Returning.', level='debug')
     return pira_kwargs
 
-  def construct_pira_kwargs(self):
+  def construct_pira_kwargs(self) -> typing.Dict:
     log.get_logger().log('Builder::construct_pira_keywords', level='debug')
     default_provider = defaults.BackendDefaults()
 
@@ -98,7 +98,7 @@ class Builder:
     log.get_logger().log('Builder::construct_pira_keywords Returning.', level='debug')
     return kwargs
 
-  def check_build_prerequisites(self):
+  def check_build_prerequisites(self) -> None:
     ScorepSystemHelper.check_build_prerequisites()
 
   def build_flavors(self, kwargs) -> None:
