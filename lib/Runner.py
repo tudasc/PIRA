@@ -55,14 +55,15 @@ class LocalBaseRunner(Runner):
       invoke_arguments = target_config.get_args_for_invocation()
       kwargs['args'] = invoke_arguments
       if invoke_arguments is not None:
-        log.get_logger().log('LocalRunner::run: (args) ' + invoke_arguments)
+        log.get_logger().log('LocalBaseRunner::run: (args) ' + invoke_arguments)
 
       command = run_functor.passive(target_config.get_target(), **kwargs)
       _, runtime = util.shell(command, time_invoc=True)
-      log.get_logger().log('LocalRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
+      log.get_logger().log('LocalBaseRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
 
     except Exception as e:
-      log.get_logger().log('LocalRunner::run Exception\n' + str(e), level='error')
+      log.get_logger().log('LocalBaseRunner::run Exception\n' + str(e), level='error')
+      raise RuntimeError('LocalBaseRunner::run caught exception. ' + str(e))
 
     # TODO: Insert the data into the database
     return runtime
@@ -74,15 +75,14 @@ class LocalRunner(LocalBaseRunner):
   For scalability studies, i.e., iterate over all given input sizes, use the LocalScalingRunner.
   """
 
-  def __init__(self, configuration: PiraConfiguration, sink, num_repetitions: int):
+  def __init__(self, configuration: PiraConfiguration, sink, num_repetitions: int = 2):
     """ Runner are initialized once with a PiraConfiguration """
     super().__init__(configuration, sink)
     self._num_repetitions = num_repetitions
 
-  def do_baseline_run(self, target_config: TargetConfiguration, iterations: int) -> ms.RunResult:
+  def do_baseline_run(self, target_config: TargetConfiguration) -> ms.RunResult:
     log.get_logger().log('LocalRunner::do_baseline_run')
     accu_runtime = .0
-    num_vanilla_repetitions = iterations
 
     if not target_config.has_args_for_invocation():
       # This runner only takes into account the first argument string (if not already set)
@@ -90,12 +90,12 @@ class LocalRunner(LocalBaseRunner):
       target_config.set_args_for_invocation(args[0])
 
     # TODO Better evaluation of the obtained timings.
-    for y in range(0, num_vanilla_repetitions):
+    for y in range(0, self._num_repetitions):
       log.get_logger().log('LocalRunner::do_baseline_run: Running iteration ' + str(y), level='debug')
       accu_runtime += self.run(target_config, InstrumentConfig(), True)
 
-    run_result = ms.RunResult(accu_runtime, iterations)
-    log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()), level='perf')
+    run_result = ms.RunResult(accu_runtime, self._num_repetitions)
+    log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n\n', level='perf')
 
     return run_result
 
@@ -103,7 +103,6 @@ class LocalRunner(LocalBaseRunner):
                      target_config: TargetConfiguration,
                      instr_iteration: int,
                      compile_time_filtering: bool = True) -> ms.RunResult:
-    log.get_logger().log('LocalRunner::do_profile_run')
     log.get_logger().log(
         'LocalRunner::do_profile_run: Received instrumentation file: ' + target_config.get_instr_file(), level='debug')
     scorep_helper = ms.ScorepSystemHelper(self._config)
@@ -149,21 +148,25 @@ class LocalScalingRunner(LocalRunner):
     # TODO: How to handle the model parameter <-> input parameter relation, do we care?
     args = self._config.get_args(target_config.get_build(), target_config.get_target())
     # TODO: How to handle multiple MeasurementResult items? We get a vector of these after this function.
+    run_result= ms.RunResult()
     for arg_cfg in args:
       # Call the runner method with the correct arguments.
       target_config.set_args_for_invocation(arg_cfg)
-      super().do_profile_run(target_config, instr_iteration, compile_time_filtering)
+      rr = super().do_profile_run(target_config, instr_iteration, compile_time_filtering)
+      run_result.add_from(rr)
 
-    return ms.RunResult(3.0, 1)
+    return run_result
 
-  def do_baseline_run(self, target_config: TargetConfiguration, iterations: int) -> ms.RunResult:
+  def do_baseline_run(self, target_config: TargetConfiguration) -> ms.RunResult:
     log.get_logger().log('LocalScalingRunner::do_baseline_run')
     args = self._config.get_args(target_config.get_build(), target_config.get_target())
+    run_result= ms.RunResult()
     for arg_cfg in args:
       target_config.set_args_for_invocation(arg_cfg)
-      super().do_baseline_run(target_config, iterations)
+      rr = super().do_baseline_run(target_config)
+      run_result.add_from(rr)
 
-    return ms.RunResult(3.0, 1)
+    return run_result
 
 
 class SlurmRunner(Runner):

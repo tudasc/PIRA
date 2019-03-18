@@ -25,7 +25,7 @@ class MeasurementSystemException(PiraException):
 class RunResult:
   """  Holds the result of a measurement execution with potentially multiple iterations.  """
 
-  def __init__(self, accumulated_runtime: float, nr_of_iterations: int, rt_trace=None):
+  def __init__(self, accumulated_runtime: float = None, nr_of_iterations: int = None, rt_trace=None):
     """Initializes the class
 
     :accumulated_runtime: TODO
@@ -33,17 +33,53 @@ class RunResult:
     :average: TODO
 
     """
-    self._accumulated_runtime = accumulated_runtime
-    self._nr_of_iterations = nr_of_iterations
-    self._rt_trace = rt_trace
+    if accumulated_runtime is not None:
+      self._accumulated_runtime = [accumulated_runtime]
+    else:
+      self._accumulated_runtime = []
+    if nr_of_iterations is not None:
+      self._nr_of_iterations = [nr_of_iterations]
+    else:
+      self._nr_of_iterations = []
+    if rt_trace is not None:
+      self._rt_trace = [rt_trace]
+    else:
+      self._rt_trace = []
 
-  def get_average(self) -> float:
-    return self._accumulated_runtime / self._nr_of_iterations
+  def is_multi_value(self):
+    return len(self._accumulated_runtime) > 1
 
-  def compute_overhead(self, base_line) -> float:
-    base_line_avg = base_line.get_average()
-    result = self.get_average() / base_line_avg
+  def add_values(self, accu_rt: float, nr_iter: int) -> None:
+    self._accumulated_runtime.append(accu_rt)
+    self._nr_of_iterations.append(nr_iter)
+    self._rt_trace.append(None)
+
+  def add_from(self, other) -> None:
+    for (accu, iters) in zip(other._accumulated_runtime, other._nr_of_iterations):
+      self._accumulated_runtime.append(accu)
+      self._nr_of_iterations.append(iters)
+
+  def get_average(self, pos: int = 0) -> float:
+    return self._accumulated_runtime[pos] / self._nr_of_iterations[pos]
+
+  def compute_overhead(self, base_line, pos: int = 0) -> float:
+    base_line_avg = base_line.get_average(pos)
+    result = self.get_average(pos) / base_line_avg
     return result
+
+  def get_all_averages(self) -> typing.List[float]:
+    avgs = []
+    for (rt, ni) in  zip(self._accumulated_runtime, self._nr_of_iterations):
+      avgs.append(rt / ni)
+    
+    return avgs
+
+  def compute_all_overheads(self, base_line: typing.List) -> typing.List[float]:
+    ovhds = []
+    for (thisAvg, otherAvg) in zip(self.get_all_averages(), base_line.get_all_averaged()):
+      ovhds.append(thisAvg / otherAvg)
+    
+    return ovhds
 
 
 class ScorepSystemHelper:

@@ -28,6 +28,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
   try:
     log.get_logger().log('run_setup phase.', level='debug')
     instrument = False
+    pira_iterations = 2  # XXX Should be cmdline arg!
 
     # Build without any instrumentation
     vanilla_builder = B(target_config, instrument)
@@ -36,12 +37,11 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
 
     # Run without instrumentation for baseline
     log.get_logger().log('Running baseline measurements', level='info')
-    iterations = 1  # XXX Should be cmdline arg!
-    vanilla_rr = runner.do_baseline_run(target_config, iterations)
-    log.get_logger().log('RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()), level='debug')
+    vanilla_rr = runner.do_baseline_run(target_config)
+    log.get_logger().log('Pira::execute_with_config: RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()), level='debug')
     instr_file = ''
 
-    for x in range(0, 2):
+    for x in range(0, pira_iterations):
       log.get_logger().log('Running instrumentation iteration ' + str(x), level='info')
 
       # Only run the pgoe to get the functions name
@@ -60,9 +60,8 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
         tracker.m_track('Instrument Build', instr_builder, 'build')
 
       #Run Phase
-      num_repetitions = 2
       log.get_logger().log('Running profiling measurements', level='info')
-      instr_rr = runner.do_profile_run(target_config, x, num_repetitions)
+      instr_rr = runner.do_profile_run(target_config, x)
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rr.compute_overhead(vanilla_rr)
@@ -74,7 +73,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
   except Exception as e:
-    log.get_logger().log('Problem during preparation of run.\nMessage:\n' + str(e), level='error')
+    log.get_logger().log('Pira::execute_with_config: Problem during preparation of run.\nMessage:\n' + str(e), level='error')
     raise RuntimeError(str(e))
 
 
@@ -85,10 +84,10 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
     use_extra_p = True
     extrap_config = ExtrapConfiguration(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
 
-  num_reps = cmdline_args.num_reps
-  if num_reps < 5:
-    log.get_logger().log('At least 5 repetitions are needed for Extra-P modelling.', level='error')
-    raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
+    num_reps = cmdline_args.num_reps
+    if num_reps < 5:
+      log.get_logger().log('At least 5 repetitions are needed for Extra-P modelling.', level='error')
+      raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
 
   return use_extra_p, extrap_config
 

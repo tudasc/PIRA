@@ -31,7 +31,7 @@ def set_home_dir(home_dir: str) -> None:
 
 def get_home_dir() -> str:
   if home_directory == '':
-    raise PiraException('Utility: No Home Directory Set!')
+    raise PiraException('Utility::get_home_dir: No Home Directory Set!')
 
   return home_directory
 
@@ -54,7 +54,7 @@ def lines_in_file(file_name: str) -> int:
     lines = len(content.split('\n'))
     return lines
 
-  log.get_logger().log('No file ' + file_name + ' to read. Return 0 lines', level='debug')
+  log.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
   return 0
 
 
@@ -117,7 +117,7 @@ def diff_inst_files(file1: str, file2: str) -> bool:
 
 
 def set_env(env_var: str, val) -> None:
-  log.get_logger().log('Setting ' + env_var + ' to ' + str(val), level='debug')
+  log.get_logger().log('Utility::set_env: Setting ' + env_var + ' to ' + str(val), level='debug')
   os.environ[env_var] = val
 
 
@@ -134,23 +134,23 @@ def get_cwd() -> str:
 
 
 def change_cwd(path: str) -> None:
-  log.get_logger().log('util.change_cwd to ' + path, level='debug')
+  log.get_logger().log('Utility::change_cwd: to ' + path, level='debug')
   os.chdir(path)
 
 
 def load_functor(directory: str, module: str):
   if not check_provided_directory(directory):
-    log.get_logger().log('Functor directory invalid', level='warn')
+    log.get_logger().log('Utility::load_functor: Functor directory invalid', level='warn')
   if not is_valid_file_name(directory + '/' + module):
-    log.get_logger().log('Functor filename invalid', level='warn')
+    log.get_logger().log('Utility::load_functor: Functor filename invalid', level='warn')
 
   # TODO: Add error if functor path does not exist!!!
-  log.get_logger().log('Appending ' + directory + ' to system path.', level='debug')
+  log.get_logger().log('Utility::load_functor: Appending ' + directory + ' to system path.', level='debug')
   append_to_sys_path(directory)
   # Adding 'fromList' argument loads exactly the module.
   functor = __import__(module)
   remove_from_sys_path(directory)
-  log.get_logger().log('Returning from load_functor', level='debug')
+  log.get_logger().log('Utility::load_functor: Returning from load_functor', level='debug')
   return functor
 
 
@@ -170,17 +170,17 @@ def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
 
 def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool = False) -> typing.Tuple[str, float]:
   if dry:
-    log.get_logger().log('DRY RUN SHELL CALL: ' + command, level='debug')
+    log.get_logger().log('Utility::shell: DRY RUN SHELL CALL: ' + command, level='debug')
     return '', -1.0
 
   stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
   stderr_fd = open(stderr_fn, 'w+')
   try:
-    log.get_logger().log('util executing: ' + str(command), level='debug')
+    log.get_logger().log('Utility::shell: util executing: ' + str(command), level='debug')
 
     if time_invoc:
       out, rt = timed_invocation(command, stderr_fd)
-      log.get_logger().log('Util::shell:timed_invocation: ' + str(rt), level='debug')
+      log.get_logger().log('Util::shell: timed_invocation took: ' + str(rt), level='debug')
       return str(out.decode('utf-8')), rt
 
     else:
@@ -193,22 +193,22 @@ def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool
         return '', .0
 
     err_out = ''
-    log.get_logger().log('Attempt to write stderr file', level='debug')
+    log.get_logger().log('Utility::shell: Attempt to write stderr file', level='debug')
     err_out += stderr_fd.read()
 
-    log.get_logger().log('Error output: ' + str(err_out), level='debug')
-    log.get_logger().log('Utility.shell: Caught Exception ' + str(e), level='error')
-    raise Exception('Running command ' + command + ' did not succeed')
+    log.get_logger().log('Utility::shell: Error output: ' + str(err_out), level='debug')
+    log.get_logger().log('Utility::shell: Caught Exception ' + str(e), level='error')
+    raise Exception('Utility::shell: Running command ' + command + ' did not succeed')
 
   finally:
     stderr_fd.close()
     remove_file(stderr_fn)
-    log.get_logger().log('Cleaning up temp files for subprocess communication.', level='debug')
+    log.get_logger().log('Utility::shell Cleaning up temp files for subprocess communication.', level='debug')
 
 
 def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
   if dry:
-    log.get_logger().log('SHELL CALL: ' + command, level='debug')
+    log.get_logger().log('Utility::shell_for_submitter: SHELL CALL: ' + command, level='debug')
     return ''
 
   try:
@@ -221,7 +221,7 @@ def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
         return ''
 
     log.get_logger().log('Utility.shell: Caught Exception ' + str(e), level='error')
-    raise Exception('Running command ' + command + ' did not succeed')
+    raise Exception('Utility::shell_for_submitter: Running command ' + command + ' did not succeed')
 
 
 def append_to_sys_path(path: str) -> None:
@@ -302,17 +302,17 @@ def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark
   cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
 
   sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
-  log.get_logger().log('  INSTR: Run cmd: ' + sh_cmd)
+  log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
-  log.get_logger().log('Output of analyzer:\n' + out, level='debug')
+  log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
 
 
 def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, benchmark_name: str) -> None:
   ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
   sh_cmd = command + ' ' + ipcg_file
-  log.get_logger().log('  NO INSTR: Run cmd: ' + sh_cmd)
+  log.get_logger().log('Utility::run_analyser_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
-  log.get_logger().log('Output of analyzer:\n' + out, level='debug')
+  log.get_logger().log('Utility::run_analyser_command_noInstr: Output of analyzer:\n' + out, level='debug')
 
 
 def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:
@@ -325,4 +325,4 @@ def build_cube_file_path_for_db(exp_dir: str, flavor: str, iterationNumber: int)
   if is_valid_file_name(fp):
     return fp
 
-  raise Exception('Built file path to Cube not valid. fp: ' + fp)
+  raise Exception('Utility::build_cube_file_path_for_db: Built file path to Cube not valid. fp: ' + fp)
