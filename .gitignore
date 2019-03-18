@@ -145,3 +145,11 @@ Session.vim
 tags
 # Persistent undo
 [._]*.un~
+
+
+## Project specific
+# Tape files
+*.tp
+tapes/*.tp
+# experiment database
+*.sqlite
