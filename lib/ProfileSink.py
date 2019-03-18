@@ -14,6 +14,43 @@ from lib.Configuration import TargetConfiguration, InstrumentConfig
 from lib.Exception import PiraException
 
 
+
+class ArgumentMapper:
+  """
+  The first approach towards the implementation of the general mapping problem would be that.
+  """
+  pass
+
+class SimpleCmdlineArgumentMapper(ArgumentMapper):
+  """
+  Maps a single parameter from param to commandline argument.
+  """
+  pass
+
+class SimpleInputFileArgumentMapper(ArgumentMapper):
+  """
+  Maps a single parameter to a series of input files.
+  """
+  pass
+
+class CartesianProductCmdlineArgumentMapper(SimpleCmdlineArgumentMapper):
+  """
+  Does a cartesian product of all the given cmdline arguments.
+  Param names and values are given in config file. 
+  """
+  pass
+
+class UserArgumentMapper(ArgumentMapper):
+  """
+  Used for complex mappings of arguments to inputs / files.
+  
+  TODO: How should this be implemented? Ideas:
+  1) Loads another functor that does the final mapping.
+  2) Config has explicit mapping that is loaded.
+  """
+  pass
+
+
 class ProfileSinkException(PiraException):
 
   def __init__(self, msg):
@@ -50,7 +87,7 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._filename = filename
     self._iteration = -1
     self._repetition = 0
-    self._VALUE = 1234  # FIXME Implement how to get this data
+    self._VALUE = 1  # FIXME Implement how to get this data
 
   def get_extrap_dir_name(self, instr_config: InstrumentConfig) -> str:
     dir_name = self._base_dir + '/' + self._prefix + '.'
@@ -87,9 +124,10 @@ class ExtrapProfileSink(ProfileSinkBase):
     if instr_config.get_instrumentation_iteration() > self._iteration:
       self._iteration = instr_config.get_instrumentation_iteration()
       self._repetition = -1
-      self._VALUE += 1
+      self._VALUE = 0
 
     self._repetition += 1
+    self._VALUE += 1
     src_cube_name = self.check_and_prepare(exp_dir, target_config, instr_config)
 
     self.do_copy(src_cube_name, self.get_extrap_dir_name(instr_config))
