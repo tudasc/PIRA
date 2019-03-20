@@ -47,13 +47,17 @@ class Analyzer:
           logging.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
           prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
+        tracker = tt.TimeTracker()
+
         if iterationNumber > 0 and util.check_file(instr_files):
           logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
-          #tt.m_track('analysis', util, 'run_analyser_command', command, analyser_dir, flavor, benchmark_name, exp_dir, iterationNumber-1)
-          util.run_analyser_command(command, analyzer_dir, flavor, benchmark_name, exp_dir, iterationNumber)
+          tracker.m_track('Analysis', util, 'run_analyser_command', command, analyzer_dir, flavor, benchmark_name,
+                          exp_dir, iterationNumber)
           logging.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
         else:
+          tracker.m_track('Initial analysis', util, 'run_analyser_command_noInstr', command, analyzer_dir, flavor,
+                          benchmark_name)
           util.run_analyser_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
 
         self.tear_down(build, exp_dir)
