@@ -239,9 +239,16 @@ def json_to_canonic(json_elem):
       new_list.append(json_to_canonic(entry))
     return new_list
 
-  if isinstance(json_elem, str):
+  elif isinstance(json_elem, str):
     new_str = str(json_elem)
     return new_str
+
+  elif isinstance(json_elem, dict):
+    new_dict = {}
+    for k in json_elem:
+      key_v = json_to_canonic(k)
+      new_dict[key_v] = json_to_canonic(json_elem[key_v])
+    return new_dict
 
   else:
     return str(json_elem)

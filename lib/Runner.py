@@ -55,11 +55,12 @@ class LocalBaseRunner(Runner):
       invoke_arguments = target_config.get_args_for_invocation()
       kwargs['args'] = invoke_arguments
       if invoke_arguments is not None:
-        log.get_logger().log('LocalBaseRunner::run: (args) ' + invoke_arguments)
+        log.get_logger().log('LocalBaseRunner::run: (args) ' + str(invoke_arguments))
 
       command = run_functor.passive(target_config.get_target(), **kwargs)
       _, runtime = util.shell(command, time_invoc=True)
-      log.get_logger().log('LocalBaseRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
+      log.get_logger().log(
+          'LocalBaseRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
 
     except Exception as e:
       log.get_logger().log('LocalBaseRunner::run Exception\n' + str(e), level='error')
@@ -148,7 +149,7 @@ class LocalScalingRunner(LocalRunner):
     # TODO: How to handle the model parameter <-> input parameter relation, do we care?
     args = self._config.get_args(target_config.get_build(), target_config.get_target())
     # TODO: How to handle multiple MeasurementResult items? We get a vector of these after this function.
-    run_result= ms.RunResult()
+    run_result = ms.RunResult()
     for arg_cfg in args:
       # Call the runner method with the correct arguments.
       target_config.set_args_for_invocation(arg_cfg)
@@ -160,7 +161,7 @@ class LocalScalingRunner(LocalRunner):
   def do_baseline_run(self, target_config: TargetConfiguration) -> ms.RunResult:
     log.get_logger().log('LocalScalingRunner::do_baseline_run')
     args = self._config.get_args(target_config.get_build(), target_config.get_target())
-    run_result= ms.RunResult()
+    run_result = ms.RunResult()
     for arg_cfg in args:
       target_config.set_args_for_invocation(arg_cfg)
       rr = super().do_baseline_run(target_config)

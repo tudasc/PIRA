@@ -8,7 +8,9 @@ Description: Module to read the PIRA configuration from file.
 
 import lib.Utility as util
 import lib.Logging as log
-from lib.Configuration import PiraConfiguration
+from lib.Configuration import PiraConfiguration, PiraConfigurationII, PiraItem, PiraConfigurationAdapter
+from lib.ArgumentMapping import CmdlineCartesianProductArgumentMapper, CmdlineLinearArgumentMapper, ArgumentMapperFactory
+
 import json
 import typing
 """ 
@@ -90,3 +92,81 @@ class ConfigurationLoader:
             util.json_to_canonic(json_tree[_DESC][_BUILDS][build_dir][_FLAVORS][item]), build_dir, item)
 
     return conf
+
+
+class SimplifiedConfigurationLoader:
+
+  def __init__(self):
+    self._config = PiraConfigurationII()
+
+  def load_conf(self, confilg_file: str) -> PiraConfiguration:
+    if not util.check_file(confilg_file):
+      raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file.')
+
+    try:
+      file_content = util.read_file(confilg_file)
+      json_tree = json.loads(file_content)
+      self.parse_from_json(json_tree)
+
+    except Exception as e:
+      log.get_logger().log('SimplifiedConfigurationLoader::load_conf: Caught exception "' + str(e))
+
+    return PiraConfigurationAdapter(self._config)
+
+  def is_escaped(self, string: str) -> bool:
+    return string.startswith('%')
+
+  def create_item_from_json(self, item_key, item_tree):
+    pira_item = PiraItem(item_key)
+
+    analyzer_dir = item_tree[item_key]['analyzer']
+    cubes_dir = item_tree[item_key]['cubes']
+    flavors = item_tree[item_key]['flavors']
+    functors_base_path = item_tree[item_key]['functors']
+    mode = item_tree[item_key]['mode']
+
+    run_opts = {}
+    run_opts['mapper'] = util.json_to_canonic(item_tree[item_key]['argmap']['mapper'])
+    params = {}
+    for param in item_tree[item_key]['argmap']:
+      parameter = util.json_to_canonic(param)
+      if param == 'mapper':
+        continue
+      try:
+        params[parameter]
+      except:
+        params[parameter] = []
+      params[parameter] = util.json_to_canonic(item_tree[item_key]['argmap'][param])
+    run_opts['argmap'] = params
+
+    run_options = ArgumentMapperFactory.get_mapper(run_opts)
+
+    pira_item.set_analyzer_dir(analyzer_dir)
+    pira_item.set_cubes_dir(cubes_dir)
+    pira_item.set_flavors(flavors)
+    pira_item.set_functors_base_path(functors_base_path)
+    pira_item.set_mode(mode)
+    pira_item.set_run_options(run_options)
+
+    return pira_item
+
+  def parse_from_json(self, json_tree) -> None:
+    # Top-level key elements // theoretically not required
+    try:
+      directories = util.json_to_canonic(json_tree[_DIRS])
+
+    except Exception as e:
+      log.get_logger().log('SimplifiedConfigurationLoader::parse_from_json: ' + str(e))
+      directories = {}
+
+    for tld_build in json_tree[_BUILDS]:
+      # These are the elements, i.e., %astar and alike
+      directory_for_item = util.json_to_canonic(tld_build)
+      if self.is_escaped(directory_for_item):
+        directory_for_item = directories[directory_for_item[1:]]
+
+      item_tree = util.json_to_canonic(json_tree[_BUILDS][tld_build][_ITEMS])
+      for item_key in item_tree:
+        pira_item = self.create_item_from_json(item_key, item_tree)
+
+        self._config.add_item(directory_for_item, pira_item)

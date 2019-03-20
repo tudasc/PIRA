@@ -13,6 +13,139 @@ import lib.Logging as log
 import typing
 
 
+class PiraItem:
+
+  def __init__(self, name):
+    self._name = name
+    self._analyzer_dir = None
+    self._cubes_dir = None
+    self._flavors = None
+    self._functor_base_path = None
+    self._mode = None
+    self._run_options = None
+
+  def get_name(self):
+    return self._name
+
+  def get_analyzer_dir(self):
+    return self._analyzer_dir
+
+  def get_cubes_dir(self):
+    return self._cubes_dir
+
+  def get_flavors(self):
+    return self._flavors
+
+  def get_functor_base_path(self):
+    return self._functor_base_path
+
+  def get_mode(self):
+    return self._mode
+
+  def get_run_options(self):
+    return self._run_options
+
+  def set_analyzer_dir(self, directory) -> None:
+    self._analyzer_dir = directory
+
+  def set_cubes_dir(self, directory) -> None:
+    self._cubes_dir = directory
+
+  def set_flavors(self, flavors) -> None:
+    self._flavors = flavors
+
+  def set_functors_base_path(self, path) -> None:
+    self._functor_base_path = path
+
+  def set_mode(self, mode) -> None:
+    self._mode = mode
+
+  def set_run_options(self, run_opts) -> None:
+    self._run_options = run_opts
+
+
+class PiraConfigurationII:
+
+  def __init__(self):
+    self._directories = {}
+
+  def add_item(self, name, item):
+    try:
+      self._directories[name]
+    except:
+      self._directories[name] = []
+
+    self._directories[name].append(item)
+
+  def get_directories(self):
+    return self._directories.keys()
+
+  def get_items(self, directory):
+    return self._directories[directory]
+
+
+class PiraConfigurationAdapter:
+
+  def __init__(self, pc2):
+    self._pcii = pc2
+
+  def get_builds(self):
+    return self._pcii.get_directories()
+
+  def get_items(self, build):
+    return [item.get_name() for item in self._pcii.get_items(build)]
+
+  def has_local_flavors(self, build, item):
+    return True
+
+  def get_item_w_name(self, build, item):
+    items = self._pcii.get_items(build)
+    for item_obj in items:
+      if item_obj.get_name() == item:
+        return item_obj
+
+    raise RuntimeError('Flavors not found for item ' + item)
+
+  def get_flavors(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_flavors()
+
+  def get_analyzer_path(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_functor_base_path()
+
+  def get_analyser_dir(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_analyzer_dir()
+
+  def get_benchmark_name(self, item):
+    return item
+
+  def get_builder_path(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_functor_base_path()
+
+  def get_runner_path(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_functor_base_path()
+
+  def get_runner_func(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_functor_base_path()
+
+  def get_cleaner_path(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_functor_base_path()
+
+  def get_analyser_exp_dir(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_cubes_dir()
+
+  def get_args(self, build, item):
+    io = self.get_item_w_name(build, item)
+    return io.get_run_options().as_list()
+
+
 class PiraConfiguration:
   """
     A configuration for PIRA

@@ -6,6 +6,7 @@ Github: https://github.com/jplehr
 Description: Module implementing the main workflow of PIRA.
 """
 
+from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader
 from lib.ConfigurationLoader import ConfigurationLoader as CLoader
 from lib.Configuration import TargetConfiguration, PiraConfiguration, ExtrapConfiguration, InvocationConfiguration
 from lib.Runner import Runner, LocalRunner, LocalScalingRunner
@@ -38,7 +39,9 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     # Run without instrumentation for baseline
     log.get_logger().log('Running baseline measurements', level='info')
     vanilla_rr = runner.do_baseline_run(target_config)
-    log.get_logger().log('Pira::execute_with_config: RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()), level='debug')
+    log.get_logger().log(
+        'Pira::execute_with_config: RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()),
+        level='debug')
     instr_file = ''
 
     for x in range(0, pira_iterations):
@@ -73,7 +76,8 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       log.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
   except Exception as e:
-    log.get_logger().log('Pira::execute_with_config: Problem during preparation of run.\nMessage:\n' + str(e), level='error')
+    log.get_logger().log(
+        'Pira::execute_with_config: Problem during preparation of run.\nMessage:\n' + str(e), level='error')
     raise RuntimeError(str(e))
 
 
@@ -123,7 +127,11 @@ def main(arguments) -> None:
   util.set_home_dir(home_dir)
 
   try:
-    config_loader = CLoader()
+    if arguments.version is 1:
+      config_loader = CLoader()
+    else:
+      config_loader = SCLoader()
+
     configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
 
     if bat_sys.check_queued_job():

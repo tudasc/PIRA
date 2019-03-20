@@ -23,6 +23,7 @@ for row in rows:
 
 parser = argparse.ArgumentParser()
 parser.add_argument('config', help='The configuration json file.')
+parser.add_argument('--version', help='Which config file version to use', choices=[1, 2], default=1, type=int)
 parser.add_argument('--tape', help='Path to tape file to dump.')
 parser.add_argument('--runtime-filter', help='Use run-time filtering', default=False, action='store_true')
 parser.add_argument('--num-reps', help='Number of iterations run', default=3, type=int)
