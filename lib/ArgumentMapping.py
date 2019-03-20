@@ -12,6 +12,9 @@ sys.path.append('..')
 
 class ArgumentMapper:
 
+  def __iter__(self):
+    raise StopIteration('Not implemented.')
+
   def as_list(self):
     l = []
     for p in self:
@@ -34,6 +37,7 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
     for e in arg_vals:
       if len(e) is not len(l_elem):
         raise RuntimeError('CmdlineLinearArgumentMapper: All parameters need the same number of values')
+    self._num_elems = len(l_elem)
 
   def __iter__(self):
     if len(self._argmap.keys()) is 1:
@@ -42,7 +46,16 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
         yield (key, v)
 
     else:
-      raise RuntimeError('Currently not supported: Only single param allowed')
+      res = []
+      keys = self._argmap.keys()
+      for counter in range(0, self._num_elems):
+        for k in keys:
+          val = self._argmap[k][counter]
+          res.append(k)
+          res.append(val)
+
+        yield tuple(res)
+        res = []
 
   def __getitem__(self, key):
     if key is 0:

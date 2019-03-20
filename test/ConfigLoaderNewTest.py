@@ -148,9 +148,9 @@ n_flavors = {'item01': ['local-flav1', 'vanilla'], 'item02': ['test-flav']}
 
 class TestSimplifiedConfigLoader(unittest.TestCase):
 
-  @classmethod
-  def setUpClass(cls):
-    cls.loader = SimplifiedConfigurationLoader()
+  #@classmethod
+  def setUp(self):
+    self.loader = SimplifiedConfigurationLoader()
 
   def test_load_conf_not_none(self):
     cfg = self.loader.load_conf('../examples/item_based_new.json')
@@ -221,15 +221,36 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
 
     args = cfg.get_args(b, i_02)
     # FIXME correct asserted args
-    self.assertListEqual(args.as_list(), [('param1', 'val1'), ('param1', 'val2'), ('param1', 'val3')])
+    self.assertListEqual(args, [('param1', 'val1'), ('param1', 'val2'), ('param1', 'val3')])
 
-  def test_global_flavors(self):
-    # TODO implement tests for retrieving global flavors
-    pass
+  def test_config_linear_mapper(self):
+    cfg = self.loader.load_conf('../examples/small_item_v2.json')
+    # As the dicts are unordered, we set the keys manually!
+    b = '/this/is/my/home'
+    i_01 = 'item01'
 
-  def test_generated_items(self):
-    # TODO build_directory, cube_directory, analyzer_dir, ..?
-    pass
+    builder = cfg.get_builder_path(b, i_01)
+    self.assertIsNotNone(builder)
+    self.assertIn(builder, n_functor_path[i_01])
+
+    expected_item = 'item01'
+    anal_func_dir = cfg.get_analyzer_path(b, i_01)
+    self.assertEqual(anal_func_dir, n_functor_path[expected_item])
+    cube_path = cfg.get_analyser_exp_dir(b, i_01)
+    self.assertEqual(cube_path, '/where/to/put/cube/files/item01')
+    tool_path = cfg.get_analyser_dir(b, i_01)
+    self.assertEqual(tool_path, n_analysis_path)
+
+    runner = cfg.get_runner_func(b, i_01)
+    self.assertEqual(runner, n_functor_path[expected_item])
+
+    flvs = cfg.get_flavors(b, i_01)
+    self.assertEqual(flvs, ['test'])
+
+    args = cfg.get_args(b, i_01)
+    # FIXME correct asserted args
+    self.assertListEqual(args, [('param1', 'val1', 'param2', 'yval1'), ('param1', 'val2', 'param2', 'yval2'),
+                                ('param1', 'val3', 'param2', 'yval3')])
 
 
 if __name__ == '__main__':
