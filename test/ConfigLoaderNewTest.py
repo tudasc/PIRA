@@ -193,7 +193,10 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
 
     args = cfg.get_args(b, i_01)
     # FIXME correct asserted args
-    self.assertListEqual(args, [])
+    self.assertListEqual(args, [('param1', 'val1', 'param2', 'val3'), ('param1', 'val1', 'param2', 'val4'),
+                                ('param1', 'val2', 'param2', 'val3'), ('param1', 'val2', 'param2', 'val4'),
+                                ('param2', 'val3', 'param1', 'val1'), ('param2', 'val3', 'param1', 'val2'),
+                                ('param2', 'val4', 'param1', 'val1'), ('param2', 'val4', 'param1', 'val2')])
 
   def test_config_item02(self):
     cfg = self.loader.load_conf('../examples/item_based_new.json')

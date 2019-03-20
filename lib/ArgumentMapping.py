@@ -70,8 +70,31 @@ class CmdlineCartesianProductArgumentMapper(ArgumentMapper):
   """
   Mapper to create the Cartesian product of all given argument/values. All arguments passed
   via the commandline. Here, the arguments do not need to have equally many values.
+  FIXME: Does not work for more than 2 parameters.
   """
-  pass
+
+  def __init__(self, argmap):
+    self._argmap = argmap
+
+  def __iter__(self):
+    keys = self._argmap.keys()
+    res = []
+    for k in keys:
+      for v in self._argmap[k]:
+        for kk in keys:
+          if k is kk:
+            continue
+          for vv in self._argmap[kk]:
+            res.append(k)
+            res.append(v)
+
+            res.append(kk)
+            res.append(vv)
+            yield tuple(res)
+            res = []
+
+  def __getitem__(self, key):
+    pass
 
 
 class ArgumentMapperFactory:
@@ -86,6 +109,6 @@ class ArgumentMapperFactory:
     if requested_mapper == 'Linear':
       return CmdlineLinearArgumentMapper(options['argmap'])
     elif requested_mapper == 'CartesianProduct':
-      return CmdlineCartesianProductArgumentMapper()
+      return CmdlineCartesianProductArgumentMapper(options['argmap'])
     else:
       raise RuntimeError('Unknown Mapper: ' + requested_mapper)
