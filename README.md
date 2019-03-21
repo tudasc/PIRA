@@ -1,4 +1,4 @@
-# PyIRA
+# PIRA
 
 The Python Instrumentation Refinement Automation (PyIRA) framework approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base.
 Currently, the framework assumes a Score-P driven toolchain. However, the goal is to be as flexibel w.r.t. the used toolchain as possible.
