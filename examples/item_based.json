@@ -1,51 +1,55 @@
 {
   "description":{
     "directories":[
-      "/home/sachin/MasterThesis"
+      "/home/something/top_dir"
     ],
     "builds": {
-        "/home/sachin/MasterThesis": {
+        "/home/something/top_dir": {
           "prefix": "",
           "items": [
-            "/home/sachin/MasterThesis/lulesh203",
-            "/home/sachin/MasterThesis/lulesh"
+            "item01",
+						"item02"
           ],
           "flavors": {
-            "/home/sachin/MasterThesis": [
+            "item01": [
               "local-flav1",
               "vanilla"
             ],
+						"item02": [
+							"local-flav1"
+						],
             "instrument-analysis": {
-              "/home/sachin/MasterThesis/lulesh203": [
-                "/home/sachin/IdeaProjects/master/benchpress/functors",
-                "/home/sachin/MasterThesis/lulesh203/lulesh",
-                "/home/sachin/CLionProjects/pgoe"
+              "item01": [
+                "/ins_anal/directory/for/functors",
+                "/where/to/put/cube/files",
+                "/path/to/analysis/tool"
                 ],
-              "/home/sachin/MasterThesis/lulesh":[
-                "/home/sachin/IdeaProjects/master/benchpress/functors2",
-                "/home/sachin/MasterThesis/lulesh/lulesh",
-                "/home/sachin/CLionProjects/pgoe"
+              "item02":[
+                "/item02/path/to/functors",
+                "/shared/work/cubes",
+                "/directory/where_to/find/analyzer"
               ]
             },
             "builders": {
-              "/home/sachin/MasterThesis/lulesh203": "/home/sachin/IdeaProjects/master/benchpress/functors",
-              "/home/sachin/MasterThesis/lulesh": "/home/sachin/IdeaProjects/master/benchpress/functors2"
+              "item01": "/builder/item01/directory",
+              "item02": "/another/builder/directory/for/item02"
             },
             "run": {
-              "/home/sachin/MasterThesis/lulesh203": {
+              "item01": {
                 "args": [
                 ],
-                "runner": "/home/sachin/IdeaProjects/master/benchpress/functors",
-                "submitter":"/home/sachin/IdeaProjects/master/benchpress/functors",
-                "batch_script":"/home/sm49xeji/job.sh"
+                "runner": "/path/to/runner_functors/item01",
+                "submitter":"/another/path/to/item01/submitter",
+                "batch_script":"/some/madeup/script.sh"
               },
-              "/home/sachin/MasterThesis/lulesh":{
+              "item02":{
                 "args":[
-
+									"-i 200",
+									"-g 100"
                 ],
-                "runner":"/home/sachin/IdeaProjects/master/benchpress/functors2",
+                "runner":"/item02/runner/functors.dir",
                 "submitter":"",
-                "batch_script":"/home/sm49xeji/job.sh"
+                "batch_script":""
               }
             }
           }

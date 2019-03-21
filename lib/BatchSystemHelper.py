@@ -1,5 +1,5 @@
-import Utility as util
-import Logging as log
+import lib.Utility as util
+import lib.Logging as log
 
 queued_job_filename = './queued_job.tmp'
 
@@ -97,7 +97,6 @@ def check_queued_job():
 def get_runtime_of_submitted_job(job_id):
   first_line = open('stderr.txt.runner.' + job_id).readline().rstrip()
   values = first_line.split("\t")
-  print values[1]
   return values[1]
 
 
