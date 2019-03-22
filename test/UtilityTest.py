@@ -20,7 +20,7 @@ class TestUtility(unittest.TestCase):
 
   def test_shell_dry_run(self):
     command = 'echo "Hello world!"'
-    expected_out = '[debug] DRY RUN SHELL CALL: ' + command
+    expected_out = '[debug] Utility::shell: DRY RUN SHELL CALL: ' + command
 
     out, t = u.shell(command, dry=True)
     lm = log.get_logger().get_last_msg()
