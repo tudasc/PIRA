@@ -22,6 +22,16 @@ class ArgumentMapper:
 
     return l
 
+  def as_string(self) -> str:
+    s = ''
+    for p in self:
+      s += str(p[0]) + str(p[1]) + '.'
+
+    return s
+
+  def __str__(self):
+    return self.as_string()
+
 
 class CmdlineLinearArgumentMapper(ArgumentMapper):
   """
@@ -95,6 +105,17 @@ class CmdlineCartesianProductArgumentMapper(ArgumentMapper):
 
   def __getitem__(self, key):
     pass
+
+
+class UserArgumentMapper(ArgumentMapper):
+  """
+  Used for complex mappings of arguments to inputs / files.
+  
+  TODO: How should this be implemented? Ideas:
+  1) Loads another functor that does the final mapping.
+  2) Config has explicit mapping that is loaded.
+  """
+  pass
 
 
 class ArgumentMapperFactory:

@@ -25,5 +25,6 @@ class PiraRunnerFactory:
 
   def get_scalability_runner(self, extrap_config: ExtrapConfiguration):
     # TODO Make use of ArgumentMapper here
-    attached_sink = ExtrapProfileSink(extrap_config.get_dir(), 'param', extrap_config.get_prefix(), '', 'profile.cubex')
+    attached_sink = ExtrapProfileSink(extrap_config.get_dir(), 'param', extrap_config.get_prefix(), 'pf',
+                                      'profile.cubex')
     return LocalScalingRunner(self._config, attached_sink, self._invoc_cfg.get_num_repetitions())

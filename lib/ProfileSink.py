@@ -14,43 +14,6 @@ from lib.Configuration import TargetConfiguration, InstrumentConfig
 from lib.Exception import PiraException
 
 
-
-class ArgumentMapper:
-  """
-  The first approach towards the implementation of the general mapping problem would be that.
-  """
-  pass
-
-class SimpleCmdlineArgumentMapper(ArgumentMapper):
-  """
-  Maps a single parameter from param to commandline argument.
-  """
-  pass
-
-class SimpleInputFileArgumentMapper(ArgumentMapper):
-  """
-  Maps a single parameter to a series of input files.
-  """
-  pass
-
-class CartesianProductCmdlineArgumentMapper(SimpleCmdlineArgumentMapper):
-  """
-  Does a cartesian product of all the given cmdline arguments.
-  Param names and values are given in config file. 
-  """
-  pass
-
-class UserArgumentMapper(ArgumentMapper):
-  """
-  Used for complex mappings of arguments to inputs / files.
-  
-  TODO: How should this be implemented? Ideas:
-  1) Loads another functor that does the final mapping.
-  2) Config has explicit mapping that is loaded.
-  """
-  pass
-
-
 class ProfileSinkException(PiraException):
 
   def __init__(self, msg):
@@ -87,17 +50,28 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._filename = filename
     self._iteration = -1
     self._repetition = 0
-    self._VALUE = 1  # FIXME Implement how to get this data
+    self._VALUE = ()
 
-  def get_extrap_dir_name(self, instr_config: InstrumentConfig) -> str:
+  def get_param_mapping(self, target_config: TargetConfiguration) -> str:
+    if not target_config.has_args_for_invocation():
+      return '.'
+
+    args = target_config.get_args_for_invocation()
+    param_str = ''
+    for v in args:
+      param_str += v
+    log.get_logger().log('ExtrapProfileSink::get_param_mapping: ' + param_str)
+    return param_str
+
+  def get_extrap_dir_name(self, target_config: TargetConfiguration) -> str:
     dir_name = self._base_dir + '/' + self._prefix + '.'
-    dir_name += self._paramname + str(self._VALUE)
+    dir_name += self.get_param_mapping(target_config)
     dir_name += '.' + self._postfix + '.r' + str(self._repetition)
     return dir_name
 
   def check_and_prepare(self, experiment_dir: str, target_config: TargetConfiguration,
                         instr_config: InstrumentConfig) -> str:
-    cur_ep_dir = self.get_extrap_dir_name(instr_config)
+    cur_ep_dir = self.get_extrap_dir_name(target_config)
     if not u.is_valid_file_name(cur_ep_dir):
       log.get_logger().log(
           'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort', level='error')
@@ -120,14 +94,15 @@ class ExtrapProfileSink(ProfileSinkBase):
     u.copy_file(src_cube_name, dest_dir + '/' + self._filename)
 
   def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig) -> None:
-    log.get_logger().log('ExtrapProfileSink::process.')
-    if instr_config.get_instrumentation_iteration() > self._iteration:
+    log.get_logger().log('ExtrapProfileSink::process: ' + str(instr_config.get_instrumentation_iteration()))
+    if instr_config.get_instrumentation_iteration() > self._iteration or target_config.get_args_for_invocation(
+    ) is not self._VALUE:
       self._iteration = instr_config.get_instrumentation_iteration()
       self._repetition = -1
-      self._VALUE = 0
+      self._VALUE = ()
 
     self._repetition += 1
-    self._VALUE += 1
+    self._VALUE = target_config.get_args_for_invocation()
     src_cube_name = self.check_and_prepare(exp_dir, target_config, instr_config)
 
-    self.do_copy(src_cube_name, self.get_extrap_dir_name(instr_config))
+    self.do_copy(src_cube_name, self.get_extrap_dir_name(target_config))
