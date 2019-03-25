@@ -60,6 +60,10 @@ class RunResult:
       self._nr_of_iterations.append(iters)
 
   def get_average(self, pos: int = 0) -> float:
+    if self._nr_of_iterations == 0:
+      log.get_logger().log('Calculating average based on 0 repetitions - assuming 1', level='warn')
+      #raise RuntimeError('Calculating Average based on 0 repetitions.')
+      self._nr_of_iterations = 1
     return self._accumulated_runtime[pos] / self._nr_of_iterations[pos]
 
   def compute_overhead(self, base_line, pos: int = 0) -> float:
@@ -69,16 +73,16 @@ class RunResult:
 
   def get_all_averages(self) -> typing.List[float]:
     avgs = []
-    for (rt, ni) in  zip(self._accumulated_runtime, self._nr_of_iterations):
+    for (rt, ni) in zip(self._accumulated_runtime, self._nr_of_iterations):
       avgs.append(rt / ni)
-    
+
     return avgs
 
   def compute_all_overheads(self, base_line: typing.List) -> typing.List[float]:
     ovhds = []
     for (thisAvg, otherAvg) in zip(self.get_all_averages(), base_line.get_all_averaged()):
       ovhds.append(thisAvg / otherAvg)
-    
+
     return ovhds
 
 

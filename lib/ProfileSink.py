@@ -63,15 +63,15 @@ class ExtrapProfileSink(ProfileSinkBase):
     log.get_logger().log('ExtrapProfileSink::get_param_mapping: ' + param_str)
     return param_str
 
-  def get_extrap_dir_name(self, target_config: TargetConfiguration) -> str:
-    dir_name = self._base_dir + '/' + self._prefix + '.'
+  def get_extrap_dir_name(self, target_config: TargetConfiguration, instr_iteration: int) -> str:
+    dir_name = self._base_dir + '/' + 'i' + str(instr_iteration) + '/' + self._prefix + '.'
     dir_name += self.get_param_mapping(target_config)
     dir_name += '.' + self._postfix + '.r' + str(self._repetition)
     return dir_name
 
   def check_and_prepare(self, experiment_dir: str, target_config: TargetConfiguration,
                         instr_config: InstrumentConfig) -> str:
-    cur_ep_dir = self.get_extrap_dir_name(target_config)
+    cur_ep_dir = self.get_extrap_dir_name(target_config, instr_config.get_instrumentation_iteration())
     if not u.is_valid_file_name(cur_ep_dir):
       log.get_logger().log(
           'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort', level='error')
@@ -86,7 +86,7 @@ class ExtrapProfileSink(ProfileSinkBase):
       else:
         return cubex_name
 
-    raise ProfileSinkException('Could not create target directory')
+    raise ProfileSinkException('ExtrapProfileSing: Could not create target directory or Cube dir bad.')
 
   def do_copy(self, src_cube_name: str, dest_dir: str) -> None:
     log.get_logger().log('ExtrapProfileSink::do_copy: ' + src_cube_name + ' => ' + dest_dir + '/' + self._filename)
@@ -105,4 +105,4 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._VALUE = target_config.get_args_for_invocation()
     src_cube_name = self.check_and_prepare(exp_dir, target_config, instr_config)
 
-    self.do_copy(src_cube_name, self.get_extrap_dir_name(target_config))
+    self.do_copy(src_cube_name, self.get_extrap_dir_name(target_config, self._iteration))
