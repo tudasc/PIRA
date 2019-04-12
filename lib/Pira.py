@@ -50,7 +50,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       # Only run the pgoe to get the functions name
       iteration_tracker = tt.TimeTracker()
 
-      #Analysis Phase
+      # Analysis Phase
       instr_file = analyzer.analyze(target_config, x)
       log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
       util.shell('stat ' + instr_file)
@@ -156,6 +156,9 @@ def main(arguments) -> None:
       runner = runner_factory.get_simple_local_runner()
       if use_extra_p:
         runner = runner_factory.get_scalability_runner(extrap_config)
+
+      if runner.has_sink():
+        analyzer.set_profile_sink(runner.get_sink())
 
       # A build/place is a top-level directory
       for build in configuration.get_builds():

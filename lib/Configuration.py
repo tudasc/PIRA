@@ -69,7 +69,7 @@ class PiraConfigurationII:
   def __init__(self):
     self._directories = {}
 
-  def add_item(self, name, item):
+  def add_item(self, name, item) -> None:
     try:
       self._directories[name]
     except:
@@ -88,6 +88,9 @@ class PiraConfigurationAdapter:
 
   def __init__(self, pc2):
     self._pcii = pc2
+
+  def get_adapted(self):
+    return self._pcii
 
   def get_builds(self):
     return self._pcii.get_directories()

@@ -44,16 +44,25 @@ class NopSink(ProfileSinkBase):
 
 class ExtrapProfileSink(ProfileSinkBase):
 
-  def __init__(self, dir: str, paramname: str, prefix: str, postfix: str, filename: str):
+  def __init__(self, dir: str, params, prefix: str, postfix: str, filename: str, reps: int):
     super().__init__()
     self._base_dir = dir
-    self._paramname = paramname
+    self._params = params
     self._prefix = prefix
     self._postfix = postfix
     self._filename = filename
     self._iteration = -1
     self._repetition = 0
+    self._total_reps = reps
     self._VALUE = ()
+
+  def output_pgis_config(self):
+    log.get_logger().log('ExtrapProfileSink::output_pgis_config:\ndir: ' + self._base_dir + '\nprefix: ' +
+                         self._prefix + '\npostfix: ' + self._postfix + '\nreps: ' + str(self._total_reps))
+    s = ''
+    for p in self._params:
+      s += p + ', '
+    log.get_logger().log('params: ')
 
   def get_target(self):
     return self._sink_target
