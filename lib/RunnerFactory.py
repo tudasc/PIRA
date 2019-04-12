@@ -10,6 +10,7 @@ import sys
 sys.path.append('..')
 
 from lib.Configuration import PiraConfiguration, ExtrapConfiguration, InvocationConfiguration
+from lib.Configuration import PiraConfigurationII, PiraConfigurationAdapter
 from lib.Runner import LocalRunner, LocalScalingRunner
 from lib.ProfileSink import NopSink, ExtrapProfileSink
 
@@ -24,7 +25,21 @@ class PiraRunnerFactory:
     return LocalRunner(self._config, NopSink(), self._invoc_cfg.get_num_repetitions())
 
   def get_scalability_runner(self, extrap_config: ExtrapConfiguration):
-    # TODO Make use of ArgumentMapper here
-    attached_sink = ExtrapProfileSink(extrap_config.get_dir(), 'param', extrap_config.get_prefix(), 'pf',
-                                      'profile.cubex')
+    pc_ii = None
+    params = None
+    if isinstance(self._config, PiraConfigurationAdapter):
+      pc_ii = self._config.get_adapted()
+
+    if pc_ii is not None and isinstance(pc_ii, PiraConfigurationII):
+      params = {}
+      for k in pc_ii.get_directories():
+        for pi in pc_ii.get_items(k):
+          for p in pi.get_run_options():
+            params[p[0]] = True
+
+    if params is None:
+      raise RuntimeError('PiraRunnerFactory::get_scalability_runner: Cannot use extra-p with old configuration')
+
+    attached_sink = ExtrapProfileSink(extrap_config.get_dir(), list(params.keys()), extrap_config.get_prefix(), 'pf',
+                                      'profile.cubex', self._invoc_cfg.get_num_repetitions())
     return LocalScalingRunner(self._config, attached_sink, self._invoc_cfg.get_num_repetitions())

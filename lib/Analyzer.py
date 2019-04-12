@@ -18,12 +18,26 @@ class Analyzer:
   def __init__(self, configuration) -> None:
     self.config = configuration
     self.error = None
+    self._profile_sink = None
+
+  def set_profile_sink(self, sink) -> None:
+    self._profile_sink = sink
 
   def analyze_local(self, flavor, build, benchmark, kwargs, iterationNumber) -> str:
     fm = fmg.FunctorManager()
     analyze_functor = fm.get_or_load_functor(build, benchmark, flavor, 'analyze')
     analyzer_dir = self.config.get_analyser_dir(build, benchmark)
     kwargs['analyzer_dir'] = analyzer_dir
+
+    # The invoke args can be retrieved from the configuration object.
+    # Since the invoke args are iterable, we can create all necessary argument tuples here.
+    if self._profile_sink is None:
+      raise RuntimeError('Profile Sink in Analyzer not set!')
+
+    # We construct a json file that contains the necesary information to be parsed vy the
+    # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.
+    # This will be the new standard way of pusing information to PGIS.
+    self._profile_sink.output_pgis_config()
 
     if analyze_functor.get_method()['active']:
       analyze_functor.active(benchmark, **kwargs)
