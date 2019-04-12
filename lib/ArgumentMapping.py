@@ -160,14 +160,14 @@ class ArgumentMapperFactory:
   @classmethod
   def get_mapper(cls, options):
     requested_mapper = options['mapper']
-    is_file_mapper = 'pira_file' in options
+    is_file_mapper = 'pira-file' in options
 
     # The term 'pira-file' indicates that a FileMapper needs to be used instead of a regular mpapper.
     # The options have a field called pira-file, which holds a list of filenames to be used.
     # Currently, this can only be used with a linear mapper.
     if requested_mapper == 'Linear':
       if is_file_mapper:
-        return CmdlineLinearArgumentMapper(options['argmap'], options['pira_file'])
+        return CmdlineLinearArgumentMapper(options['argmap'], options['pira-file'])
       return CmdlineLinearArgumentMapper(options['argmap'])
 
     elif requested_mapper == 'CartesianProduct':
