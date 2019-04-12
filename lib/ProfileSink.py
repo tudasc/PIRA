@@ -23,20 +23,23 @@ class ProfileSinkException(PiraException):
 class ProfileSinkBase:
 
   def __init__(self):
-    pass
+    self._sink_target = ''
 
   def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig):
     log.get_logger().log('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
     assert (False)
 
+  def get_target(self):
+    return self._sink_target
+
 
 class NopSink(ProfileSinkBase):
 
   def __init__(self):
-    pass
+    super().__init__()
 
   def process(self, exp_dir, target_conf, instr_config):
-    pass
+    self._sink_target = exp_dir
 
 
 class ExtrapProfileSink(ProfileSinkBase):
@@ -51,6 +54,9 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._iteration = -1
     self._repetition = 0
     self._VALUE = ()
+
+  def get_target(self):
+    return self._sink_target
 
   def get_param_mapping(self, target_config: TargetConfiguration) -> str:
     if not target_config.has_args_for_invocation():
@@ -81,12 +87,12 @@ class ExtrapProfileSink(ProfileSinkBase):
       log.get_logger().log(cubex_name)
 
       if not u.check_file(cubex_name):
-        log.get_logger().log('ExtrapProfileSink::check_and_prepare: Returned experiment cube name is no file [' +
+        log.get_logger().log('ExtrapProfileSink::check_and_prepare: Returned experiment cube name is no file: ' +
                              cubex_name)
       else:
         return cubex_name
 
-    raise ProfileSinkException('ExtrapProfileSing: Could not create target directory or Cube dir bad.')
+    raise ProfileSinkException('ExtrapProfileSink: Could not create target directory or Cube dir bad.')
 
   def do_copy(self, src_cube_name: str, dest_dir: str) -> None:
     log.get_logger().log('ExtrapProfileSink::do_copy: ' + src_cube_name + ' => ' + dest_dir + '/' + self._filename)
@@ -104,5 +110,6 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._repetition += 1
     self._VALUE = target_config.get_args_for_invocation()
     src_cube_name = self.check_and_prepare(exp_dir, target_config, instr_config)
+    self._sink_target = self.get_extrap_dir_name(target_config, self._iteration)
 
-    self.do_copy(src_cube_name, self.get_extrap_dir_name(target_config, self._iteration))
+    self.do_copy(src_cube_name, self._sink_target)

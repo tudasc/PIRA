@@ -10,6 +10,33 @@ import sys
 sys.path.append('..')
 
 
+class PiraArgument:
+  """
+  In this class the 0-th entry is always the name of the parameter.
+  The 1-st entry is always the value to pass to the target application - it might be a file name.
+  When a string is constructed from this class, always parametername+parametervalue is returned.
+  """
+
+  def __init__(self, param_name, param_value, file_name=None):
+    self._param_name = param_name
+    self._param_val = param_value
+    self._file_name = file_name
+
+  def __getitem__(self, key):
+    if key == 0:
+      return self._param_name
+    elif key == 1:
+      if self._file_name is None:
+        return self._param_val
+      else:
+        return self._file_name
+    else:
+      raise IndexError('PiraArgument only accepts 0 or 1 index.')
+
+  def __str__(self):
+    return self._param_name + self._param_val
+
+
 class ArgumentMapper:
 
   def __iter__(self):
@@ -40,8 +67,9 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
   must receive the same number of values.
   """
 
-  def __init__(self, argmap):
+  def __init__(self, argmap, files=None):
     self._argmap = argmap
+    self._files = files
     arg_vals = self._argmap.values()
     l_elem = list(arg_vals)[0]
     for e in arg_vals:
@@ -52,8 +80,14 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
   def __iter__(self):
     if len(self._argmap.keys()) is 1:
       key = list(self._argmap.keys())[0]
-      for v in self._argmap[key]:
-        yield (key, v)
+      # If this is not a file mapper, we just return as normal
+      if self._files == None:
+        for v in self._argmap[key]:
+          yield PiraArgument(key, v)
+      else:
+        # If this is a file mapper, we need to give the correct file as well
+        for v, f in zip(self._argmap[key], self._files):
+          yield PiraArgument(key, v, f)
 
     else:
       res = []
@@ -64,13 +98,13 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
           res.append(k)
           res.append(val)
 
-        yield tuple(res)
+        yield tuple(res)  # What does this ctor actually do?
         res = []
 
   def __getitem__(self, key):
     if key is 0:
       key = list(self._argmap.keys())[0]
-      return (key, self._argmap[key][0])
+      return PiraArgument(key, self._argmap[key][0])
 
     else:
       raise IndexError('Only direct access to first element allowed.')
@@ -126,10 +160,18 @@ class ArgumentMapperFactory:
   @classmethod
   def get_mapper(cls, options):
     requested_mapper = options['mapper']
+    is_file_mapper = 'pira_file' in options
 
+    # The term 'pira-file' indicates that a FileMapper needs to be used instead of a regular mpapper.
+    # The options have a field called pira-file, which holds a list of filenames to be used.
+    # Currently, this can only be used with a linear mapper.
     if requested_mapper == 'Linear':
+      if is_file_mapper:
+        return CmdlineLinearArgumentMapper(options['argmap'], options['pira_file'])
       return CmdlineLinearArgumentMapper(options['argmap'])
+
     elif requested_mapper == 'CartesianProduct':
       return CmdlineCartesianProductArgumentMapper(options['argmap'])
+
     else:
       raise RuntimeError('Unknown Mapper: ' + requested_mapper)

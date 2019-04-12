@@ -132,6 +132,9 @@ class SimplifiedConfigurationLoader:
       parameter = util.json_to_canonic(param)
       if param == 'mapper':
         continue
+      if param == 'pira-file':
+        run_opts['pira-file'] = []
+        run_opts['pira-file'] = util.json_to_canonic(item_tree[item_key]['argmap']['pira-file']['names'])
       try:
         params[parameter]
       except:

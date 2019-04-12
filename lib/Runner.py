@@ -15,6 +15,7 @@ from lib.Configuration import PiraConfiguration, TargetConfiguration, Instrument
 import lib.FunctorManagement as fm
 import lib.Measurement as ms
 import lib.DefaultFlags as defaults
+import lib.ProfileSink as sinks
 
 import typing
 
@@ -32,6 +33,17 @@ class LocalBaseRunner(Runner):
     """ Runner are initialized once with a PiraConfiguration """
     self._config = configuration
     self._sink = sink
+
+  def has_sink(self) -> bool:
+    if self._sink is None:
+      return False
+    if isinstance(self._sink, sinks.NopSink):
+      return False
+
+    return True
+
+  def get_sink(self):
+    return self._sink
 
   def run(self, target_config: TargetConfiguration, instrument_config: InstrumentConfig,
           compile_time_filtering: bool) -> float:
@@ -155,6 +167,8 @@ class LocalScalingRunner(LocalRunner):
       target_config.set_args_for_invocation(arg_cfg)
       rr = super().do_profile_run(target_config, instr_iteration, compile_time_filtering)
       run_result.add_from(rr)
+
+    # At this point we have all the data we need to construct an Extra-P model
 
     return run_result
 

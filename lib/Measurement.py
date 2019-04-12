@@ -68,6 +68,8 @@ class RunResult:
 
   def compute_overhead(self, base_line, pos: int = 0) -> float:
     base_line_avg = base_line.get_average(pos)
+    if base_line_avg == 0:
+      base_line_avg = 1
     result = self.get_average(pos) / base_line_avg
     return result
 
@@ -80,7 +82,7 @@ class RunResult:
 
   def compute_all_overheads(self, base_line: typing.List) -> typing.List[float]:
     ovhds = []
-    for (thisAvg, otherAvg) in zip(self.get_all_averages(), base_line.get_all_averaged()):
+    for (thisAvg, otherAvg) in zip(self.get_all_averages(), base_line.get_all_averages()):
       ovhds.append(thisAvg / otherAvg)
 
     return ovhds
