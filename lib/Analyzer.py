@@ -37,7 +37,7 @@ class Analyzer:
     # We construct a json file that contains the necesary information to be parsed vy the
     # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.
     # This will be the new standard way of pusing information to PGIS.
-    self._profile_sink.output_pgis_config()
+    self._profile_sink.output_pgis_config(analyzer_dir)
 
     if analyze_functor.get_method()['active']:
       analyze_functor.active(benchmark, **kwargs)

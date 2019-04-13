@@ -36,6 +36,40 @@ class PiraArgument:
   def __str__(self):
     return self._param_name + self._param_val
 
+  def get_params(self):
+    return [self._param_name]
+
+
+class PiraListArgument(PiraArgument):
+
+  def __init__(self, param_names, param_vals, file=None):
+    self._p_names = param_names
+    self._p_vals = param_vals
+    self._p_files = file
+
+  def __getitem__(self, key):
+    if key >= len(self._p_names):
+      raise IndexError('Out of Range in PiraListArgument')
+
+    if key % 2 == 0:
+      return self._p_names[key]
+    elif key % 2 == 1:
+      if self._p_files == None:
+        return self._p_vals[key]
+      else:
+        return self._p_files
+
+    raise IndexError('Wrong index')
+
+  def __str__(self):
+    s = ''
+    for n, v in zip(self._p_names, self._p_vals):
+      s += n + v
+    return s
+
+  def get_params(self):
+    return self._p_names  # This should already be a list
+
 
 class ArgumentMapper:
 
@@ -90,16 +124,22 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
           yield PiraArgument(key, v, f)
 
     else:
-      res = []
+      #res = []
       keys = self._argmap.keys()
+      values = []
+      names = []
       for counter in range(0, self._num_elems):
         for k in keys:
           val = self._argmap[k][counter]
-          res.append(k)
-          res.append(val)
+          #res.append(k)
+          #res.append(val)
+          names.append(k)
+          values.append(val)
 
-        yield tuple(res)  # What does this ctor actually do?
-        res = []
+        yield PiraListArgument(names, values, self._files)
+        #res = []
+        names = []
+        values = []
 
   def __getitem__(self, key):
     if key is 0:
@@ -108,6 +148,9 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
 
     else:
       raise IndexError('Only direct access to first element allowed.')
+
+  def get_argmap(self):
+    return self._argmap
 
 
 class CmdlineCartesianProductArgumentMapper(ArgumentMapper):

@@ -310,6 +310,8 @@ def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark
 
   sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
   log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
+  log.get_logger().log(
+      '\nTHIS IS THE OLD VERSION OF PIRA/PGIS!!! WE NEED TO PASS -c IN FRONT OF CUBE FILE!!!!\n', level='warn')
   out, _ = shell(sh_cmd)
   log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
 

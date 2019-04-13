@@ -13,6 +13,8 @@ import lib.Utility as u
 from lib.Configuration import TargetConfiguration, InstrumentConfig
 from lib.Exception import PiraException
 
+import json
+
 
 class ProfileSinkException(PiraException):
 
@@ -27,7 +29,7 @@ class ProfileSinkBase:
 
   def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig):
     log.get_logger().log('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
-    assert (False)
+    raise RuntimeError('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
 
   def get_target(self):
     return self._sink_target
@@ -56,13 +58,25 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._total_reps = reps
     self._VALUE = ()
 
-  def output_pgis_config(self):
+  def output_pgis_config(self, output_dir):
     log.get_logger().log('ExtrapProfileSink::output_pgis_config:\ndir: ' + self._base_dir + '\nprefix: ' +
-                         self._prefix + '\npostfix: ' + self._postfix + '\nreps: ' + str(self._total_reps))
+                         self._prefix + '\npostfix: ' + self._postfix + '\nreps: ' + str(self._total_reps) +
+                         '\nNiter: ' + str(self._iteration + 1))
     s = ''
     for p in self._params:
       s += p + ', '
-    log.get_logger().log('params: ')
+    log.get_logger().log('params: ' + s)
+
+    json_str = json.dumps({
+        'dir': self._base_dir,
+        'prefix': self._prefix,
+        'postfix': self._postfix,
+        'reps': int(self._total_reps),
+        'iter': int(self._iteration + 1),
+        'params': self._params
+    })
+
+    u.write_file(output_dir + '/pgis_cfg.json', json_str)
 
   def get_target(self):
     return self._sink_target
@@ -73,8 +87,12 @@ class ExtrapProfileSink(ProfileSinkBase):
 
     args = target_config.get_args_for_invocation()
     param_str = ''
-    for v in args:
-      param_str += v
+    if not isinstance(args, tuple):
+      param_str = str(args)  # PiraArgument knows how to unparse to string
+    else:
+      for v in args:
+        param_str += v
+
     log.get_logger().log('ExtrapProfileSink::get_param_mapping: ' + param_str)
     return param_str
 
@@ -89,7 +107,7 @@ class ExtrapProfileSink(ProfileSinkBase):
     cur_ep_dir = self.get_extrap_dir_name(target_config, instr_config.get_instrumentation_iteration())
     if not u.is_valid_file_name(cur_ep_dir):
       log.get_logger().log(
-          'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort', level='error')
+          'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort\n' + cur_ep_dir, level='error')
     else:
       u.create_directory(cur_ep_dir)
       cubex_name = experiment_dir + '/' + target_config.get_flavor() + '-' + target_config.get_target() + '.cubex'
