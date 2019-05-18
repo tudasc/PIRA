@@ -98,6 +98,7 @@ class SimplifiedConfigurationLoader:
 
   def __init__(self):
     self._config = PiraConfigurationII()
+    self.base_mapper = None
 
   def load_conf(self, confilg_file: str) -> PiraConfiguration:
     if not util.check_file(confilg_file):

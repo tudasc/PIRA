@@ -173,6 +173,7 @@ class PiraConfiguration:
     self.global_submitter = {}
     self.stop_iteration = {}
     self.is_first_iteration = {}
+    self.base_mapper = None
 
   def set_build_directories(self, dirs) -> None:
     self.directories = dirs

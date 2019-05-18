@@ -48,16 +48,23 @@ class PiraListArgument(PiraArgument):
     self._p_files = file
 
   def __getitem__(self, key):
-    if key >= len(self._p_names):
+    if key >= 3 * len(self._p_names):
       raise IndexError('Out of Range in PiraListArgument')
 
-    if key % 2 == 0:
-      return self._p_names[key]
-    elif key % 2 == 1:
-      if self._p_files == None:
-        return self._p_vals[key]
+    if key % 3 == 2:
+      return self._p_files
+    elif key % 3 == 1:
+      if key >= 3:
+        e_key = key - 3
       else:
-        return self._p_files
+        e_key = key - 1
+      return self._p_vals[e_key]
+    elif key % 3 == 0:
+      if key >= 3:
+        e_key = key - 2
+      else:
+        e_key = key
+      return self._p_names[e_key]
 
     raise IndexError('Wrong index')
 
@@ -124,22 +131,22 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
           yield PiraArgument(key, v, f)
 
     else:
-      #res = []
       keys = self._argmap.keys()
       values = []
       names = []
+      files = []
       for counter in range(0, self._num_elems):
         for k in keys:
           val = self._argmap[k][counter]
-          #res.append(k)
-          #res.append(val)
           names.append(k)
           values.append(val)
+          files.append(self._files[counter])
 
-        yield PiraListArgument(names, values, self._files)
-        #res = []
+        print('CmdlineLinearArgumentMapper::__iter__: names ' + str(names) + ' | values ' + str(values) + ' | files ' + str(files))
+        yield PiraListArgument(names, values, files)
         names = []
         values = []
+        files = []
 
   def __getitem__(self, key):
     if key is 0:
@@ -184,6 +191,28 @@ class CmdlineCartesianProductArgumentMapper(ArgumentMapper):
     pass
 
 
+class MPIArgumentMapper(ArgumentMapper):
+  def __init__(self, argmap, base_mapper):
+    self._n_mpi = argmap['np']
+    self._base_mapper = base_mapper
+
+  def __iter__(self):
+    for nps in self._n_mpi:
+      for args in self._base_mapper:
+        # args is PiraListArgument
+        #print('MPI Argument Mapper: ' + str(args))
+        #print('ARGS: ' + str(args[1]) + ' | ' + str(args[4]))
+        res = []
+        res.append(nps)
+        for v in args:
+          res.append(v)
+        print('Yielded: ' + str(res))
+        yield res
+
+  def get_argmap(self):
+    return self._base_mapper.get_argmap()
+
+
 class UserArgumentMapper(ArgumentMapper):
   """
   Used for complex mappings of arguments to inputs / files.
@@ -215,6 +244,11 @@ class ArgumentMapperFactory:
 
     elif requested_mapper == 'CartesianProduct':
       return CmdlineCartesianProductArgumentMapper(options['argmap'])
+
+    elif requested_mapper == 'MPILinear':
+      if is_file_mapper:
+        return MPIArgumentMapper(options['argmap'], CmdlineLinearArgumentMapper(options['argmap'], options['pira-file']))
+      return MPIArgumentMapper(options['argmap'], CmdlineLinearArgumentMapper(options['argmap']))
 
     else:
       raise RuntimeError('Unknown Mapper: ' + requested_mapper)
