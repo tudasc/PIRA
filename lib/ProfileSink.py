@@ -58,7 +58,7 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._total_reps = reps
     self._VALUE = ()
 
-  def output_pgis_config(self, output_dir):
+  def output_pgis_config(self, benchmark, output_dir):
     log.get_logger().log('ExtrapProfileSink::output_pgis_config:\ndir: ' + self._base_dir + '\nprefix: ' +
                          self._prefix + '\npostfix: ' + self._postfix + '\nreps: ' + str(self._total_reps) +
                          '\nNiter: ' + str(self._iteration + 1))
@@ -76,7 +76,9 @@ class ExtrapProfileSink(ProfileSinkBase):
         'params': self._params
     })
 
-    u.write_file(output_dir + '/pgis_cfg.json', json_str)
+    out_file_final = output_dir + '/pgis_cfg_' + benchmark + '.json'
+    u.write_file(out_file_final, json_str)
+    return out_file_final
 
   def get_target(self):
     return self._sink_target
@@ -87,8 +89,15 @@ class ExtrapProfileSink(ProfileSinkBase):
 
     args = target_config.get_args_for_invocation()
     param_str = ''
-    if not isinstance(args, tuple):
+    # TODO FIX ME!
+    if isinstance(args, list):
+      log.get_logger().log('ExtrapProfileSink::get_param_mapping: isinstance of list')
+      param_str = str(args[1]) + str(args[2]) + '.' + str(args[4]) + str(args[0])
+
+    elif not isinstance(args, tuple):
+      log.get_logger().log('ExtrapProfileSink::get_param_mapping: not isinstance of tuple')
       param_str = str(args)  # PiraArgument knows how to unparse to string
+
     else:
       for v in args:
         param_str += v
@@ -99,7 +108,7 @@ class ExtrapProfileSink(ProfileSinkBase):
   def get_extrap_dir_name(self, target_config: TargetConfiguration, instr_iteration: int) -> str:
     dir_name = self._base_dir + '/' + 'i' + str(instr_iteration) + '/' + self._prefix + '.'
     dir_name += self.get_param_mapping(target_config)
-    dir_name += '.' + self._postfix + '.r' + str(self._repetition)
+    dir_name += '.' + self._postfix + '.r' + str(self._repetition + 1)
     return dir_name
 
   def check_and_prepare(self, experiment_dir: str, target_config: TargetConfiguration,

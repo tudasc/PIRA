@@ -37,7 +37,7 @@ class Analyzer:
     # We construct a json file that contains the necesary information to be parsed vy the
     # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.
     # This will be the new standard way of pusing information to PGIS.
-    self._profile_sink.output_pgis_config(analyzer_dir)
+    pgis_cfg_file = self._profile_sink.output_pgis_config(benchmark, analyzer_dir)
 
     if analyze_functor.get_method()['active']:
       analyze_functor.active(benchmark, **kwargs)
@@ -62,12 +62,13 @@ class Analyzer:
           prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
         tracker = tt.TimeTracker()
-
+        
+        # TODO: Alternate between expansion and pure filtering.
         if iterationNumber > 0 and util.check_file(instr_files):
           logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
           tracker.m_track('Analysis', util, 'run_analyser_command', command, analyzer_dir, flavor, benchmark_name,
-                          exp_dir, iterationNumber)
+                          exp_dir, iterationNumber, pgis_cfg_file)
           logging.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
         else:
           tracker.m_track('Initial analysis', util, 'run_analyser_command_noInstr', command, analyzer_dir, flavor,
