@@ -30,13 +30,20 @@ class PiraRunnerFactory:
     params = None
     ro = None
     if isinstance(self._config, PiraConfigurationAdapter):
+      log.get_logger().log('PiraRunnerFactory::get_scalability_runner: Configuration is PiraConfigurationAdapter')
       pc_ii = self._config.get_adapted()
 
+    if pc_ii is not None:
+      log.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is not none.')
+
     if pc_ii is not None and isinstance(pc_ii, PiraConfigurationII):
+      log.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is PiraConfigurationII')
       params = {}
       log.get_logger().log('PiraRunnerFactory::get_scalability_runner: Preparing params')
       for k in pc_ii.get_directories():
+        log.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(k))
         for pi in pc_ii.get_items(k):
+          log.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(pi))
           # This should be only one element anyway.
           # for p in pi.get_run_options():
           ro = pi.get_run_options()

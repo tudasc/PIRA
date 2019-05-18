@@ -148,8 +148,9 @@ class LocalScalingRunner(LocalRunner):
   """
 
   def __init__(self, configuration: PiraConfiguration, sink, num_repetitions: int = 5):
-    if num_repetitions < 5:
-      raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
+    if num_repetitions < 0:
+      log.get_logger().log('REMEMBER TO REMOVE IN LocalScalingRunner::__init__', level='warn')
+      raise RuntimeError('At least 3 repetitions are required for Extra-P modelling.')
     super().__init__(configuration, sink, num_repetitions)
 
   def do_profile_run(self,

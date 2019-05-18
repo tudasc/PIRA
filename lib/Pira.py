@@ -29,7 +29,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
   try:
     log.get_logger().log('run_setup phase.', level='debug')
     instrument = False
-    pira_iterations = 2  # XXX Should be cmdline arg!
+    pira_iterations = 3  # XXX Should be cmdline arg!
 
     # Build without any instrumentation
     vanilla_builder = B(target_config, instrument)
@@ -90,8 +90,11 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
 
     num_reps = cmdline_args.num_reps
     if num_reps < 5:
-      log.get_logger().log('At least 5 repetitions are needed for Extra-P modelling.', level='error')
-      raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
+      log.get_logger().log('At least 5 repetitions are recommended for Extra-P modelling.', level='warn')
+      if num_reps < 0:
+        log.get_logger().log('REMEMBER TO REMOVE IN PIRA::process_args_for_extrap', level='warn')
+        log.get_logger().log('At least 3 repetitions are required for Extra-P modelling.', level='error')
+        raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
 
   return use_extra_p, extrap_config
 
