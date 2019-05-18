@@ -100,6 +100,7 @@ class ScorepSystemHelper:
     self.cur_overwrite_exp_dir = 'False'
     self.cur_base_name = ''
     self.cur_filter_file = ''
+    self._enable_unwinding = 'False'
 
   def get_data_elem(self, key: str):
     try:
@@ -155,6 +156,8 @@ class ScorepSystemHelper:
     self.set_memory_size('500M')
     self.set_overwrite_exp_dir()
     self.set_profiling_basename(flavor, build, item)
+    # TODO WHEN FIXED: FOR NOW LET'S ENABLE UNWINDING
+    # self.set_enable_unwinding(self)
 
   def set_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
@@ -180,6 +183,10 @@ class ScorepSystemHelper:
   def set_overwrite_exp_dir(self) -> None:
     self.cur_overwrite_exp_dir = 'True'
     u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', self.cur_overwrite_exp_dir)
+
+  def set_enable_unwinding(self) -> None:
+    self._enable_unwinding = 'True'
+    u.set_env('SCOREP_ENABLE_UNWINDING', self._enable_unwinding)
 
   def set_filter_file(self, file_name: str) -> None:
     log.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' + file_name)
