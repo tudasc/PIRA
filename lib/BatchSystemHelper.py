@@ -1,3 +1,8 @@
+"""
+File: BatchSystemHelper.py
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+Description: Needs attention
+"""
 import lib.Utility as util
 import lib.Logging as log
 

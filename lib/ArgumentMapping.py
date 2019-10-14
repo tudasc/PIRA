@@ -1,8 +1,6 @@
 """
-File: Runner.py
-Author: JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+File: ArgumentMapping.py
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module provides mapper classes to handle argument.
 """
 

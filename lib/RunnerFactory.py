@@ -1,8 +1,6 @@
 """
 File: RunnerFactory.py
-Author: JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module to create different Runner objects, depending on the configuration.
 """
 
