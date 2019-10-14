@@ -20,7 +20,7 @@ class TestUtility(unittest.TestCase):
 
   def test_shell_dry_run(self):
     command = 'echo "Hello world!"'
-    expected_out = '[debug] DRY RUN SHELL CALL: ' + command
+    expected_out = '[debug] Utility::shell: DRY RUN SHELL CALL: ' + command
 
     out, t = u.shell(command, dry=True)
     lm = log.get_logger().get_last_msg()
@@ -77,37 +77,37 @@ class TestUtility(unittest.TestCase):
 
   def test_is_valid_file(self):
     file_name = '/work/scratch/j_lehr/temp1-a'
-    res = u.is_valid_file(file_name)
+    res = u.is_valid_file_name(file_name)
     self.assertTrue(res)
 
   def test_is_valid_file_cube_pattern(self):
     file_name = '/work/scratch/j_lehr/_preparation_/hpcg-1-test_run-1'
-    res = u.is_valid_file(file_name)
+    res = u.is_valid_file_name(file_name)
     self.assertTrue(res)
 
   def test_is_valid_file_false(self):
     file_name = '/work\\scratch/j_lehr/temp1-%a'
-    res = u.is_valid_file(file_name)
+    res = u.is_valid_file_name(file_name)
     self.assertFalse(res)
 
   def test_is_valid_file_long(self):
     file_name = '/work/scratch/j_lehr/temp1-a/_asd-tes-12-_2-/asd/nul'
-    res = u.is_valid_file(file_name)
+    res = u.is_valid_file_name(file_name)
     self.assertTrue(res)
 
   def test_is_valid_file_dot(self):
     file_name = '/work+tch/j.lehr/temp1-a'
-    res = u.is_valid_file(file_name)
+    res = u.is_valid_file_name(file_name)
     self.assertFalse(res)
 
   def test_is_valid_file_plus(self):
     file_name = '/work+tch/j_lehr/temp1-a'
-    res = u.is_valid_file(file_name)
+    res = u.is_valid_file_name(file_name)
     self.assertFalse(res)
 
   def test_is_valid_file_whitespace(self):
     file_name = '/work+tch/j_leh r/temp1-a'
-    res = u.is_valid_file(file_name)
+    res = u.is_valid_file_name(file_name)
     self.assertFalse(res)
 
 

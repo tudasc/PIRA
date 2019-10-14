@@ -1,55 +1,81 @@
+"""
+File: Analyzer.py
+Author: Sachin Manawadi, JP Lehr
+Email: jan.lehr@sc.tu-darmstadt.de
+Github: https://github.com/jplehr
+Description: Module to encapsulate the underlying analysis engine.
+"""
+
 import lib.Utility as util
 import lib.Logging as logging
+import lib.TimeTracking as tt
+import lib.FunctorManagement as fmg
+import lib.DefaultFlags as defaults
 
 
 class Analyzer:
 
-  def __init__(self, configuration, build, benchmark) -> None:
-    self.directory = build
+  def __init__(self, configuration) -> None:
     self.config = configuration
-    self.benchmark = benchmark
-    self.old_cwd = build
     self.error = None
+    self._profile_sink = None
 
-  def analyse(self, flavor, build, benchmark, kwargs, config, iterationNumber) -> str:
-    benchmark_name = config.get_benchmark_name(benchmark)
-    anal_func_filename = util.build_analyse_functor_filename(False, benchmark_name, flavor)
-    logging.get_logger().log('Loading analysis functor at: ' + anal_func_filename)
+  def set_profile_sink(self, sink) -> None:
+    self._profile_sink = sink
 
-    # TODO Refactor these code pieces.
+  def analyze_local(self, flavor, build, benchmark, kwargs, iterationNumber) -> str:
+    fm = fmg.FunctorManager()
+    analyze_functor = fm.get_or_load_functor(build, benchmark, flavor, 'analyze')
+    analyzer_dir = self.config.get_analyser_dir(build, benchmark)
+    kwargs['analyzer_dir'] = analyzer_dir
 
-    analyse_functor = util.load_functor(config.get_analyse_func(build, benchmark), anal_func_filename)
-    if analyse_functor.get_method()['active']:
-      analyse_functor.active(benchmark, **kwargs)
+    # The invoke args can be retrieved from the configuration object.
+    # Since the invoke args are iterable, we can create all necessary argument tuples here.
+    if self._profile_sink is None:
+      raise RuntimeError('Profile Sink in Analyzer not set!')
+
+    # We construct a json file that contains the necesary information to be parsed vy the
+    # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.
+    # This will be the new standard way of pusing information to PGIS.
+    pgis_cfg_file = self._profile_sink.output_pgis_config(benchmark, analyzer_dir)
+
+    if analyze_functor.get_method()['active']:
+      analyze_functor.active(benchmark, **kwargs)
 
     else:
-      logging.get_logger().log('Using passive mode')
+      logging.get_logger().log('Analyzer::analyze_local: Using passive mode')
       try:
-        exp_dir = config.get_analyser_exp_dir(build, benchmark)
-        analyser_dir = config.get_analyser_dir(build, benchmark)
-        isdirectory_good = util.check_provided_directory(analyser_dir)
-        # XXX We need to identify a 'needed set of variables' that can be relied on begin passed
-        kwargs = {'analyzer_dir': analyser_dir}
-        command = analyse_functor.passive(benchmark, **kwargs)
+        exp_dir = self.config.get_analyser_exp_dir(build, benchmark)
+        isdirectory_good = util.check_provided_directory(analyzer_dir)
+        command = analyze_functor.passive(benchmark, **kwargs)
 
-        logging.get_logger().log('Analyzer with command: ' + command)
-        logging.get_logger().log('Checking ' + analyser_dir + ' | is good: ' + str(isdirectory_good))
+        logging.get_logger().log('Analyzer::analyze_local: Command = ' + command)
+
+        benchmark_name = self.config.get_benchmark_name(benchmark)
 
         if isdirectory_good:
-          util.change_cwd(analyser_dir)
-          instr_files = util.build_instr_file_path(analyser_dir, flavor, benchmark_name)
-          logging.get_logger().log('The built instrumentation file path is: ' + instr_files)
-          prev_instr_file = util.build_previous_instr_file_path(analyser_dir, flavor, benchmark_name)
+          util.change_cwd(analyzer_dir)
+          logging.get_logger().log('Analyzer::analyzer_local: Flavor = ' + flavor + ' | benchmark_name = ' +
+                                   benchmark_name)
+          instr_files = util.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
+          logging.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
+          prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
-        if util.check_file(instr_files):
+        tracker = tt.TimeTracker()
+        
+        # TODO: Alternate between expansion and pure filtering.
+        if iterationNumber > 0 and util.check_file(instr_files):
+          logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
-          util.run_analyser_command(command, analyser_dir, flavor, benchmark_name, exp_dir,
-                                    iterationNumber-1)
-          logging.get_logger().log('Analyzer command finished', level='debug')
+          tracker.m_track('Analysis', util, 'run_analyser_command', command, analyzer_dir, flavor, benchmark_name,
+                          exp_dir, iterationNumber, pgis_cfg_file)
+          logging.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
         else:
-          util.run_analyser_command_noInstr(command, analyser_dir, flavor, benchmark_name)
+          tracker.m_track('Initial analysis', util, 'run_analyser_command_noInstr', command, analyzer_dir, flavor,
+                          benchmark_name)
+          util.run_analyser_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
 
-        self.tear_down(exp_dir)
+        self.tear_down(build, exp_dir)
         return instr_files
 
       except Exception as e:
@@ -75,23 +101,19 @@ class Analyzer:
   def set_up(self):
     pass
 
-  def tear_down(self, exp_dir):
+  def tear_down(self, old_dir, exp_dir):
     isdirectory_good = util.check_provided_directory(exp_dir)
     if isdirectory_good:
       try:
-        util.change_cwd(self.old_cwd)
+        util.change_cwd(old_dir)
       except Exception as e:
-        logging.get_logger().log(e.message, level='error')
+        logging.get_logger().log(str(e), level='error')
 
-  def analyse_detail(self, config, build, benchmark, flavor, iterationNumber) -> str:
-    kwargs = {'compiler': ''}
-    # No need to analyse on the slurm. May be a future extension
-    '''
-        if config.is_submitter(build,benchmark):
-            self.analyse_slurm(flavor,build,benchmark,kwargs,config)
-        else:
-        '''
-    return self.analyse(flavor, build, benchmark, kwargs, config, iterationNumber)
+  def analyze(self, target_config, iteration_number: int) -> str:
+    default_provider = defaults.BackendDefaults()
+    kwargs = default_provider.get_default_kwargs()
 
-  def run_analyzer(self, flavors, build, benchmark, kwargs):
-    pass
+    flavor = target_config.get_flavor()
+    build = target_config.get_build()
+    benchmark = target_config.get_target()
+    return self.analyze_local(flavor, build, benchmark, kwargs, iteration_number)
