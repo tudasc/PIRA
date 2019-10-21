@@ -31,7 +31,7 @@ class TestUtility(unittest.TestCase):
     out, t = u.shell(command, dry=True)
     lm = log.get_logger().get_last_msg()
     self.assertEqual(lm, expected_out)
-    self.assertEqual(t, -1.0)
+    self.assertEqual(t, 1.0)
     self.assertEqual(out, '')
 
   def test_shell_time_invoc(self):

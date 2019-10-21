@@ -58,9 +58,9 @@ class RunResult:
       self._nr_of_iterations.append(iters)
 
   def get_average(self, pos: int = 0) -> float:
-    if self._nr_of_iterations == 0:
+    if self._nr_of_iterations == 0 or self._nr_of_iterations == []:
       log.get_logger().log('Calculating average based on 0 repetitions - assuming 1', level='warn')
-      #raise RuntimeError('Calculating Average based on 0 repetitions.')
+      raise RuntimeError('Calculating average based on 0 repetitions impossible.')
       self._nr_of_iterations = 1
     return self._accumulated_runtime[pos] / self._nr_of_iterations[pos]
 

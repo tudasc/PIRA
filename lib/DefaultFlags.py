@@ -41,8 +41,8 @@ class BackendDefaults:
 
     def get_default_kwargs(self) -> dict:
       kwargs = {
-          'CC': self.get_default_c_compiler_name(),
-          'CXX': self.get_default_cpp_compiler_name(),
+          'CC': '\"' + self.get_default_c_compiler_name() + '\"',
+          'CXX': '\"' + self.get_default_cpp_compiler_name() + '\"',
           'PIRANAME': self.get_default_exe_name(),
           'NUMPROCS': self._num_compile_procs
       }
