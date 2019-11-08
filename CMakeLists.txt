@@ -17,4 +17,3 @@ list(APPEND CMAKE_MODULE_PATH
 include(ToolchainOptions)
 
 add_subdirectory(lib)
-add_subdirectory(test)
