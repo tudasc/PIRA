@@ -67,7 +67,14 @@ tar xzf extrap-3.0.tar.gz
 cd extrap-3.0
 rm -rf build
 mkdir build && cd build
-pythonheader=$(dirname $(locate "/Python.h" | grep "python3."))
+# On my Ubuntu machine, the locate command is available, on the CentOS machine it wasn't
+# TODO This should be done just a little less fragile
+command -v locate "/Python.h"
+if [ $? -eq 1 ]; then
+	pythonheader=$(dirname $(which python))/../include/python3.7m
+else
+  pythonheader=$(dirname $(locate "/Python.h" | grep "python3."))
+fi
 echo "[PIRA] Found Python.h at " $pythonheader
 ../configure --prefix=$extinstalldir/extrap CPPFLAGS=-I$pythonheader
 make -j $parallel_jobs
