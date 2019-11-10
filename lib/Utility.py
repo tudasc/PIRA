@@ -1,8 +1,6 @@
 """
 File: Utility.py
-Author: Sachin Manawadi, JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module to support other tasks.
 """
 
@@ -171,7 +169,7 @@ def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
 def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool = False) -> typing.Tuple[str, float]:
   if dry:
     log.get_logger().log('Utility::shell: DRY RUN SHELL CALL: ' + command, level='debug')
-    return '', -1.0
+    return '', 1.0
 
   stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
   stderr_fd = open(stderr_fn, 'w+')
@@ -303,20 +301,31 @@ def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
 
 
 def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
-                         iterationNumber: int) -> None:
+                         iterationNumber: int, pgis_cfg_file: str) -> None:
   ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
   cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber - 1)
   cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
 
-  sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
+  #sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
+  #log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
+  #log.get_logger().log(
+  #    '\nTHIS IS THE OLD VERSION OF PIRA/PGIS!!! WE NEED TO PASS -c IN FRONT OF CUBE FILE!!!!\n', level='warn')
+  #out, _ = shell(sh_cmd)
+  #log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
+
+  extrap_cfg_file = pgis_cfg_file
+  # extrap_file_path = analyser_dir + '/' + extrap_cfg_file
+  # sh_cmd = command + ' --model-filter -e ' + extrap_file_path + ' ' + ipcg_file
+  sh_cmd = command + ' -e ' + pgis_cfg_file + ' ' + ipcg_file
   log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
   log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
 
 
+
 def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, benchmark_name: str) -> None:
   ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
-  sh_cmd = command + ' ' + ipcg_file
+  sh_cmd = command + ' --static ' + ipcg_file
   log.get_logger().log('Utility::run_analyser_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
   log.get_logger().log('Utility::run_analyser_command_noInstr: Output of analyzer:\n' + out, level='debug')

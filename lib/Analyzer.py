@@ -1,8 +1,6 @@
 """
 File: Analyzer.py
-Author: Sachin Manawadi, JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module to encapsulate the underlying analysis engine.
 """
 
@@ -18,12 +16,26 @@ class Analyzer:
   def __init__(self, configuration) -> None:
     self.config = configuration
     self.error = None
+    self._profile_sink = None
+
+  def set_profile_sink(self, sink) -> None:
+    self._profile_sink = sink
 
   def analyze_local(self, flavor, build, benchmark, kwargs, iterationNumber) -> str:
     fm = fmg.FunctorManager()
     analyze_functor = fm.get_or_load_functor(build, benchmark, flavor, 'analyze')
     analyzer_dir = self.config.get_analyser_dir(build, benchmark)
     kwargs['analyzer_dir'] = analyzer_dir
+
+    # The invoke args can be retrieved from the configuration object.
+    # Since the invoke args are iterable, we can create all necessary argument tuples here.
+    if self._profile_sink is None:
+      raise RuntimeError('Profile Sink in Analyzer not set!')
+
+    # We construct a json file that contains the necesary information to be parsed vy the
+    # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.
+    # This will be the new standard way of pusing information to PGIS.
+    pgis_cfg_file = self._profile_sink.output_pgis_config(benchmark, analyzer_dir)
 
     if analyze_functor.get_method()['active']:
       analyze_functor.active(benchmark, **kwargs)
@@ -48,12 +60,13 @@ class Analyzer:
           prev_instr_file = util.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
 
         tracker = tt.TimeTracker()
-
+        
+        # TODO: Alternate between expansion and pure filtering.
         if iterationNumber > 0 and util.check_file(instr_files):
           logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
           tracker.m_track('Analysis', util, 'run_analyser_command', command, analyzer_dir, flavor, benchmark_name,
-                          exp_dir, iterationNumber)
+                          exp_dir, iterationNumber, pgis_cfg_file)
           logging.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
         else:
           tracker.m_track('Initial analysis', util, 'run_analyser_command_noInstr', command, analyzer_dir, flavor,

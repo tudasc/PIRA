@@ -1,3 +1,7 @@
+"""
+File: tables.py
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+"""
 import sqlite3 as db
 
 create_application_table = """ CREATE TABLE IF NOT EXISTS Application (

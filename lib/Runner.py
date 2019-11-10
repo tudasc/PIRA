@@ -1,8 +1,6 @@
 """
 File: Runner.py
-Author: JP Lehr, Sachin Manawadi 
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module to run the target software.
 """
 
@@ -15,6 +13,7 @@ from lib.Configuration import PiraConfiguration, TargetConfiguration, Instrument
 import lib.FunctorManagement as fm
 import lib.Measurement as ms
 import lib.DefaultFlags as defaults
+import lib.ProfileSink as sinks
 
 import typing
 
@@ -32,6 +31,17 @@ class LocalBaseRunner(Runner):
     """ Runner are initialized once with a PiraConfiguration """
     self._config = configuration
     self._sink = sink
+
+  def has_sink(self) -> bool:
+    if self._sink is None:
+      return False
+    if isinstance(self._sink, sinks.NopSink):
+      return False
+
+    return True
+
+  def get_sink(self):
+    return self._sink
 
   def run(self, target_config: TargetConfiguration, instrument_config: InstrumentConfig,
           compile_time_filtering: bool) -> float:
@@ -136,8 +146,9 @@ class LocalScalingRunner(LocalRunner):
   """
 
   def __init__(self, configuration: PiraConfiguration, sink, num_repetitions: int = 5):
-    if num_repetitions < 5:
-      raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
+    if num_repetitions < 0:
+      log.get_logger().log('REMEMBER TO REMOVE IN LocalScalingRunner::__init__', level='warn')
+      raise RuntimeError('At least 3 repetitions are required for Extra-P modelling.')
     super().__init__(configuration, sink, num_repetitions)
 
   def do_profile_run(self,
@@ -155,6 +166,8 @@ class LocalScalingRunner(LocalRunner):
       target_config.set_args_for_invocation(arg_cfg)
       rr = super().do_profile_run(target_config, instr_iteration, compile_time_filtering)
       run_result.add_from(rr)
+
+    # At this point we have all the data we need to construct an Extra-P model
 
     return run_result
 

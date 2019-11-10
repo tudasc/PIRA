@@ -1,8 +1,6 @@
 """
 File: Measurement.py
-Author: JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module hosts measurement support infrastructure.
 """
 
@@ -60,14 +58,16 @@ class RunResult:
       self._nr_of_iterations.append(iters)
 
   def get_average(self, pos: int = 0) -> float:
-    if self._nr_of_iterations == 0:
+    if self._nr_of_iterations == 0 or self._nr_of_iterations == []:
       log.get_logger().log('Calculating average based on 0 repetitions - assuming 1', level='warn')
-      #raise RuntimeError('Calculating Average based on 0 repetitions.')
+      raise RuntimeError('Calculating average based on 0 repetitions impossible.')
       self._nr_of_iterations = 1
     return self._accumulated_runtime[pos] / self._nr_of_iterations[pos]
 
   def compute_overhead(self, base_line, pos: int = 0) -> float:
     base_line_avg = base_line.get_average(pos)
+    if base_line_avg == 0:
+      base_line_avg = 1
     result = self.get_average(pos) / base_line_avg
     return result
 
@@ -80,7 +80,7 @@ class RunResult:
 
   def compute_all_overheads(self, base_line: typing.List) -> typing.List[float]:
     ovhds = []
-    for (thisAvg, otherAvg) in zip(self.get_all_averages(), base_line.get_all_averaged()):
+    for (thisAvg, otherAvg) in zip(self.get_all_averages(), base_line.get_all_averages()):
       ovhds.append(thisAvg / otherAvg)
 
     return ovhds
@@ -98,6 +98,7 @@ class ScorepSystemHelper:
     self.cur_overwrite_exp_dir = 'False'
     self.cur_base_name = ''
     self.cur_filter_file = ''
+    self._enable_unwinding = 'False'
 
   def get_data_elem(self, key: str):
     try:
@@ -153,6 +154,8 @@ class ScorepSystemHelper:
     self.set_memory_size('500M')
     self.set_overwrite_exp_dir()
     self.set_profiling_basename(flavor, build, item)
+    # TODO WHEN FIXED: FOR NOW LET'S ENABLE UNWINDING
+    # self.set_enable_unwinding(self)
 
   def set_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
@@ -178,6 +181,10 @@ class ScorepSystemHelper:
   def set_overwrite_exp_dir(self) -> None:
     self.cur_overwrite_exp_dir = 'True'
     u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', self.cur_overwrite_exp_dir)
+
+  def set_enable_unwinding(self) -> None:
+    self._enable_unwinding = 'True'
+    u.set_env('SCOREP_ENABLE_UNWINDING', self._enable_unwinding)
 
   def set_filter_file(self, file_name: str) -> None:
     log.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' + file_name)

@@ -1,8 +1,6 @@
 """
 File: DefaultFlags.py
-Author: JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module holds a selection of default flags.
 """
 import typing
@@ -43,8 +41,8 @@ class BackendDefaults:
 
     def get_default_kwargs(self) -> dict:
       kwargs = {
-          'CC': self.get_default_c_compiler_name(),
-          'CXX': self.get_default_cpp_compiler_name(),
+          'CC': '\"' + self.get_default_c_compiler_name() + '\"',
+          'CXX': '\"' + self.get_default_cpp_compiler_name() + '\"',
           'PIRANAME': self.get_default_exe_name(),
           'NUMPROCS': self._num_compile_procs
       }

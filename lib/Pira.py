@@ -1,8 +1,6 @@
 """
 File: Pira.py
-Author: JP Lehr, Sachin Manawadi
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module implementing the main workflow of PIRA.
 """
 
@@ -29,7 +27,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
   try:
     log.get_logger().log('run_setup phase.', level='debug')
     instrument = False
-    pira_iterations = 2  # XXX Should be cmdline arg!
+    pira_iterations = 3  # XXX Should be cmdline arg!
 
     # Build without any instrumentation
     vanilla_builder = B(target_config, instrument)
@@ -50,7 +48,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       # Only run the pgoe to get the functions name
       iteration_tracker = tt.TimeTracker()
 
-      #Analysis Phase
+      # Analysis Phase
       instr_file = analyzer.analyze(target_config, x)
       log.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(util.lines_in_file(instr_file)), level='perf')
       util.shell('stat ' + instr_file)
@@ -90,8 +88,11 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
 
     num_reps = cmdline_args.num_reps
     if num_reps < 5:
-      log.get_logger().log('At least 5 repetitions are needed for Extra-P modelling.', level='error')
-      raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
+      log.get_logger().log('At least 5 repetitions are recommended for Extra-P modelling.', level='warn')
+      if num_reps < 0:
+        log.get_logger().log('REMEMBER TO REMOVE IN PIRA::process_args_for_extrap', level='warn')
+        log.get_logger().log('At least 3 repetitions are required for Extra-P modelling.', level='error')
+        raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
 
   return use_extra_p, extrap_config
 
@@ -156,6 +157,9 @@ def main(arguments) -> None:
       runner = runner_factory.get_simple_local_runner()
       if use_extra_p:
         runner = runner_factory.get_scalability_runner(extrap_config)
+
+      if runner.has_sink():
+        analyzer.set_profile_sink(runner.get_sink())
 
       # A build/place is a top-level directory
       for build in configuration.get_builds():

@@ -1,8 +1,6 @@
 """
 File: TimeTracking.py
-Author: JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: This module allows to track timings of the various bits and pieces with convenience functions.
 """
 

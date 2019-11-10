@@ -1,8 +1,6 @@
 """
 File: Configuration.py
-Author: Sachin Manawadi, JP Lehr
-Email: jan.lehr@sc.tu-darmstadt.de
-Github: https://github.com/jplehr
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module that provides to main data structures.
 """
 
@@ -69,7 +67,7 @@ class PiraConfigurationII:
   def __init__(self):
     self._directories = {}
 
-  def add_item(self, name, item):
+  def add_item(self, name, item) -> None:
     try:
       self._directories[name]
     except:
@@ -88,6 +86,9 @@ class PiraConfigurationAdapter:
 
   def __init__(self, pc2):
     self._pcii = pc2
+
+  def get_adapted(self):
+    return self._pcii
 
   def get_builds(self):
     return self._pcii.get_directories()
@@ -170,6 +171,7 @@ class PiraConfiguration:
     self.global_submitter = {}
     self.stop_iteration = {}
     self.is_first_iteration = {}
+    self.base_mapper = None
 
   def set_build_directories(self, dirs) -> None:
     self.directories = dirs
