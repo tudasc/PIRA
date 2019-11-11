@@ -39,8 +39,26 @@ make -j $parallel_jobs
 
 # Score-P modified version
 echo "[PIRA] Configuring and building Score-P"
-# TODO We should check whether a cube / scorep install was found and if so, bail out, to know exactly which scorep/cube we get.
 cd $extsourcedir/scorep-mod
+
+# TODO We should check whether a cube / scorep install was found and if so, bail out, to know exactly which scorep/cube we get.
+aclocalversion=$( aclocal --version | grep 1.13 )
+if [ -z "$aclocalversion" ]; then
+	echo "aclocal available in wrong version. Guessing to autoreconf."
+	autoreconf -ivf
+	cd ./vendor/cubelib
+	autoreconf -ivf
+	cd ./build-frontend
+	autoreconf -ivf
+	cd ../../cubew
+	autoreconf -ivf
+	cd ./build-backend
+	autoreconf -ivf
+	cd ../build-frontend
+	autoreconf -ivf
+	cd $extsourcedir/scorep-mod
+fi
+
 rm -rf scorep-build
 mkdir scorep-build && cd scorep-build
 ../configure --prefix=$extinstalldir/scorep --disable-gcc-plugin "$add_flags"
@@ -64,7 +82,7 @@ if [ ! -f "extrap-3.0.tar.gz" ]; then
     wget http://apps.fz-juelich.de/scalasca/releases/extra-p/extrap-3.0.tar.gz
 fi
 tar xzf extrap-3.0.tar.gz
-cd extrap-3.0
+cd ./extrap-3.0
 rm -rf build
 mkdir build && cd build
 # On my Ubuntu machine, the locate command is available, on the CentOS machine it wasn't
@@ -73,7 +91,12 @@ command -v locate "/Python.h"
 if [ $? -eq 1 ]; then
 	pythonheader=$(dirname $(which python))/../include/python3.7m
 else
-  pythonheader=$(dirname $(locate "/Python.h" | grep "python3."))
+	pythonlocation=$(locate "/Python.h" | grep "python3.")
+	if [ -z $pythonlocation ]; then
+	  pythonheader=$(dirname $(which python))/../include/python3.7m
+	else
+    pythonheader=$(dirname $pythonlocation)
+	fi
 fi
 echo "[PIRA] Found Python.h at " $pythonheader
 ../configure --prefix=$extinstalldir/extrap CPPFLAGS=-I$pythonheader

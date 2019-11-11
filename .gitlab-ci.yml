@@ -1,26 +1,26 @@
-# This file is a template, and might need editing before it works on your project.
-# Official language image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/python/tags/
-image: python:3.6
+stages:
+  - download
+  - build
+  - test
 
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+dl-deps:
+  stage: download
+  script: 
+    - git submodule init;
+    - git submodule update extern/src/cgcollector;
+    - git submodule update extern/src/llvm-instrumenter;
+    - git submodule update extern/src/scorep-mod;
 
-# Pip's cache doesn't store the python packages
-# https://pip.pypa.io/en/stable/reference/pip_install/#caching
-#
-# If you want to also cache the installed packages, you have to install
-# them in a virtualenv and cache it as well.
-cache:
-  paths:
-    - .cache/pip
-    - venv/
-
-before_script:
-  - python -V               # Print out python version for debugging
-
-test:
+build-deps:
+  stage: build
   script:
-  - ./run_tests.sh
+    - git submodule init;
+    - git submodule update extern/src/cgcollector;
+    - git submodule update extern/src/llvm-instrumenter;
+    - git submodule update extern/src/scorep-mod;
+    - ls ./extern/src/llvm-instrumenter
+    - module use /opt/modules/modulefiles
+    - module load clang/9
+    - echo $PATH
+    - cd resources
+    - ./build_submodules.sh 6 --without-mpi
