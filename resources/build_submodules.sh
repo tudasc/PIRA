@@ -110,7 +110,8 @@ if [ ! -d "$extsourcedir/cxxopts" ]; then
     git clone https://github.com/jarro2783/cxxopts cxxopts
 fi
 cd cxxopts
-echo "[PIRA] JP TODO: Select a specific release branch."
+echo "[PIRA] Select release branch 2_1 for cxxopts."
+git checkout 2_1
 
 # JSON library
 echo "[PIRA] Getting json library"
