@@ -7,9 +7,15 @@ Description: Module that provides to main data structures.
 import sys
 sys.path.append('..')
 import lib.Logging as log
+import lib.Exception as PE
+
 
 import typing
 
+
+class PiraConfigurationErrorException(PE.PiraException):
+  def __init__(self, m):
+    super().__init__(m)
 
 class PiraItem:
 
@@ -81,6 +87,9 @@ class PiraConfigurationII:
   def get_items(self, directory):
     return self._directories[directory]
 
+  def is_valid(self) -> bool:
+    return True
+
 
 class PiraConfigurationAdapter:
 
@@ -146,6 +155,9 @@ class PiraConfigurationAdapter:
     io = self.get_item_w_name(build, item)
     return io.get_run_options().as_list()
 
+  def is_valid(self) -> bool:
+    return True
+
 
 class PiraConfiguration:
   """
@@ -172,6 +184,9 @@ class PiraConfiguration:
     self.stop_iteration = {}
     self.is_first_iteration = {}
     self.base_mapper = None
+
+  def is_valid(self) -> bool:
+    return True
 
   def set_build_directories(self, dirs) -> None:
     self.directories = dirs
@@ -227,10 +242,10 @@ class PiraConfiguration:
     self.flavors[dir][item].update({'flavors': flavors})
 
   def get_builds(self) -> typing.List[str]:
-    return self.builds.keys()
+    return [ x for x in self.builds.keys() ]
 
   def get_items(self, b: str) -> typing.List[str]:
-    return self.items[b].keys()
+    return [ x for x in self.items[b].keys() ]
 
   def get_flavors(self, b: str, it: str) -> typing.List[str]:
     return self.flavors[b][it]['flavors']

@@ -1,0 +1,33 @@
+{
+  "builds": {
+    "%home": {
+      "items": {
+      "item01": {
+        "analyzer": "/path/to/analysis/tool",
+        "cubes": "/where/to/put/cube/files/item01",
+        "flavors": [
+          "test"
+        ],
+        "functors": "/directory/for/functors/item01",
+        "mode": "CT",
+        "argmap": {
+          "mapper": "Linear",
+          "param1": [
+            "val1",
+            "val2",
+            "val3"
+          ],
+          "param2": [
+            "yval1",
+            "yval2",
+            "yval3"
+          ]
+        }
+      }
+    }
+    }
+  },
+  "directories": {
+    "home": "/this/is/my/home"
+  }
+}
