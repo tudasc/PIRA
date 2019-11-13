@@ -56,8 +56,10 @@ run-unit-tests:
     - pira, cluster
   before_script: *lb-setup
   script:
+    - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
+    - echo $PATH
     - echo 'Running unit tests'
-    - ./extern/install/scorep/bin/scorep --version
+    - ./run_tests.sh
   dependencies:
     - build-deps
 
