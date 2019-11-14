@@ -136,7 +136,7 @@ class TestCmdlineCatesianProductArgumentMapper(unittest.TestCase):
     for (exp, mapped) in zip(expected, mapper):
       self.assertEqual(exp, mapped)
 
-  @unittest.expectFail()
+  @unittest.expectedFailure
   def test_arg_mapping_3_params(self):
     mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_3_params_cartesian)
 
