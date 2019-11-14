@@ -1,0 +1,65 @@
+{
+  "description":{
+    "directories":[
+      "/home/something/top_dir"
+    ],
+    "builds": {
+        "/home/something/top_dir": {
+          "prefix": "",
+          "items": [
+            "item01",
+						"item02"
+          ],
+          "flavors": {
+            "item01": [
+              "local-flav1",
+              "vanilla"
+            ],
+						"item02": [
+							"local-flav1"
+						],
+            "instrument-analysis": {
+              "item01": [
+                "/ins_anal/directory/for/functors",
+                "/where/to/put/cube/files",
+                "/path/to/analysis/tool"
+                ],
+              "item02":[
+                "/item02/path/to/functors",
+                "/shared/work/cubes",
+                "/directory/where_to/find/analyzer"
+              ]
+            },
+            "builders": {
+              "item01": "/builder/item01/directory",
+              "item02": "/another/builder/directory/for/item02"
+            },
+            "run": {
+              "item01": {
+                "args": [
+                ],
+                "runner": "/path/to/runner_functors/item01",
+                "submitter":"/another/path/to/item01/submitter",
+                "batch_script":"/some/madeup/script.sh"
+              },
+              "item02":{
+                "args":[
+									"-i 200",
+									"-g 100"
+                ],
+                "runner":"/item02/runner/functors.dir",
+                "submitter":"",
+                "batch_script":""
+              }
+            }
+          }
+        }
+      },
+      "glob-flavors":[
+      ],
+      "glob-submitter":{
+        "flav1":"/path/to/py/functor",
+        "flav2":"path/to/py/functor"
+      }
+  }
+}

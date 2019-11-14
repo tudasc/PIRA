@@ -100,7 +100,7 @@ class SimplifiedConfigurationLoader:
 
   def load_conf(self, config_file: str) -> PiraConfiguration:
     if not util.check_file(config_file):
-      raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file.')
+      raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file location "' + config_file + '" [no such file].')
 
     try:
       file_content = util.read_file(config_file)
