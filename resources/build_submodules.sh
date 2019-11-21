@@ -121,6 +121,8 @@ if [ ! -d "$extsourcedir/json" ]; then
 fi
 
 # CGCollector / merge tool
-echo "[PIRA] Not yet ready to be built, thus skipping CGCollector"
+echo "[PIRA] Not yet ready to build CGCollector. Skipping."
 
+# PGIS
+echo "[PIRA] Not yet ready to build PGIS. Skipping."
 
