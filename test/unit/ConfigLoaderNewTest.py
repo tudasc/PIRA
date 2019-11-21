@@ -56,18 +56,18 @@ class TestConfigLoader(unittest.TestCase):
     cls.loader = ConfigurationLoader()
 
   def test_load_conf_not_none(self):
-    cfg = self.loader.load_conf('../examples/item_based.json')
+    cfg = self.loader.load_conf('./input/unit_input_001.json')
     self.assertIsNotNone(cfg)
 
   def test_conf_builds(self):
-    cfg = self.loader.load_conf('../examples/item_based.json')
+    cfg = self.loader.load_conf('./input/unit_input_001.json')
     bs = cfg.get_builds()
     self.assertIsNotNone(bs)
     for b in bs:
       self.assertIn(b, dep_aw_builds)
 
   def test_conf_items(self):
-    cfg = self.loader.load_conf('../examples/item_based.json')
+    cfg = self.loader.load_conf('./input/unit_input_001.json')
     for b in cfg.get_builds():
       itms = cfg.get_items(b)
       self.assertIsNotNone(itms)
@@ -75,7 +75,7 @@ class TestConfigLoader(unittest.TestCase):
         self.assertIn(i, dep_aw_items)
 
   def test_config_item01(self):
-    cfg = self.loader.load_conf('../examples/item_based.json')
+    cfg = self.loader.load_conf('./input/unit_input_001.json')
     # As the dicts are unordered, we set the keys manually!
     b = '/home/something/top_dir'
     i_01 = 'item01'
@@ -106,7 +106,7 @@ class TestConfigLoader(unittest.TestCase):
     self.assertListEqual(args, dep_aw_run[expected_item]['args'])
 
   def test_config_item02(self):
-    cfg = self.loader.load_conf('../examples/item_based.json')
+    cfg = self.loader.load_conf('./input/unit_input_001.json')
     # As the dicts are unordered, we set the keys manually!
     b = '/home/something/top_dir'
     i_02 = 'item02'
@@ -137,13 +137,15 @@ class TestConfigLoader(unittest.TestCase):
     self.assertListEqual(args, dep_aw_run[expected_item]['args'])
     self.assertFalse(cfg.is_submitter(b, i_02))
 
+  @unittest.skip('Global flavors are currently not implemented')
   def test_global_flavors(self):
     # TODO implement tests for retrieving global flavors
-    pass
+    self.assertFalse('Need to check global flavors')
 
+  @unittest.skip('Global flavors are currently not implemented')
   def test_generated_items(self):
     # TODO build_directory, cube_directory, analyzer_dir, ..?
-    pass
+    self.assertFalse('Need to check global flavors')
 
 
 n_functor_path = {'item01': '/directory/for/functors/item01', 'item02': '/directory/for/functors/item02'}
@@ -159,18 +161,18 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     self.loader = SimplifiedConfigurationLoader()
 
   def test_load_conf_not_none(self):
-    cfg = self.loader.load_conf('../examples/item_based_new.json')
+    cfg = self.loader.load_conf('./input/unit_input_002.json')
     self.assertIsNotNone(cfg)
 
   def test_conf_builds(self):
-    cfg = self.loader.load_conf('../examples/item_based_new.json')
+    cfg = self.loader.load_conf('./input/unit_input_002.json')
     bs = cfg.get_builds()
     self.assertIsNotNone(bs)
     for b in bs:
       self.assertIn(b, ['/this/is/my/home'])
 
   def test_conf_items(self):
-    cfg = self.loader.load_conf('../examples/item_based_new.json')
+    cfg = self.loader.load_conf('./input/unit_input_002.json')
     for b in cfg.get_builds():
       itms = cfg.get_items(b)
       self.assertIsNotNone(itms)
@@ -178,7 +180,7 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
         self.assertIn(i, dep_aw_items)
 
   def test_config_item01(self):
-    cfg = self.loader.load_conf('../examples/item_based_new.json')
+    cfg = self.loader.load_conf('./input/unit_input_002.json')
     # As the dicts are unordered, we set the keys manually!
     b = '/this/is/my/home'
     i_01 = 'item01'
@@ -205,7 +207,7 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
                                 ('param2', 'val4', 'param1', 'val1'), ('param2', 'val4', 'param1', 'val2')])
 
   def test_config_item02(self):
-    cfg = self.loader.load_conf('../examples/item_based_new.json')
+    cfg = self.loader.load_conf('./input/unit_input_002.json')
     # As the dicts are unordered, we set the keys manually!
     b = '/this/is/my/home'
     i_02 = 'item02'
@@ -230,13 +232,15 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
 
     args = cfg.get_args(b, i_02)
     # FIXME correct asserted args
-    self.assertListEqual(args, [('param1', 'val1'), ('param1', 'val2'), ('param1', 'val3')])
+    self.assertListEqual([tuple(x) for x in args], [('param1', 'val1'), ('param1', 'val2'), ('param1', 'val3')])
 
   def test_config_linear_mapper(self):
-    cfg = self.loader.load_conf('../examples/small_item_v2.json')
+    cfg = self.loader.load_conf('./input/unit_input_003.json')
     # As the dicts are unordered, we set the keys manually!
     b = '/this/is/my/home'
     i_01 = 'item01'
+
+    self.assertIsNotNone(cfg)
 
     builder = cfg.get_builder_path(b, i_01)
     self.assertIsNotNone(builder)
@@ -258,8 +262,23 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
 
     args = cfg.get_args(b, i_01)
     # FIXME correct asserted args
-    self.assertListEqual(args, [('param1', 'val1', 'param2', 'yval1'), ('param1', 'val2', 'param2', 'yval2'),
-                                ('param1', 'val3', 'param2', 'yval3')])
+    expected = [ ('param1', 'val1', [], 'param2', 'yval1', []),
+                  ('param1', 'val2', [], 'param2', 'yval2', []),
+                  ('param1', 'val3', [], 'param2', 'yval3', []) ]
+    #self.assertListEqual(args, [('param1', 'val1', 'param2', 'yval1'), ('param1', 'val2', 'param2', 'yval2'),
+    #                            ('param1', 'val3', 'param2', 'yval3')])
+
+    for (exp, arg) in zip(expected, args):
+      self.assertEqual(exp, tuple(arg))
+
+  @unittest.skip('This test needs to run, when the configuration checks are correctly implemented.')
+  def test_basic_config_001(self):
+    cfg = self.loader.load_conf('../inputs/configs/basic_config_001.json')
+
+    self.assertIsNotNone(cfg)
+    self.assertFalse(cfg.is_valid())
+    # TODO Figure out how we can check that we generate the correct errors
+
 
 
 if __name__ == '__main__':

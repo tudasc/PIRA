@@ -61,7 +61,7 @@ class TestScorepHelper(unittest.TestCase):
   """
   def setUp(self):
     self.cfg_loader = cln.ConfigurationLoader()
-    self.cfg = self.cfg_loader.load_conf('input/2_items_local_only.json')
+    self.cfg = self.cfg_loader.load_conf('input/unit_input_004.json')
     self.target_cfg = TargetConfiguration('/this/is/top_dir', 'item01', 'item01-flavor01', '')
     self.instr_cfg = InstrumentConfig(True, 0)
 

@@ -133,14 +133,17 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
       values = []
       names = []
       files = []
+      #for f in self._files:
+      #  print(f)
       for counter in range(0, self._num_elems):
         for k in keys:
           val = self._argmap[k][counter]
           names.append(k)
           values.append(val)
-          files.append(self._files[counter])
+          if self._files is not None:
+            files.append(self._files[counter])
 
-        print('CmdlineLinearArgumentMapper::__iter__: names ' + str(names) + ' | values ' + str(values) + ' | files ' + str(files))
+        #print('CmdlineLinearArgumentMapper::__iter__: names ' + str(names) + ' | values ' + str(values) + ' | files ' + str(files))
         yield PiraListArgument(names, values, files)
         names = []
         values = []

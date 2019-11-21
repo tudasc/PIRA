@@ -6,7 +6,7 @@ Description: Module to load and manage the user-supplied functors.
 
 import typing
 import lib.Utility as u
-from lib.Configuration import PiraConfiguration
+from lib.Configuration import PiraConfiguration, PiraConfigurationErrorException
 import lib.Logging as log
 from lib.Exception import PiraException
 
@@ -147,6 +147,8 @@ class FunctorManager:
       FunctorManager.instance = FunctorManager.__FunctorManagerImpl(cfg)
     else:
       if cfg is not None:
+        if not cfg.is_valid():
+          raise PiraConfigurationErrorException('Invalid configuration passed to FunctorManager')
         FunctorManager.instance.cfg = cfg
         FunctorManager.instance.functor_cache.clear()
 
@@ -157,3 +159,6 @@ class FunctorManager:
 
   def __getattr__(self, name):
     return getattr(self.instance, name)
+
+  def reset(self):
+    FunctorManager.instance = None
