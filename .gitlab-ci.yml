@@ -14,6 +14,15 @@ stages:
   - module use /home/groups/sc/modules/modulefiles
   - module load gcc/8 git clang/9.0 cmake python/3
 
+# Update all submodules in git
+.get-submodules: &get-submodules
+  - git submodule init;
+  - git submodule update extern/src/cgcollector;
+  - git submodule update extern/src/llvm-instrumenter;
+  - git submodule update extern/src/scorep-mod;
+  - git submodule update extern/src/PGIS;
+
+
 # Ohnly test that the submodules configured in here are accessible
 # Idk how much sense that makes for now
 # TODO: Figure out how to use gitlab's cache mechanism to keep the repositories for the next stage.
@@ -23,10 +32,7 @@ dl-deps:
     - pira, cluster
   before_script: *lb-setup
   script:
-    - git submodule init;
-    - git submodule update extern/src/cgcollector;
-    - git submodule update extern/src/llvm-instrumenter;
-    - git submodule update extern/src/scorep-mod;
+    - *get-submodules
 
 # Download repositories again
 # Run the automated build script to build all PIRA related software
@@ -37,11 +43,12 @@ build-deps:
   tags:
     - pira, cluster
   before_script: *lb-setup
-  script:
+  script: 
     - git submodule init;
     - git submodule update extern/src/cgcollector;
     - git submodule update extern/src/llvm-instrumenter;
     - git submodule update extern/src/scorep-mod;
+    - git submodule update extern/src/PGIS;
     - ls ./extern/src/llvm-instrumenter
     - cd resources
     - ./build_submodules.sh 12 --without-mpi

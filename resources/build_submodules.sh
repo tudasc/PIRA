@@ -34,8 +34,18 @@ echo "[PIRA] Configuring and building LLVM-instrumentation"
 cd $extsourcedir/llvm-instrumenter
 rm -rf build
 mkdir build && cd build
+
 cmake ..
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Configuring LLVM-Instrumenter failed."
+	exit 1
+fi
+
 make -j $parallel_jobs
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Building LLVM-Instrumenter failed."
+	exit 1
+fi
 
 # Score-P modified version
 echo "[PIRA] Configuring and building Score-P"
@@ -62,7 +72,15 @@ fi
 rm -rf scorep-build
 mkdir scorep-build && cd scorep-build
 ../configure --prefix=$extinstalldir/scorep --disable-gcc-plugin "$add_flags"
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Configuring Score-P failed."
+	exit 1
+fi
 make -j $parallel_jobs
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Building Score-P failed."
+	exit 1
+fi
 make install
 echo "[PIRA] Adding PIRA Score-P to PATH for subsequent tool chain components."
 export PATH=$extinstalldir/scorep/bin:$PATH
@@ -72,6 +90,10 @@ echo "[PIRA] Building Extra-P (for PIRA II modeling)"
 echo "[PIRA] Getting prerequisites ..."
 pip3 install --user PyQt5
 pip3 install --user matplotlib
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Installting Extra-P dependencies failed."
+	exit 1
+fi
 
 mkdir -p $extsourcedir/extrap
 cd $extsourcedir/extrap
@@ -100,7 +122,15 @@ else
 fi
 echo "[PIRA] Found Python.h at " $pythonheader
 ../configure --prefix=$extinstalldir/extrap CPPFLAGS=-I$pythonheader
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Configuring Extra-P failed."
+	exit 1
+fi
 make -j $parallel_jobs
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Building Extra-P failed."
+	exit 1
+fi
 make install
 
 # CXX Opts
@@ -120,7 +150,36 @@ if [ ! -d "$extsourcedir/json" ]; then
     git clone https://github.com/nlohmann/json json
 fi
 
+echo "[PIRA] Building PGIS analysis engine"
+cd $extsourcedir/PGIS
+rm -rf build
+mkdir build && cd build
+cmake -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis ..
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Configuring PGIS failed."
+	exit 1
+fi
+
+make -j $parallel_jobs
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Building PGIS failed."
+	exit 1
+fi
+
 # CGCollector / merge tool
 echo "[PIRA] Not yet ready to be built, thus skipping CGCollector"
+cd $extsourcedir/cgcollector
 
+## TODO Remove when merged
+git checkout devel
+
+rm -rf build
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/cgcollector -DJSON_INCLUDE_PATH=$extsourcedir/json/single_include ..
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Building CGCollector failed."
+	exit 1
+fi
+
+make -j $parallel_jobs
 
