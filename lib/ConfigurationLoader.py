@@ -98,12 +98,12 @@ class SimplifiedConfigurationLoader:
     self._config = PiraConfigurationII()
     self.base_mapper = None
 
-  def load_conf(self, confilg_file: str) -> PiraConfiguration:
-    if not util.check_file(confilg_file):
-      raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file.')
+  def load_conf(self, config_file: str) -> PiraConfiguration:
+    if not util.check_file(config_file):
+      raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file location "' + config_file + '" [no such file].')
 
     try:
-      file_content = util.read_file(confilg_file)
+      file_content = util.read_file(config_file)
       json_tree = json.loads(file_content)
       self.parse_from_json(json_tree)
 
