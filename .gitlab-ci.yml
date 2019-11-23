@@ -31,8 +31,7 @@ dl-deps:
   tags:
     - pira, cluster
   before_script: *lb-setup
-  script:
-    - *get-submodules
+  script: *get-submodules
 
 # Download repositories again
 # Run the automated build script to build all PIRA related software
