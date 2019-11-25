@@ -1,0 +1,22 @@
+{
+  "builds":{
+		"%base": {
+			"items": {
+				"i01": {
+					"analyzer": "/does/exist",
+					"cubes": "/does/exist",
+					"flavors": [ "one" ],
+					"functors": "../functors",
+					"mode": "ct",
+					"argmap": {
+						"mapper": "Garbage",
+						"p1": [ "1" ]
+					}
+				}
+			}
+		}
+	},
+	"directories": {
+		"base": "/does/not/exist"
+	}
+}

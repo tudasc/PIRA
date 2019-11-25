@@ -1,0 +1,83 @@
+# File: .gitlab-ci.yml
+# License: Part of the PIRA proect. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+# Description: File to configure our Gitlab CI
+
+# Eventually we want to have: download-deps, build-deps, run-unit-tests, run-integration-tests
+stages:
+  - download
+  - build
+  - test
+
+# YAML anchor for setting up environment on LB cluster
+.lb-setup: &lb-setup
+  - ssh-add ~/.ssh/gitlab_rsa
+  - module use /home/groups/sc/modules/modulefiles
+  - module load gcc/8 git clang/9.0 cmake python/3
+
+# Update all submodules in git
+.get-submodules: &get-submodules
+  - git submodule init;
+  - git submodule update extern/src/cgcollector;
+  - git submodule update extern/src/llvm-instrumenter;
+  - git submodule update extern/src/scorep-mod;
+  - git submodule update extern/src/PGIS;
+
+
+# Ohnly test that the submodules configured in here are accessible
+# Idk how much sense that makes for now
+# TODO: Figure out how to use gitlab's cache mechanism to keep the repositories for the next stage.
+dl-deps:
+  stage: download
+  tags:
+    - pira, cluster
+  before_script: *lb-setup
+  script: *get-submodules
+
+# Download repositories again
+# Run the automated build script to build all PIRA related software
+# This job builds: LLVM-instrumenter, Score-P, CGCollector, Extra-P
+# TODO: Use Gitlab's cache to carry the install folders of the tools over to the next stages.
+build-deps:
+  stage: build
+  tags:
+    - pira, cluster
+  before_script: *lb-setup
+  script: 
+    - git submodule init;
+    - git submodule update extern/src/cgcollector;
+    - git submodule update extern/src/llvm-instrumenter;
+    - git submodule update extern/src/scorep-mod;
+    - git submodule update extern/src/PGIS;
+    - ls ./extern/src/llvm-instrumenter
+    - cd resources
+    - ./build_submodules.sh 12 --without-mpi
+  artifacts:
+    paths:
+      - ./extern/install
+
+# Runs the unit tests (that we currently have only very few of...
+run-unit-tests:
+  stage: test
+  tags:
+    - pira, cluster
+  before_script: *lb-setup
+  script:
+    - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
+    - echo $PATH
+    - echo 'Running unit tests'
+    - ./run_tests.sh
+  dependencies:
+    - build-deps
+
+# Runs the larger / integration tests (of which we currently have none).
+run-integration-tests:
+  stage: test
+  tags:
+    - pira, cluster
+  before_script: *lb-setup
+  script:
+    - echo 'Running integration tests'
+    - ./extern/install/scorep/bin/scorep --version
+  dependencies:
+    - build-deps
+
