@@ -8,6 +8,7 @@ import sys
 sys.path.append('..')
 import lib.Logging as log
 import lib.Exception as PE
+import lib.Utility as u
 
 
 import typing
@@ -21,6 +22,7 @@ class PiraItem:
 
   def __init__(self, name):
     self._name = name
+    self._base_path = None
     self._analyzer_dir = None
     self._cubes_dir = None
     self._flavors = None
@@ -32,22 +34,34 @@ class PiraItem:
     return self._name
 
   def get_analyzer_dir(self):
-    return self._analyzer_dir
+    if u.is_absolute_path(self._analyzer_dir):
+      return self._analyzer_dir
+
+    return self._base_path + '/' + self._analyzer_dir
 
   def get_cubes_dir(self):
-    return self._cubes_dir
+    if u.is_absolute_path(self._cubes_dir):
+      return self._cubes_dir
+
+    return self._base_path + '/' + self._cubes_dir
 
   def get_flavors(self):
     return self._flavors
 
   def get_functor_base_path(self):
-    return self._functor_base_path
+    if u.is_absolute_path(self._functor_base_path):
+      return self._functor_base_path
+
+    return self._base_path + '/' + self._functor_base_path
 
   def get_mode(self):
     return self._mode
 
   def get_run_options(self):
     return self._run_options
+
+  def set_base_path(self, path : str) -> None:
+    self._base_path = path
 
   def set_analyzer_dir(self, directory) -> None:
     self._analyzer_dir = directory
@@ -72,6 +86,7 @@ class PiraConfigurationII:
 
   def __init__(self):
     self._directories = {}
+    self._abs_base_path = None
 
   def add_item(self, name, item) -> None:
     try:
@@ -79,13 +94,29 @@ class PiraConfigurationII:
     except:
       self._directories[name] = []
 
+    item.set_base_path(self._abs_base_path)
+
     self._directories[name].append(item)
 
   def get_directories(self):
     return self._directories.keys()
 
+  def get_place(self, build):
+    place = build
+    for k in self._directories.keys():
+      if build == k:
+        if not u.is_absolute_path(k):
+          place = self._abs_base_path + '/' + str(k)
+    return place
+
   def get_items(self, directory):
     return self._directories[directory]
+
+  def set_absolute_base_path(self, path):
+    self._abs_base_path = path
+
+  def get_absolute_base_path(self):
+    return self._abs_base_path
 
   def is_valid(self) -> bool:
     return True
@@ -101,6 +132,9 @@ class PiraConfigurationAdapter:
 
   def get_builds(self):
     return self._pcii.get_directories()
+
+  def get_place(self, build):
+    return self._pcii.get_place(build)
 
   def get_items(self, build):
     return [item.get_name() for item in self._pcii.get_items(build)]
@@ -260,6 +294,7 @@ class PiraConfiguration:
     return self.items[b][i]['builders']
 
   def get_builder_path(self, b: str, i: str) -> str:
+    log.get_logger().log('Old: get_builder_path: ' + self.items[b][i]['builders'], level='debug')
     return self.items[b][i]['builders']
 
   def get_analyzer_path(self, b: str, i: str) -> str:
@@ -321,7 +356,7 @@ class TargetConfiguration:
   """  The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. 
   Using TargetConfiguration all steps of building and executing are possible.  """
 
-  def __init__(self, place: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True):
+  def __init__(self, place: str, build: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True):
     """  Initializes the TargetConfiguration with its necessary parameters.
 
     :place: str: TODO
@@ -331,6 +366,7 @@ class TargetConfiguration:
 
     """
     self._place: str = place
+    self._build: str = build
     self._target: str = target
     self._flavor: str = flavor
     self._db_item_id: str = db_item_id
@@ -338,14 +374,23 @@ class TargetConfiguration:
     self._instr_file = ''
     self._args_for_invocation = None
 
-  def get_build(self) -> str:
-    """Return the place / build stored in this TargetConfiguration
+  def get_place(self) -> str:
+    """Return the place stored in this TargetConfiguration
 
     :lf: TODO
     :returns: The top-level items, i.e., "builds"
 
     """
     return self._place
+
+  def get_build(self) -> str:
+    """Return the build stored in this TargetConfiguration
+
+    :lf: TODO
+    :returns: The top-level items, i.e., "builds"
+
+    """
+    return self._build
 
   def get_target(self) -> str:
     """Return the target / item stored in this TargetConfiguration

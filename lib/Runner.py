@@ -60,7 +60,7 @@ class LocalBaseRunner(Runner):
       runtime = 1.0
 
     try:
-      util.change_cwd(target_config.get_build())
+      util.change_cwd(target_config.get_place())
 
       invoke_arguments = target_config.get_args_for_invocation()
       kwargs['args'] = invoke_arguments

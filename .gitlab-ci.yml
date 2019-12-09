@@ -4,12 +4,19 @@
 
 # Eventually we want to have: download-deps, build-deps, run-unit-tests, run-integration-tests
 stages:
-  - download
-  - build
-  - test
+  - download-test
+  - pira-unit-test
+  - dependence-build-test
+  - integration-test
+
+default:
+  after_script:
+    - rm -rf $(dirname $(echo $SSH_AUTH_SOCK))
+    - ssh-agent -k
 
 # YAML anchor for setting up environment on LB cluster
 .lb-setup: &lb-setup
+  - eval $(ssh-agent -s)
   - ssh-add ~/.ssh/gitlab_rsa
   - module use /home/groups/sc/modules/modulefiles
   - module load gcc/8 git clang/9.0 cmake python/3
@@ -19,15 +26,13 @@ stages:
   - git submodule init;
   - git submodule update extern/src/cgcollector;
   - git submodule update extern/src/llvm-instrumenter;
-  - git submodule update extern/src/scorep-mod;
+  - git submodule update --force extern/src/scorep-mod;
   - git submodule update extern/src/PGIS;
 
 
-# Ohnly test that the submodules configured in here are accessible
-# Idk how much sense that makes for now
-# TODO: Figure out how to use gitlab's cache mechanism to keep the repositories for the next stage.
-dl-deps:
-  stage: download
+# Only test that the submodules configured in here are accessible, so we do not block the Pipeline unneccessary long
+download:
+  stage: download-test
   tags:
     - pira, cluster
   before_script: *lb-setup
@@ -36,9 +41,10 @@ dl-deps:
 # Download repositories again
 # Run the automated build script to build all PIRA related software
 # This job builds: LLVM-instrumenter, Score-P, CGCollector, Extra-P
-# TODO: Use Gitlab's cache to carry the install folders of the tools over to the next stages.
-build-deps:
-  stage: build
+# FIXME: Prior used Gitlab CI's artifacts to carry results to next stage. However, files are becoming too large
+# TODO: Find why the .get-submodules anchor cannot be incorporated into either the before_script or the script itself
+build-dependencies:
+  stage: dependence-build-test
   tags:
     - pira, cluster
   before_script: *lb-setup
@@ -46,18 +52,15 @@ build-deps:
     - git submodule init;
     - git submodule update extern/src/cgcollector;
     - git submodule update extern/src/llvm-instrumenter;
-    - git submodule update extern/src/scorep-mod;
+    - git submodule update --force extern/src/scorep-mod;
     - git submodule update extern/src/PGIS;
     - ls ./extern/src/llvm-instrumenter
     - cd resources
-    - ./build_submodules.sh 12 --without-mpi
-  artifacts:
-    paths:
-      - ./extern/install
+    - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l) --without-mpi
 
 # Runs the unit tests (that we currently have only very few of...
 run-unit-tests:
-  stage: test
+  stage: pira-unit-test
   tags:
     - pira, cluster
   before_script: *lb-setup
@@ -66,18 +69,24 @@ run-unit-tests:
     - echo $PATH
     - echo 'Running unit tests'
     - ./run_tests.sh
-  dependencies:
-    - build-deps
 
 # Runs the larger / integration tests (of which we currently have none).
 run-integration-tests:
-  stage: test
+  stage: integration-test
   tags:
     - pira, cluster
   before_script: *lb-setup
   script:
+    - git submodule init;
+    - git submodule update extern/src/cgcollector;
+    - git submodule update extern/src/llvm-instrumenter;
+    - git submodule update extern/src/scorep-mod;
+    - git submodule update extern/src/PGIS;
+    - ls ./extern/src/llvm-instrumenter
+    - cd resources
+    - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l) --without-mpi
+    - cd ..
     - echo 'Running integration tests'
-    - ./extern/install/scorep/bin/scorep --version
-  dependencies:
-    - build-deps
+    - cd test/integration/GameOfLife
+    - ./run.sh
 

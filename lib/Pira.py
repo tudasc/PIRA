@@ -21,6 +21,7 @@ import lib.ProfileSink as sinks
 from lib.RunnerFactory import PiraRunnerFactory
 
 import typing
+import sys
 
 
 def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfiguration) -> None:
@@ -179,7 +180,8 @@ def main(arguments) -> None:
               # prepare database, and get a unique handle for current item.
               db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
               # Create configuration object for the item currently processed.
-              t_config = TargetConfiguration(build, item, flavor, db_item_id, invoc_cfg.is_compile_time_filtering())
+              place = configuration.get_place(build)
+              t_config = TargetConfiguration(place, build, item, flavor, db_item_id, invoc_cfg.is_compile_time_filtering())
 
               # Execute using a local runner, given the generated target description
               execute_with_config(runner, analyzer, t_config)
@@ -196,3 +198,4 @@ def main(arguments) -> None:
     util.change_cwd(home_dir)
     log.get_logger().log('Runner.run caught exception. Message: ' + str(rt_err), level='error')
     log.get_logger().dump_tape()
+    sys.exit(-1)
