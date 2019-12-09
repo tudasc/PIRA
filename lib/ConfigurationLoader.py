@@ -102,6 +102,10 @@ class SimplifiedConfigurationLoader:
     if not util.check_file(config_file):
       raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file location "' + config_file + '" [no such file].')
 
+    config_abs = util.get_absolute_path(config_file)
+    config_abs_path = config_abs[:config_abs.rfind('/')]
+    self._config.set_absolute_base_path(config_abs_path)
+
     try:
       file_content = util.read_file(config_file)
       json_tree = json.loads(file_content)

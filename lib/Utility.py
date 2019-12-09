@@ -120,7 +120,23 @@ def set_env(env_var: str, val) -> None:
 
 
 def get_absolute_path(path: str) -> str:
+  if path[0] == '/':
+    return path
+
   return os.path.abspath(path)
+
+
+def is_absolute_path(path: str) -> bool:
+  if not check_provided_directory(path):
+    """
+    This is a hack for our tests, as we fake file paths in the tests.
+    If the path is invalid from a system's point of view, but looks like an absolute directory
+    we keep going, and return that it is an absolute path.
+    """
+    if path[0] == '/':
+      return True
+
+  return os.path.isabs(path)
 
 
 def generate_random_string() -> str:

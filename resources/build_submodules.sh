@@ -51,6 +51,8 @@ fi
 echo "[PIRA] Configuring and building Score-P"
 cd $extsourcedir/scorep-mod
 
+bash set_instrumenter_directory.sh $extsourcedir/llvm-instrumenter/build/lib
+
 # TODO We should check whether a cube / scorep install was found and if so, bail out, to know exactly which scorep/cube we get.
 aclocalversion=$( aclocal --version | grep 1.13 )
 if [ -z "$aclocalversion" ]; then
@@ -152,6 +154,9 @@ fi
 
 echo "[PIRA] Building PGIS analysis engine"
 cd $extsourcedir/PGIS
+
+git checkout devel
+
 rm -rf build
 mkdir build && cd build
 cmake -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis ..
@@ -165,6 +170,7 @@ if [ $? -ne 0 ]; then
 	echo "[PIRA] Building PGIS failed."
 	exit 1
 fi
+make install
 
 # CGCollector / merge tool
 echo "[PIRA] Not yet ready to be built, thus skipping CGCollector"
@@ -177,9 +183,15 @@ rm -rf build
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/cgcollector -DJSON_INCLUDE_PATH=$extsourcedir/json/single_include ..
 if [ $? -ne 0 ]; then
-	echo "[PIRA] Building CGCollector failed."
+	echo "[PIRA] Configuring CGCollector failed."
 	exit 1
 fi
 
 make -j $parallel_jobs
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Building CGCollector failed."
+	exit 1
+fi
+make install
 
+cd $scriptdir

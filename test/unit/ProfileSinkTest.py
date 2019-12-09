@@ -23,7 +23,7 @@ class TestProfileSink(unittest.TestCase):
     self._flavor = 'fl'
     self._dbi = 'a'
     self._nreps = 1
-    self._tc = c.TargetConfiguration(self._dir, self._target, self._flavor, self._dbi)
+    self._tc = c.TargetConfiguration(self._dir, self._dir, self._target, self._flavor, self._dbi)
     self._ic_true = c.InstrumentConfig(True, self._nreps)
     self._ic_false = c.InstrumentConfig()
     self._params = ['par1']

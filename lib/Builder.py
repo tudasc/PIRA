@@ -28,7 +28,7 @@ class Builder:
 
   def __init__(self, target_config: TargetConfiguration, instrument: bool, instr_file: str = None) -> None:
     self.target_config = target_config
-    self.directory = target_config.get_build()
+    self.directory = target_config.get_place()
     self.old_cwd = ''
     self.build_instr = instrument
     self.instrumentation_file = instr_file
@@ -97,6 +97,7 @@ class Builder:
     return kwargs
 
   def check_build_prerequisites(self) -> None:
+    return
     ScorepSystemHelper.check_build_prerequisites()
 
   def build_flavors(self, kwargs) -> None:
