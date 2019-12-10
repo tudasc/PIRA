@@ -30,7 +30,7 @@ class Analyzer:
     # The invoke args can be retrieved from the configuration object.
     # Since the invoke args are iterable, we can create all necessary argument tuples here.
     if self._profile_sink is None:
-      raise RuntimeError('Profile Sink in Analyzer not set!')
+      raise RuntimeError('[Analyzer] Profile Sink in Analyzer not set!')
 
     # We construct a json file that contains the necesary information to be parsed vy the
     # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.

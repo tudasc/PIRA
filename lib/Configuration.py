@@ -278,6 +278,9 @@ class PiraConfiguration:
   def get_builds(self) -> typing.List[str]:
     return [ x for x in self.builds.keys() ]
 
+  def get_place(self, dir):
+    return dir
+
   def get_items(self, b: str) -> typing.List[str]:
     return [ x for x in self.items[b].keys() ]
 
@@ -472,9 +475,10 @@ class ExtrapConfiguration:
 
 class InvocationConfiguration:
 
-  def __init__(self, path_to_config: str, compile_time_filter: bool, num_reps: int):
+  def __init__(self, path_to_config: str, compile_time_filter: bool, pira_iters: int, num_reps: int):
     self._path_to_cfg = path_to_config
     self._compile_time_filtering = compile_time_filter
+    self._pira_iters = pira_iters
     self._num_repetitions = num_reps
 
   def get_path_to_cfg(self) -> str:
@@ -482,6 +486,9 @@ class InvocationConfiguration:
 
   def is_compile_time_filtering(self) -> bool:
     return self._compile_time_filtering
+
+  def get_pira_iters(self) -> int:
+    return self._pira_iters
 
   def get_num_repetitions(self) -> int:
     return self._num_repetitions

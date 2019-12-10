@@ -116,6 +116,11 @@ class ExtrapProfileSink(ProfileSinkBase):
       log.get_logger().log(
           'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort\n' + cur_ep_dir, level='error')
     else:
+      if u.check_provided_directory(cur_ep_dir):
+        new_dir_name = cur_ep_dir + '_' + u.generate_random_string()
+        log.get_logger().log('ExtrapProfileSink::check_and_prepare: Moving old experiment directory to: ' + new_dir_name, level='info')
+        u.rename(cur_ep_dir, new_dir_name)
+
       u.create_directory(cur_ep_dir)
       cubex_name = experiment_dir + '/' + target_config.get_flavor() + '-' + target_config.get_target() + '.cubex'
       log.get_logger().log(cubex_name)

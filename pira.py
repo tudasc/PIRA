@@ -6,36 +6,36 @@ Description: This is PIRA.
 import argparse
 import lib.Logging as log
 import lib.Pira as pira
-'''
-trying DB
 
-database = db("db_file")
-cur = database.create_cursor(database.conn)
-database.create_table(cur,tables.sql_create_application_table)
-database.create_table(cur,tables.sql_create_builds_table)
-database.create_table(cur,tables.sql_create_items_table)
-database.create_table(cur,tables.sql_create_experiment_table)
+"""
+  Pira Main
 
-app = ('app_1','globa_falv_1','global_sub_1')
-database.insert_data_application(cur,app)
-cur.execute("SELECT * FROM Application" )
-rows = cur.fetchall()
-
-for row in rows:
-    print(row)
-
-'''
+  This file contains the main entry point for the Pira framework.
+  Options are defined here and then passed to the Pira class.
+"""
 
 parser = argparse.ArgumentParser()
+
+# --- Required arguments section
 parser.add_argument('config', help='The configuration json file.')
+
+# --- Pira "mode" options
 parser.add_argument('--version', help='Which config file version to use', choices=[1, 2], default=1, type=int)
-parser.add_argument('--tape', help='Path to tape file to dump.')
 parser.add_argument('--runtime-filter', help='Use run-time filtering', default=False, action='store_true')
-parser.add_argument('--num-reps', help='Number of iterations run', default=3, type=int)
+parser.add_argument('--iterations', help='Number of Pira iterations', default=3, type=int)
+parser.add_argument('--repetitions', help='Number of measurement repetitions', default=3, type=int)
+
+# --- Pira debug options
+parser.add_argument('--tape', help='Path to tape file to dump.')
+
+# --- Pira modeling options
 group = parser.add_argument_group('ExP')
 group.add_argument(
     '--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
 group.add_argument('--extrap-prefix', help='The prefix in extra-p naming scheme', type=str)
+
+
+# ====== Start of Pira program ====== #
 args = parser.parse_args()
 
 try:

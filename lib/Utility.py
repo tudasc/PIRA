@@ -22,6 +22,9 @@ queued_job_filename = './queued_job.tmp'
 home_directory = ''
 
 
+
+# --- Files / Directories --- #
+
 def set_home_dir(home_dir: str) -> None:
   global home_directory
   home_directory = home_dir
@@ -32,6 +35,15 @@ def get_home_dir() -> str:
     raise PiraException('Utility::get_home_dir: No Home Directory Set!')
 
   return home_directory
+
+
+def get_cwd() -> str:
+  return os.getcwd()
+
+
+def change_cwd(path: str) -> None:
+  log.get_logger().log('Utility::change_cwd: to ' + path, level='debug')
+  os.chdir(path)
 
 
 def read_file(file_name: str) -> str:
@@ -46,21 +58,31 @@ def copy_file(source_file: str, target_file: str) -> None:
   shutil.copyfile(source_file, target_file)
 
 
-def lines_in_file(file_name: str) -> int:
-  if check_file(file_name):
-    content = read_file(file_name)
-    lines = len(content.split('\n'))
-    return lines
-
-  log.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
-  return 0
-
-
 def check_provided_directory(path: str) -> bool:
   if os.path.isdir(path):
     return True
 
   return False
+
+
+def get_absolute_path(path: str) -> str:
+  if path[0] == '/':
+    return path
+
+  return os.path.abspath(path)
+
+
+def is_absolute_path(path: str) -> bool:
+  if not check_provided_directory(path):
+    """
+    This is a hack for our tests, as we fake file paths in the tests.
+    If the path is invalid from a system's point of view, but looks like an absolute directory
+    we keep going, and return that it is an absolute path.
+    """
+    if path[0] == '/':
+      return True
+
+  return os.path.isabs(path)
 
 
 def create_directory(path: str) -> None:
@@ -108,6 +130,44 @@ def remove_file(path: str) -> bool:
   return False
 
 
+# --- File-related utils --- #
+
+def json_to_canonic(json_elem):
+  if isinstance(json_elem, list):
+    new_list = []
+    for entry in json_elem:
+      new_list.append(json_to_canonic(entry))
+    return new_list
+
+  elif isinstance(json_elem, str):
+    new_str = str(json_elem)
+    return new_str
+
+  elif isinstance(json_elem, dict):
+    new_dict = {}
+    for k in json_elem:
+      key_v = json_to_canonic(k)
+      new_dict[key_v] = json_to_canonic(json_elem[key_v])
+    return new_dict
+
+  else:
+    return str(json_elem)
+
+
+def remove_from_pgoe_out_dir(directory: str) -> None:
+  remove(directory + "/" + "out")
+
+
+def lines_in_file(file_name: str) -> int:
+  if check_file(file_name):
+    content = read_file(file_name)
+    lines = len(content.split('\n'))
+    return lines
+
+  log.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
+  return 0
+
+
 def diff_inst_files(file1: str, file2: str) -> bool:
   if (filecmp.cmp(file1, file2)):
     return True
@@ -119,54 +179,11 @@ def set_env(env_var: str, val) -> None:
   os.environ[env_var] = val
 
 
-def get_absolute_path(path: str) -> str:
-  if path[0] == '/':
-    return path
-
-  return os.path.abspath(path)
-
-
-def is_absolute_path(path: str) -> bool:
-  if not check_provided_directory(path):
-    """
-    This is a hack for our tests, as we fake file paths in the tests.
-    If the path is invalid from a system's point of view, but looks like an absolute directory
-    we keep going, and return that it is an absolute path.
-    """
-    if path[0] == '/':
-      return True
-
-  return os.path.isabs(path)
-
-
 def generate_random_string() -> str:
   return ''.join(choice(ascii_uppercase) for i in range(12))
 
 
-def get_cwd() -> str:
-  return os.getcwd()
-
-
-def change_cwd(path: str) -> None:
-  log.get_logger().log('Utility::change_cwd: to ' + path, level='debug')
-  os.chdir(path)
-
-
-def load_functor(directory: str, module: str):
-  if not check_provided_directory(directory):
-    log.get_logger().log('Utility::load_functor: Functor directory invalid', level='warn')
-  if not is_valid_file_name(directory + '/' + module):
-    log.get_logger().log('Utility::load_functor: Functor filename invalid', level='warn')
-
-  # TODO: Add error if functor path does not exist!!!
-  log.get_logger().log('Utility::load_functor: Appending ' + directory + ' to system path.', level='debug')
-  append_to_sys_path(directory)
-  # Adding 'fromList' argument loads exactly the module.
-  functor = __import__(module)
-  remove_from_sys_path(directory)
-  log.get_logger().log('Utility::load_functor: Returning from load_functor', level='debug')
-  return functor
-
+# --- Shell execution and timing --- #
 
 def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
   t1 = os.times()  # start time
@@ -238,38 +255,30 @@ def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
     raise Exception('Utility::shell_for_submitter: Running command ' + command + ' did not succeed')
 
 
+# --- Functor utilities --- #
+
+def load_functor(directory: str, module: str):
+  if not check_provided_directory(directory):
+    log.get_logger().log('Utility::load_functor: Functor directory invalid', level='warn')
+  if not is_valid_file_name(directory + '/' + module):
+    log.get_logger().log('Utility::load_functor: Functor filename invalid', level='warn')
+
+  # TODO: Add error if functor path does not exist!!!
+  log.get_logger().log('Utility::load_functor: Appending ' + directory + ' to system path.', level='debug')
+  append_to_sys_path(directory)
+  # Adding 'fromList' argument loads exactly the module.
+  functor = __import__(module)
+  remove_from_sys_path(directory)
+  log.get_logger().log('Utility::load_functor: Returning from load_functor', level='debug')
+  return functor
+
+
 def append_to_sys_path(path: str) -> None:
   sys.path.append(path)
 
 
 def remove_from_sys_path(path: str) -> None:
   sys.path.remove(path)
-
-
-def json_to_canonic(json_elem):
-  if isinstance(json_elem, list):
-    new_list = []
-    for entry in json_elem:
-      new_list.append(json_to_canonic(entry))
-    return new_list
-
-  elif isinstance(json_elem, str):
-    new_str = str(json_elem)
-    return new_str
-
-  elif isinstance(json_elem, dict):
-    new_dict = {}
-    for k in json_elem:
-      key_v = json_to_canonic(k)
-      new_dict[key_v] = json_to_canonic(json_elem[key_v])
-    return new_dict
-
-  else:
-    return str(json_elem)
-
-
-def remove_from_pgoe_out_dir(directory: str) -> None:
-  remove(directory + "/" + "out")
 
 
 def concat_a_b_with_sep(a: str, b: str, sep: str) -> str:

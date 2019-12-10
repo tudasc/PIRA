@@ -24,11 +24,11 @@ import typing
 import sys
 
 
-def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfiguration) -> None:
+def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_config: TargetConfiguration) -> None:
   try:
     log.get_logger().log('run_setup phase.', level='debug')
     instrument = False
-    pira_iterations = 3  # XXX Should be cmdline arg!
+    pira_iterations = pira_iters 
 
     # Build without any instrumentation
     vanilla_builder = B(target_config, instrument)
@@ -87,7 +87,7 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
     use_extra_p = True
     extrap_config = ExtrapConfiguration(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
 
-    num_reps = cmdline_args.num_reps
+    num_reps = cmdline_args.repetitions
     if num_reps < 5:
       log.get_logger().log('At least 5 repetitions are recommended for Extra-P modelling.', level='warn')
       if num_reps < 0:
@@ -111,9 +111,10 @@ def show_pira_invoc_info(cmdline_args) -> None:
 def process_args_for_invoc(cmdline_args) -> None:
   path_to_config = cmdline_args.config
   compile_time_filter = not cmdline_args.runtime_filter
-  num_reps = cmdline_args.num_reps
+  pira_iters = cmdline_args.iterations
+  num_reps = cmdline_args.repetitions
 
-  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter, num_reps)
+  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter, pira_iters, num_reps)
 
   return invoc_cfg
 
@@ -157,6 +158,7 @@ def main(arguments) -> None:
       runner_factory = PiraRunnerFactory(invoc_cfg, configuration)
       runner = runner_factory.get_simple_local_runner()
       if use_extra_p:
+        log.get_logger().log('Running with Extra-P runner')
         runner = runner_factory.get_scalability_runner(extrap_config)
 
       if runner.has_sink():
@@ -184,7 +186,7 @@ def main(arguments) -> None:
               t_config = TargetConfiguration(place, build, item, flavor, db_item_id, invoc_cfg.is_compile_time_filtering())
 
               # Execute using a local runner, given the generated target description
-              execute_with_config(runner, analyzer, t_config)
+              execute_with_config(runner, analyzer, invoc_cfg.get_pira_iters(), t_config)
 
           # If global flavor
           else:

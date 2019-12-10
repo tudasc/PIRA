@@ -52,11 +52,25 @@ cd resources
 
 ### Using PIRA
 
-Thereafter, you can invoke PIRA with an example configuration that outputs the different stages and illustrates how it processes a target.
+To use PIRA, first set up the required paths, using the script in the `resources` folder.
 
 ```{.sh}
-python3 pira.py example_config.json
+cd resources/
+. setup_paths.sh
 ```
+
+Then, you can run an example application of PIRA on a very simple implementation of Conway's Game of Life by using the provided scripts in the `./test/integration/GameOfLife` folder.
+
+```{.sh}
+cd ./test/integration/GameOfLife
+./run.sh
+```
+
+The required steps to use PIRA:
+1. Construct a whole-program call graph
+2. Implement the PIRA configuration
+3. Implement the required PIRA functors
+4. Invoke PIRA with the respective configuration
 
 #### Configuration
 
