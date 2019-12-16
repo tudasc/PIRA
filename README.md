@@ -5,7 +5,7 @@ The Performance Instrumentation Refinement Automation (PIRA) framework approache
 However, the goal is to be as flexibel w.r.t. the used toolchain as possible.
 We have published two papers about the functionality PIRA offers.
 The initial paper can be found [here](https://dl.acm.org/citation.cfm?id=3281071) (ACM).
-The follow-up paper will be linked as soon as it is available for download.
+The follow-up paper will be linked as soon as it is available for download, a preprint version can be found on [Research Gate](https://www.researchgate.net/publication/337831656_Automatic_Instrumentation_Refinement_for_Empirical_Performance_Modeling).
 
 ## Approach
 
@@ -31,6 +31,7 @@ We require a recent version of CMake (>= 3.5) and test PIRA with a Clang/LLVM so
 ### Obtaining PIRA
 
 To obtain PIRA, first, clone the PIRA repository and pull-in its dependencies
+
 ```{.sh}
 git clone https://github.com/jplehr/pira
 cd pira
@@ -59,38 +60,111 @@ cd resources/
 . setup_paths.sh
 ```
 
-Then, you can run an example application of PIRA on a very simple implementation of Conway's Game of Life by using the provided scripts in the `./test/integration/GameOfLife` folder.
+Then, you can run an example application of PIRA on a very simple implementation of Conway's Game of Life by using the provided `run.sh` script in the `./test/integration/GameOfLife` folder.
 
 ```{.sh}
 cd ./test/integration/GameOfLife
 ./run.sh
 ```
 
-The required steps to use PIRA:
-1. Construct a whole-program call graph
-2. Implement the PIRA configuration
-3. Implement the required PIRA functors
-4. Invoke PIRA with the respective configuration
+The scripts performs all steps required from the start, i.e., preparing all components for a new target code, to finally invoke PIRA.
+In the subsequent sections, we explain the steps in more detail.
+These steps are:
+
+1. Construct a whole-program call graph that contains the required meta information. This needs to be done for a target application whenever the code base changed.
+2. Implement the PIRA configuration. For the example, we provide an example configuration.
+3. Implement the required PIRA functors. For the example, we provide simple example functors, which may also work for other applications.
+4. Invoke PIRA with the respective configuration.
+
+#### Whole Program Call Graph
+
+PIRA uses source code information to construct initial instrumentations and, decide which functions to add to an instrumentation during the iterative refinement.
+We provide a Clang-based call-graph tool that collects all required information and outputs the information in a `.json` file.
+You can find the `cgcollector` tool in the subdirectory `./extern/src/cgcollector`.
 
 #### Configuration
 
-PIRA requires the user to provide the configuration as a `json` file.
-The file specifies the target codes and the necessary information to build the different flavors.
-In addition, the configuration holds the paths and names to *functors*, i.e., Python files that implement a specified set of functions and are loaded at runtime.
-In these *functors*, the user provides the recipes how to build the target software.
-Also, the analysis framework to drive the process of finding a suitable instrumentation is loaded using a functor.
-In a configuration, the user lists a base directory. This directory, holds, so called, items, which are built in different flavors.
-Adding this additional layer of indirection, the user can perform multiple tests on the same target application within a single configuration file - maybe use two different measurement strategies.
+The PIRA configuration contains all the required information for PIRA to run the automatic process.
+The various directories that need to be specified in the configuration can either be *absolute* paths, or *paths, relative to the location of the configuration file*.
+The examples are taken from the GameOfLife example in `./test/integration/GameOfLife`.
+
+The user specifies: *the directory* in which to look for subsequently defined *items*, in the example, the directory is `./gol/serial_non_template`.
+These directories are given aliases, which are dereferened using the '%' sign.
+An item in that regard is a target application, built in a specifically defined way, which is why it is grouped in the configuration under *builds*.
+
+```{.json}
+{
+    "builds": {
+        "%gol": {
+            "items": {
+                "gol": {
+                    ...
+                }
+            }
+        }
+    }
+    "directories": {
+        "gol": "./gol/serial_non_template"
+    }
+    }
+}
+```
+
+Every item specifies which *analyzer* should be used.
+The default is the analyzer that ships with PIRA, and which can be found in `./extern/src/pgis`.
+The particular analyzer is responsible for steering the instruementation refinement, and is, therefore, an essential part of the PIRA framework.
+
+The *argmap* field specifies the different arguments that are passed to the target application when running the performance experiments.
+How the arguments are passed to the target application is defined by the different *mappers*.
+In the example, a *Linear* mapper is used, which simply iterates the values of the parameter *size* in the order given in the list.
+
+```{.json}
+"argmap": {
+    "mapper": "Linear",
+    "size": [50, 80, 110, 150, 300, 500]
+}
+```
+
+The *cubes* field is the location where PIRA should store the obtained Score-P profiles.
+It will construct a directory tree in that location, so the user can, after PIRA finished, also easily invoke the Extra-P modeling tool by simply passing it the respective location, i.e., */tmp/pira* in the example.
+
+```{.json}
+"cubes": "/tmp/pira"
+```
+
+The *flavors* field adds another level of possible distinction, as target applications could be built in different *flavors*.
+An example would be to specify different math libraries that the target application should link against.
+
+Finally, the *functors* directory points PIRA to the location where it should look for the user-provided Python functions that ultimately tell PIRA how to build, run, and analyze the target application.
+In the example, PIRA is pointed to a directory called *functors* relative to the location of the configuration.
+
+```{.json}
+"flavors": [
+    "ct"
+    ],
+"functors": "./functors",
+"mode": "CT"
+```
+
+The *mode* field, currently, is ignored.
 
 #### Implementing Functors
 
+As of now, the user needs to implement five different functors:
+
+* `analyse_<ITEM>_<FLAVOR>.py`: invokes the analyzer.
+* `clean_<ITEM>_<FLAVOR>.py`: cleans the build directory.
+* `<ITEM>_<FLAVOR>.py`: build the instrumented version.
+* `no_instr_<ITEM>_<FLAVOR>.py`: builds the vanilla version.
+* `runner_<ITEM>_<FLAVOR>.py`: runs the target application.
+
 Functors, generally, support two modes of invocation: *active* and *passive*.
-The functor tells PIRA which mode it uses by setting the respective value to ```True``` in the dictionary returned by ```get_method()```.
+The functor tells PIRA which mode it uses by setting the respective value to `True` in the dictionary returned by `get_method()`.
 
 In active mode, the functor itself invokes the required commands, for example to build the software.
 When invoked, the functor is passed a `**kwargs` parameter holding, for example, the current directory, and an instance of a subprocess shell.
 
-The passive mode solely returns the commands to execute, e.g., the string ```make``` to invoke a simple Makefile at the item's top-level directory.
+The passive mode solely returns the commands to execute, e.g., the string `make` to invoke a simple Makefile at the item's top-level directory.
 The passive mode also is passed a `kwargs` parameter that holds specific information, like pre-defined values needed to add to CXXFLAGS or additional linker flags.
 An example of a passive functor may be found in the `examples` and `test` directories.
 Currently, all implemented functors use the passive mode.
@@ -101,6 +175,11 @@ PIRA passes the required flags for compiling C code in the flags `CC`, which sho
 
 PIRA passes these keyword arguments to all functors.
 In addition, different PIRA components may pass additional arguments.
+
+*Important*: This is currently under active development, as we now ship our own Score-P version.
+This removes the burden of adjusting compilation flags ourselves.
+As a result, some of the additionally passed arguments might go away, or are deprecated.
+This can be seen in the `./test/integration/GameOfLife` example functors.
 
 ##### All Functors
 
@@ -120,3 +199,4 @@ In addition, different PIRA components may pass additional arguments.
 ##### Run Functor
 
 * ***util***: Reference to a PIRA *Utility* object.
+* ***args***: The arguments passed to the target application as a list, i.e., `[0]` accesses the first argument, `[1]` the second, and so on.
