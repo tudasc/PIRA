@@ -73,7 +73,7 @@ fi
 
 rm -rf scorep-build
 mkdir scorep-build && cd scorep-build
-../configure --prefix=$extinstalldir/scorep --disable-gcc-plugin "$add_flags" 2>&1 > /dev/null
+../configure --prefix=$extinstalldir/scorep --enable-shared --disable-static --disable-gcc-plugin "$add_flags" 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Configuring Score-P failed."
 	exit 1
