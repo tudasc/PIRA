@@ -278,6 +278,9 @@ class PiraConfiguration:
   def get_builds(self) -> typing.List[str]:
     return [ x for x in self.builds.keys() ]
 
+  def get_place(self, dir):
+    return dir
+
   def get_items(self, b: str) -> typing.List[str]:
     return [ x for x in self.items[b].keys() ]
 
