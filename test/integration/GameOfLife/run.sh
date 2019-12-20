@@ -8,12 +8,13 @@ testDir=$PWD
 export TEST_DIR=$testDir
 
 # We need to be able to generate a compile_commands.json library
-git clone https://github.com/rizsotto/Bear.git bear
+echo -e "\n----- Getting and building bear -----"
+git clone https://github.com/rizsotto/Bear.git bear 2>&1 > /dev/null
 cd bear
 mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=../install ..
-make all
-make install
+cmake -DCMAKE_INSTALL_PREFIX=../install .. 2>&1 > /dev/null
+make all 2>&1 > /dev/null
+make install 2>&1 > /dev/null
 
 cd ..
 export PATH=$PWD/install/bin:$PATH
@@ -23,34 +24,36 @@ cd ..
 # Export all the Pira tools for the integration test
 export LD_LIBRARY_PATH=$PWD/../../../extern/install/scorep/lib:$PWD/../../../extern/install/extrap/lib:$PWD/../../../extern/install/pgis/lib:$PWD/../../../extern/install/cgcollector/lib:$LD_LIBRARY_PATH
 export PATH=$PWD/../../../extern/install/pgis/bin:$PWD/../../../extern/install/cgcollector/bin:$PATH
+export PATH=$PWD/../../../extern/install/scorep/bin:$PATH
 echo $PATH
 
-mkdir $PWD/../../../extern/install/pgis/bin/out
-
-# Download the target application
-git clone https://github.com/jplehr/GameOfLife gol
-
-cd gol/serial_non_template
-bear make gol
-cgcollector main.cpp
-cgcollector SerialGoL.cpp
-cgmerge gol.ipcg main.ipcg SerialGoL.ipcg
-cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/ct-gol.ipcg
-cd ../..
-
-
-export PATH=$PWD/../../../extern/install/scorep/bin:$PATH
-
+echo -e "\n------ PATH -----"
+echo $PATH
+echo -e "\n------ LD_LIBRARY_PATH -----"
+echo $LD_LIBRARY_PATH
+echo -e "\n------ Which tools -----"
 which pgis_pira
 which cgcollector
 which scorep
 
+# XXX Currently required from PGIS
+mkdir $PWD/../../../extern/install/pgis/bin/out
+
+# Download the target application
+git clone https://github.com/jplehr/GameOfLife gol 2>&1 > /dev/null
+
+echo -e "\n----- Build GameOfLife / build call graph -----"
+cd gol/serial_non_template
+bear make gol 2>&1 > /dev/null
+cgcollector main.cpp 2>&1 > /dev/null
+cgcollector SerialGoL.cpp 2>&1 > /dev/null
+cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
+cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/ct-gol.ipcg
+cd ../..
+
 cd gol
 
-echo -e "------ PATH -----\n"
-echo $PATH
-echo -e "------ LD_LIBRARY_PATH -----\n"
-echo $LD_LIBRARY_PATH
+echo -e "\n----- Running Pira -----\n"
 
 python3 ../../../../pira.py --version 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ./gol.tp $testDir/gol-config.json
 

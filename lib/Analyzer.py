@@ -30,7 +30,7 @@ class Analyzer:
     # The invoke args can be retrieved from the configuration object.
     # Since the invoke args are iterable, we can create all necessary argument tuples here.
     if self._profile_sink is None:
-      raise RuntimeError('Profile Sink in Analyzer not set!')
+      raise RuntimeError('[Analyzer] Profile Sink in Analyzer not set!')
 
     # We construct a json file that contains the necesary information to be parsed vy the
     # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.
@@ -82,19 +82,8 @@ class Analyzer:
         raise Exception('Problem in Analyzer')
 
   def analyse_slurm(self, flavors, build, benchmark, kwargs, config):
-    for flavor in flavors:
-      try:
-        analyse_functor = util.load_functor(
-            config.get_analyse_slurm_func(build, benchmark), 'analyse_slurm_submitter_' + flavor)
-        tup = [(flavor, '/home/sm49xeji/job_analyse.sh')]
-        kwargs = {"util": util, "runs_per_job": 1, "dependent": 1}
-        analyse_functor.dispatch(tup, **kwargs)
-        #print(analyse_functor)
-
-      except Exception as e:
-        logging.get_logger().log(str(e), level='error')
-
-        raise Exception('Problem in Analyzer')
+    logging.get_logger().log('Analyzer::analyse_slurm: Not implemented. Aborting.', level='error')
+    assert(False)
 
   def set_up(self):
     pass

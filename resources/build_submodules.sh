@@ -35,13 +35,13 @@ cd $extsourcedir/llvm-instrumenter
 rm -rf build
 mkdir build && cd build
 
-cmake ..
+cmake .. 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Configuring LLVM-Instrumenter failed."
 	exit 1
 fi
 
-make -j $parallel_jobs
+make -j $parallel_jobs 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Building LLVM-Instrumenter failed."
 	exit 1
@@ -57,41 +57,41 @@ bash set_instrumenter_directory.sh $extsourcedir/llvm-instrumenter/build/lib
 aclocalversion=$( aclocal --version | grep 1.13 )
 if [ -z "$aclocalversion" ]; then
 	echo "aclocal available in wrong version. Guessing to autoreconf."
-	autoreconf -ivf
-	cd ./vendor/cubelib
-	autoreconf -ivf
-	cd ./build-frontend
-	autoreconf -ivf
-	cd ../../cubew
-	autoreconf -ivf
-	cd ./build-backend
-	autoreconf -ivf
-	cd ../build-frontend
-	autoreconf -ivf
+	autoreconf -ivf 2>&1 > /dev/null
+	cd ./vendor/cubelib 2>&1 > /dev/null
+	autoreconf -ivf 2>&1 > /dev/null
+	cd ./build-frontend 2>&1 > /dev/null
+	autoreconf -ivf 2>&1 > /dev/null
+	cd ../../cubew 2>&1 > /dev/null
+	autoreconf -ivf 2>&1 > /dev/null
+	cd ./build-backend 2>&1 > /dev/null
+	autoreconf -ivf 2>&1 > /dev/null
+	cd ../build-frontend 2>&1 > /dev/null
+	autoreconf -ivf 2>&1 > /dev/null
 	cd $extsourcedir/scorep-mod
 fi
 
 rm -rf scorep-build
 mkdir scorep-build && cd scorep-build
-../configure --prefix=$extinstalldir/scorep --disable-gcc-plugin "$add_flags"
+../configure --prefix=$extinstalldir/scorep --enable-shared --disable-static --disable-gcc-plugin "$add_flags" 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Configuring Score-P failed."
 	exit 1
 fi
-make -j $parallel_jobs
+make -j $parallel_jobs 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Building Score-P failed."
 	exit 1
 fi
-make install
+make install 2>&1 > /dev/null
 echo "[PIRA] Adding PIRA Score-P to PATH for subsequent tool chain components."
 export PATH=$extinstalldir/scorep/bin:$PATH
 
 # Extra-P (https://www.scalasca.org/software/extra-p/download.html)
 echo "[PIRA] Building Extra-P (for PIRA II modeling)"
 echo "[PIRA] Getting prerequisites ..."
-pip3 install --user PyQt5
-pip3 install --user matplotlib
+pip3 install --user PyQt5 2>&1 > /dev/null
+pip3 install --user matplotlib 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Installting Extra-P dependencies failed."
 	exit 1
@@ -123,75 +123,75 @@ else
 	fi
 fi
 echo "[PIRA] Found Python.h at " $pythonheader
-../configure --prefix=$extinstalldir/extrap CPPFLAGS=-I$pythonheader
+../configure --prefix=$extinstalldir/extrap CPPFLAGS=-I$pythonheader 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Configuring Extra-P failed."
 	exit 1
 fi
-make -j $parallel_jobs
+make -j $parallel_jobs 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Building Extra-P failed."
 	exit 1
 fi
-make install
+make install 2>&1 > /dev/null
 
 # CXX Opts
 echo "[PIRA] Getting cxxopts library"
 cd $extsourcedir
 if [ ! -d "$extsourcedir/cxxopts" ]; then
-    git clone https://github.com/jarro2783/cxxopts cxxopts
+    git clone https://github.com/jarro2783/cxxopts cxxopts 2>&1 > /dev/null
 fi
 cd cxxopts
 echo "[PIRA] Select release branch 2_1 for cxxopts."
-git checkout 2_1
+git checkout 2_1 2>&1 > /dev/null
 
 # JSON library
 echo "[PIRA] Getting json library"
 cd $extsourcedir
 if [ ! -d "$extsourcedir/json" ]; then
-    git clone https://github.com/nlohmann/json json
+    git clone https://github.com/nlohmann/json json 2>&1 > /dev/null
 fi
 
 echo "[PIRA] Building PGIS analysis engine"
 cd $extsourcedir/PGIS
 
-git checkout devel
+git checkout devel 2>&1 > /dev/null
 
 rm -rf build
 mkdir build && cd build
-cmake -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis ..
+cmake -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis .. 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Configuring PGIS failed."
 	exit 1
 fi
 
-make -j $parallel_jobs
+make -j $parallel_jobs 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Building PGIS failed."
 	exit 1
 fi
-make install
+make install 2>&1 > /dev/null
 
 # CGCollector / merge tool
 echo "[PIRA] Not yet ready to be built, thus skipping CGCollector"
 cd $extsourcedir/cgcollector
 
 ## TODO Remove when merged
-git checkout devel
+git checkout devel 2>&1 > /dev/null
 
 rm -rf build
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/cgcollector -DJSON_INCLUDE_PATH=$extsourcedir/json/single_include ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/cgcollector -DJSON_INCLUDE_PATH=$extsourcedir/json/single_include .. 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Configuring CGCollector failed."
 	exit 1
 fi
 
-make -j $parallel_jobs
+make -j $parallel_jobs 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
 	echo "[PIRA] Building CGCollector failed."
 	exit 1
 fi
-make install
+make install 2>&1 > /dev/null
 
 cd $scriptdir

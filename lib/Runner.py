@@ -96,9 +96,12 @@ class LocalRunner(LocalBaseRunner):
     accu_runtime = .0
 
     if not target_config.has_args_for_invocation():
+      log.get_logger().log('LocalRunner::do_baseline_run: BEGIN not target_config.has_args_for_invocation()')
       # This runner only takes into account the first argument string (if not already set)
       args = self._config.get_args(target_config.get_build(), target_config.get_target())
+      log.get_logger().log('LocalRunner::do_baseline_run: args: ' + str(args) )
       target_config.set_args_for_invocation(args[0])
+      log.get_logger().log('LocalRunner::do_baseline_run: END not target_config.has_args_for_invocation()')
 
     # TODO Better evaluation of the obtained timings.
     for y in range(0, self._num_repetitions):
@@ -106,7 +109,7 @@ class LocalRunner(LocalBaseRunner):
       accu_runtime += self.run(target_config, InstrumentConfig(), True)
 
     run_result = ms.RunResult(accu_runtime, self._num_repetitions)
-    log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n\n', level='perf')
+    log.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n', level='perf')
 
     return run_result
 
