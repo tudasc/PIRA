@@ -173,11 +173,11 @@ fi
 make install 2>&1 > /dev/null
 
 # CGCollector / merge tool
-echo "[PIRA] Not yet ready to be built, thus skipping CGCollector"
+echo "[PIRA] Building CGCollector"
 cd $extsourcedir/cgcollector
 
-## TODO Remove when merged
-git checkout devel 2>&1 > /dev/null
+# TODO Remove when merged
+#git checkout devel 2>&1 > /dev/null
 
 rm -rf build
 mkdir build && cd build
@@ -193,5 +193,19 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 make install 2>&1 > /dev/null
+
+cd $scriptdir
+
+# Installing LLNL's MPI wrapper generator
+cd $extsourcedir
+
+rm -r mpiwrap
+mkdir mpiwrap && cd mpiwrap
+wget https://github.com/LLNL/wrap/archive/master.zip
+unzip master.zip
+rm -r $extinstalldir/mpiwrap
+mkdir $extinstalldir/mpiwrap
+cp wrap-master/wrap.py $extinstalldir/mpiwrap/wrap.py
+
 
 cd $scriptdir
