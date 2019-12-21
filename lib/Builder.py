@@ -127,6 +127,8 @@ class Builder:
 
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'build')
       kwargs = self.construct_pira_instr_kwargs()
+      ScorepSystemHelper.prepare_MPI_filtering(self.instrumentation_file)
+
     else:
       log.get_logger().log('Builder::build_flavors: No instrumentation', level='debug')
       build_functor = f_man.get_or_load_functor(build, benchmark, flavor, 'basebuild')

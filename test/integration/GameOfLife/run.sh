@@ -22,9 +22,12 @@ echo $PATH
 cd ..
 
 # Export all the Pira tools for the integration test
-export LD_LIBRARY_PATH=$PWD/../../../extern/install/scorep/lib:$PWD/../../../extern/install/extrap/lib:$PWD/../../../extern/install/pgis/lib:$PWD/../../../extern/install/cgcollector/lib:$LD_LIBRARY_PATH
-export PATH=$PWD/../../../extern/install/pgis/bin:$PWD/../../../extern/install/cgcollector/bin:$PATH
-export PATH=$PWD/../../../extern/install/scorep/bin:$PATH
+cd $testDir/../../../resources
+. setup_paths.sh
+cd $testDir
+#export LD_LIBRARY_PATH=$PWD/../../../extern/install/scorep/lib:$PWD/../../../extern/install/extrap/lib:$PWD/../../../extern/install/pgis/lib:$PWD/../../../extern/install/cgcollector/lib:$LD_LIBRARY_PATH
+#export PATH=$PWD/../../../extern/install/pgis/bin:$PWD/../../../extern/install/cgcollector/bin:$PATH
+#export PATH=$PWD/../../../extern/install/scorep/bin:$PATH
 echo $PATH
 
 echo -e "\n------ PATH -----"
@@ -35,6 +38,7 @@ echo -e "\n------ Which tools -----"
 which pgis_pira
 which cgcollector
 which scorep
+which wrap.py
 
 # XXX Currently required from PGIS
 mkdir $PWD/../../../extern/install/pgis/bin/out
@@ -55,7 +59,7 @@ cd gol
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../../pira.py --version 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ./gol.tp $testDir/gol-config.json
+python3 ../../../../pira.py --version 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../gol.tp $testDir/gol-config.json
 
 pirafailed=$?
 
