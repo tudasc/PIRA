@@ -99,6 +99,7 @@ class ScorepSystemHelper:
     self.cur_base_name = ''
     self.cur_filter_file = ''
     self._enable_unwinding = 'False'
+    self._MPI_filter_so_path = ''
 
   def get_data_elem(self, key: str):
     try:
@@ -156,6 +157,7 @@ class ScorepSystemHelper:
     self.set_profiling_basename(flavor, build, item)
     # TODO WHEN FIXED: FOR NOW LET'S ENABLE UNWINDING
     # self.set_enable_unwinding(self)
+
 
   def set_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
@@ -270,3 +272,51 @@ class ScorepSystemHelper:
     else:
       raise MeasurementSystemException('ScorepMeasurementSystem::check_build_prerequisites: Missing ' +
                                        scorep_init_file_name)
+
+  @classmethod
+  def prepare_MPI_filtering(cls, filter_file: str) -> None:
+    # Find which MPI functions to filter
+    # Get all MPI functions (our filter_file is a WHITELIST)
+    mpi_funcs_dump = '/tmp/mpi_funcs.dump'
+    u.shell('wrap.py -d > ' + mpi_funcs_dump)
+    all_MPI_functions_decls = u.read_file(mpi_funcs_dump).split('\n')
+    all_MPI_functions = []
+    t_c = 0
+    for fd in all_MPI_functions_decls:
+      if t_c < 4:
+        print(fd)
+        t_c += 1
+      name = fd[fd.find(' '):fd.find('(')]
+      if t_c < 4:
+        print(name)
+      all_MPI_functions.append(name.strip())
+
+    MPI_functions_to_filter = []
+    file_content = u.read_file(filter_file).split('\n')
+    # We always want to measure MPI_Init and MPI_Finalize
+    file_content.append('MPI_Init')
+    file_content.append('MPI_Finalize')
+    for l in file_content:
+      if l.find('MPI_') > -1:
+        log.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: Remove ' + l)
+        all_MPI_functions.remove(l)
+
+    # Generate the .c file using the mpi wrap.py script
+    log.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: About to filter ' + str(len(all_MPI_functions)) + ' MPI functions')
+    wrap_script = '{{fn PIRA_Filter'
+    for mpi_func in all_MPI_functions:
+      wrap_script += ' ' + mpi_func
+
+    wrap_script += '}}\n{{callfn}}\n{{endfn}}'
+    default_provider = defaults.BackendDefaults()
+    wrap_file = default_provider.get_wrap_w_file()
+    if u.check_file(wrap_file):
+      u.remove_file(wrap_file)
+    u.write_file(wrap_file, wrap_script)
+
+    wrap_c_path = default_provider.get_wrap_c_file()
+    wrap_command = 'wrap.py -o ' + wrap_c_path + ' ' + wrap_file
+    u.shell(wrap_command)
+    # Compile it to .so file
+    compile_mpi_wrapper_command = 'mpicc -shared -fPIC -o ' + default_provider.get_wrap_so_file() + ' ' + wrap_c_path
+    u.shell(compile_mpi_wrapper_command)

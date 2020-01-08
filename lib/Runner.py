@@ -52,6 +52,7 @@ class LocalBaseRunner(Runner):
     default_provider = defaults.BackendDefaults()
     kwargs = default_provider.get_default_kwargs()
     kwargs['util'] = util
+    kwargs['LD_PRELOAD'] = default_provider.get_MPI_wrap_LD_PRELOAD()
     runtime = .0
 
     if run_functor.get_method()['active']:

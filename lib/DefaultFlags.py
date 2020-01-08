@@ -48,6 +48,19 @@ class BackendDefaults:
       }
       return kwargs
 
+    def get_wrap_w_file(self) -> str:
+      return '/tmp/pira-mpi-filter.w'
+
+    def get_wrap_c_file(self) -> str:
+      return '/tmp/pira-mpi-filter.c'
+
+    def get_wrap_so_file(self) -> str:
+      return '/tmp/PIRA_MPI_Filter.so'
+
+    def get_MPI_wrap_LD_PRELOAD(self) -> str:
+      return 'LD_PRELOAD=' + self.get_wrap_so_file()
+
+
   instance = None
 
   def __init__(self):

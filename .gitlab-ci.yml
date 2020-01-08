@@ -19,7 +19,7 @@ default:
   - eval $(ssh-agent -s)
   - ssh-add ~/.ssh/gitlab_rsa
   - module use /home/groups/sc/modules/modulefiles
-  - module load gcc/8 git clang/9.0 cmake python/3
+  - module load gcc/8 git clang/9.0 cmake python/3 openmpi
 
 # Update all submodules in git
 .get-submodules: &get-submodules
@@ -54,9 +54,8 @@ build-dependencies:
     - git submodule update extern/src/llvm-instrumenter;
     - git submodule update --force extern/src/scorep-mod;
     - git submodule update extern/src/PGIS;
-    - ls ./extern/src/llvm-instrumenter
     - cd resources
-    - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l) --without-mpi
+    - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l)
 
 # Runs the unit tests (that we currently have only very few of...
 run-unit-tests:
@@ -66,7 +65,7 @@ run-unit-tests:
   before_script: *lb-setup
   script:
     - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
-    - echo $PATH
+    - echo 'The PATH is ' $PATH
     - echo 'Running unit tests'
     - ./run_tests.sh
 
@@ -82,11 +81,9 @@ run-integration-tests:
     - git submodule update extern/src/llvm-instrumenter;
     - git submodule update extern/src/scorep-mod;
     - git submodule update extern/src/PGIS;
-    - ls ./extern/src/llvm-instrumenter
     - cd resources
-    - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l) --without-mpi
-    - cd ..
+    - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l)
     - echo 'Running integration tests'
-    - cd test/integration/GameOfLife
+    - cd ../test/integration/GameOfLife
     - ./run.sh
 
