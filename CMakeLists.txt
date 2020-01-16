@@ -15,5 +15,6 @@ list(APPEND CMAKE_MODULE_PATH
 )
 
 include(ToolchainOptions)
+include(CMakePackageConfigHelpers)
 
 add_subdirectory(lib)

@@ -20,6 +20,12 @@ install(
   ARCHIVE DESTINATION lib
 )
 
+configure_package_config_file(
+  ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+  INSTALL_DESTINATION lib/cmake
+)
+
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
   DESTINATION lib/cmake
