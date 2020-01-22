@@ -155,7 +155,11 @@ fi
 echo "[PIRA] Building PGIS analysis engine"
 cd $extsourcedir/PGIS
 
-git checkout devel 2>&1 > /dev/null
+# TODO Remove when merged
+stat .git
+if [ $? -eq 0 ]; then
+  git checkout devel 2>&1 > /dev/null
+fi
 
 rm -rf build
 mkdir build && cd build
@@ -177,7 +181,10 @@ echo "[PIRA] Building CGCollector"
 cd $extsourcedir/cgcollector
 
 # TODO Remove when merged
-#git checkout devel 2>&1 > /dev/null
+stat .git
+if [ $? -eq 0 ]; then
+  git checkout devel 2>&1 > /dev/null
+fi
 
 rm -rf build
 mkdir build && cd build
@@ -203,7 +210,7 @@ rm -r mpiwrap
 mkdir mpiwrap && cd mpiwrap
 wget https://github.com/LLNL/wrap/archive/master.zip
 unzip master.zip
-rm -r $extinstalldir/mpiwrap
+rm -rf $extinstalldir/mpiwrap
 mkdir $extinstalldir/mpiwrap
 cp wrap-master/wrap.py $extinstalldir/mpiwrap/wrap.py
 

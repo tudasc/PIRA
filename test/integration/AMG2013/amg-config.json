@@ -1,0 +1,32 @@
+{
+	"builds": {
+		"%amg2013": {
+			"items": {
+				"amg": {
+					"analyzer": "/home/j_lehr/all_repos/gh-jplehr-pgoe-EXPERIMENTAL",
+					"argmap": {
+						"mapper": "Linear",
+							"X":[
+								10,
+								12,
+								24,
+								30,
+								40
+							]
+					},
+					"cubes": "/tmp/pira-amg",
+					"flavors": [
+						"ct-mpi"
+					],
+					"functors": "/home/j_lehr/all_repos/gh-jplehr-pira-resources/functors/amg2013",
+					"mode": "CT"
+				}
+			}
+		}
+	},
+	"directories": {
+		"amg2013": "/home/j_lehr/all_repos/gh-jplehr-typeart-benchmarks/amg2013"
+	},
+  "glob-flavors":[],
+  "glob-submitter":{}
+}

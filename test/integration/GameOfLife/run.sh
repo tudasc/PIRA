@@ -7,27 +7,13 @@
 testDir=$PWD
 export TEST_DIR=$testDir
 
-# We need to be able to generate a compile_commands.json library
-echo -e "\n----- Getting and building bear -----"
-git clone https://github.com/rizsotto/Bear.git bear 2>&1 > /dev/null
-cd bear
-mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=../install .. 2>&1 > /dev/null
-make all 2>&1 > /dev/null
-make install 2>&1 > /dev/null
-
-cd ..
-export PATH=$PWD/install/bin:$PATH
+export PATH=$PWD/../bear/install/bin:$PATH
 echo $PATH
-cd ..
 
 # Export all the Pira tools for the integration test
 cd $testDir/../../../resources
 . setup_paths.sh
 cd $testDir
-#export LD_LIBRARY_PATH=$PWD/../../../extern/install/scorep/lib:$PWD/../../../extern/install/extrap/lib:$PWD/../../../extern/install/pgis/lib:$PWD/../../../extern/install/cgcollector/lib:$LD_LIBRARY_PATH
-#export PATH=$PWD/../../../extern/install/pgis/bin:$PWD/../../../extern/install/cgcollector/bin:$PATH
-#export PATH=$PWD/../../../extern/install/scorep/bin:$PATH
 echo $PATH
 
 echo -e "\n------ PATH -----"
@@ -40,11 +26,10 @@ which cgcollector
 which scorep
 which wrap.py
 
-# XXX Currently required from PGIS
-mkdir $PWD/../../../extern/install/pgis/bin/out
-
 # Download the target application
-git clone https://github.com/jplehr/GameOfLife gol 2>&1 > /dev/null
+wget https://github.com/jplehr/GameOfLife/archive/PIRA-testing.tar.gz
+tar xzf PIRA-testing.tar.gz
+mv GameOfLife-PIRA-testing gol
 
 echo -e "\n----- Build GameOfLife / build call graph -----"
 cd gol/serial_non_template
@@ -66,6 +51,5 @@ pirafailed=$?
 rm -rf /tmp/piraII
 cd $testDir
 rm -rf gol
-rm -rf bear
 
 exit $pirafailed
