@@ -2,22 +2,18 @@
 # PIRA
 
 The Performance Instrumentation Refinement Automation (PIRA) framework approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base when using an instrumentation tool, e.g., Score-P.
-However, the goal is to be as flexibel w.r.t. the used toolchain as possible.
-We have published two papers about the functionality PIRA offers.
-The initial paper can be found [here](https://dl.acm.org/citation.cfm?id=3281071) (ACM).
-The follow-up paper will be linked as soon as it is available for download, a preprint version can be found on [Research Gate](https://www.researchgate.net/publication/337831656_Automatic_Instrumentation_Refinement_for_Empirical_Performance_Modeling).
+For more information please see our papers [1](https://dl.acm.org/citation.cfm?id=3281071) and [2](https://www.researchgate.net/publication/337831656_Automatic_Instrumentation_Refinement_for_Empirical_Performance_Modeling).
 
-## Approach
+## General Approach
 
-The framework uses four or five phases to automatically:
+PIRA runs the following four phases (2-4 are iterated):
 
-* Build the target application and perform a baseline measurement.
-* Generate an initial performance instrumentation, based on the statement aggregation selection strategy (cf. [this paper](https://ieeexplore.ieee.org/document/7530067)), and link to the Score-P measurement infrastructure.
-* Run the target application to generate a profile in the CUBEX format.
-* Analyze the generated profile to find a new and improved instrumentation.
-* Iterate the latter two steps to find a well-suited instrumentation.
+1) Build the target application and perform a baseline measurement.
+2) Generate an initial performance instrumentation, based on the statement aggregation selection strategy (cf. [this paper](https://ieeexplore.ieee.org/document/7530067)), and link to the Score-P measurement infrastructure.
+3) Run the instrumented target application to generate a profile in the CUBEX format.
+4) Analyze the generated profile to find a new and improved instrumentation.
 
-PIRA supports both *compile time* and *runtime* filtering of deselcted functions.
+PIRA supports both *compile time* and *runtime* filtering of deselcted functions, including runtime filtering of MPI functions through automatically generated wrappers.
 In compile-time filtering, the functions are not instrumented at compile-time, reducing the overall measurement influence significantly, but requiring the target to be built in each iteration.
 In contrast, with runtime filtering, the compiler inserts instrumentation hooks in every function of the target application.
 Whether a function event should actually be recorded is decided at runtime in the linked measurement library.
@@ -26,34 +22,34 @@ Whether a function event should actually be recorded is decided at runtime in th
 
 ### Requirements
 
-We require a recent version of CMake (>= 3.5) and test PIRA with a Clang/LLVM source build (release 9.0).
+We require a recent version of CMake (>= 3.5) and test PIRA with a Clang/LLVM source build (release 9.0.1).
 
 ### Obtaining PIRA
 
-To obtain PIRA, first, clone the PIRA repository and pull-in its dependencies
+To obtain PIRA, first, clone the PIRA repository and pull-in its dependencies.
 
 ```{.sh}
 git clone https://github.com/jplehr/pira
 cd pira
-git submodule init
-git submodule update
+./resources/get_externals.sh
 ```
 
 ### Building PIRA
 
 Second, build the dependent submodules using the script we provide.
-The example shows that you can pass additional flags, e.g., ```--without-mpi``` to the Score-P configure phase, to customize the build for particular needs.
-During the build, also the required dependencies are added to the ```PATH``` variable to be available to PIRA and its components.
+The two example commands show that you can pass additional flags, e.g., ```--without-mpi``` to the Score-P configure phase, to customize the build for particular needs.
 
 ```{.sh}
 cd resources
-# Build the software using 8 compile jobs, and build Score-P w/o MPI support
+# Example 1: build the dependencies using 8 compile processes, and build Score-P w/o MPI support
 ./build_submodules.sh 8 --without-mpi
+# Example 2: build the dependencies using 24 compile processes, build Score-p w/ MPI support (requires an MPI version to be available)
+./build_submodules.sh 24
 ```
 
 ### Using PIRA
 
-To use PIRA, first set up the required paths, using the script in the `resources` folder.
+To use PIRA, first, set up the required paths, using the script in the `resources` folder.
 
 ```{.sh}
 cd resources/
@@ -81,6 +77,14 @@ These steps are:
 PIRA uses source code information to construct initial instrumentations and, decide which functions to add to an instrumentation during the iterative refinement.
 We provide a Clang-based call-graph tool that collects all required information and outputs the information in a `.json` file.
 You can find the `cgcollector` tool in the subdirectory `./extern/src/cgcollector`.
+
+The final graph (currently) needs to be placed into the directory of the **PGIS** that is used for the CG analysis, i.e., copy the generated whole program file into the PGIS directory.
+Currently, it is important that the file in the PGIS directory is named following the pattern `flavor-item.ipcg`, more on the terms flavor and item in the next section.
+
+~~~{.sh}
+# Assuming $PIRA holds the top-level PIRA directory
+cp my-app.ipcg $PIRA/extern/install/pgis/bin/flavor-target.ipcg
+~~~
 
 #### Configuration
 
@@ -195,8 +199,10 @@ This can be seen in the `./test/integration/GameOfLife` example functors.
 
 * ***CLFLAGS***: Additionally needed linker flags for C.
 * ***CXXLFLAGS***: Additionally needed linker flags for C++.
+* ***filter-file***: The path to the generated white list filter file (to be passed to scorep).
 
 ##### Run Functor
 
 * ***util***: Reference to a PIRA *Utility* object.
 * ***args***: The arguments passed to the target application as a list, i.e., `[0]` accesses the first argument, `[1]` the second, and so on.
+* ***LD_PRELOAD***: The path to the `.so` file implementing the MPI wrapper functions (crucial for MPI filtering).
