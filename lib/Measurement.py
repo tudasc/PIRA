@@ -281,14 +281,8 @@ class ScorepSystemHelper:
     u.shell('wrap.py -d > ' + mpi_funcs_dump)
     all_MPI_functions_decls = u.read_file(mpi_funcs_dump).split('\n')
     all_MPI_functions = []
-    t_c = 0
     for fd in all_MPI_functions_decls:
-      if t_c < 4:
-        print(fd)
-        t_c += 1
       name = fd[fd.find(' '):fd.find('(')]
-      if t_c < 4:
-        print(name)
       all_MPI_functions.append(name.strip())
 
     MPI_functions_to_filter = []
