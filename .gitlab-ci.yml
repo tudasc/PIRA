@@ -42,7 +42,8 @@ run-test:
     GIT_STRATEGY: none
   script:
     - ls
-    - ls build
+    - cd test
+    - $HOME/all_repos/gh-llvm-llvm-project/llvm/utils/lit/lit.py -v .
     - *lb-tear-down
 
 run-install:
@@ -53,7 +54,9 @@ run-install:
   variables:
     GIT_STRATEGY: none
   script:
+    - echo $PWD
     - cd build
+    - ls
     - make install
     - stat /tmp/llvm-instrumenter-install/lib/instrumentationlib.so
     - numlines=$(opt --load=/tmp/llvm-instrumentation-install/lib/instrumentationlib.so --filter-list 2>&1 | wc -l) && if [ $numlines -eq 1 ]; then exit 0; else exit 1; fi
