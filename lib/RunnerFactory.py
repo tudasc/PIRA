@@ -10,7 +10,7 @@ sys.path.append('..')
 from lib.Configuration import PiraConfiguration, ExtrapConfiguration, InvocationConfiguration
 from lib.Configuration import PiraConfigurationII, PiraConfigurationAdapter
 from lib.Runner import LocalRunner, LocalScalingRunner
-from lib.ProfileSink import NopSink, ExtrapProfileSink
+from lib.ProfileSink import NopSink, ExtrapProfileSink, PiraOneProfileSink
 import lib.Logging as log
 
 
@@ -21,7 +21,7 @@ class PiraRunnerFactory:
     self._invoc_cfg = invocation_cfg
 
   def get_simple_local_runner(self):
-    return LocalRunner(self._config, NopSink(), self._invoc_cfg.get_num_repetitions())
+    return LocalRunner(self._config, PiraOneProfileSink(), self._invoc_cfg.get_num_repetitions())
 
   def get_scalability_runner(self, extrap_config: ExtrapConfiguration):
     pc_ii = None
