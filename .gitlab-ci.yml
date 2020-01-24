@@ -105,7 +105,7 @@ run-gameoflife-test:
   variables:
     GIT_STRATEGY: none
   script:
-    - echo 'Running GameOfLife integration test'
+    - echo 'Running GameOfLife (PIRA II) integration test'
     - cd test/integration/GameOfLife
     - ./run.sh
     - *lb-tear-down
@@ -120,6 +120,19 @@ run-amg2013-test:
   script:
     - echo 'Running AMG integration test'
     - cd test/integration/AMG2013
+    - ./run.sh
+    - *lb-tear-down
+
+run-gameoflife-v1-test:
+  stage: integration-test
+  tags:
+    - hlb0001
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - echo 'Running GameOfLife (PIRA I) integration test'
+    - cd test/integration/GameOfLifePiraVersion1
     - ./run.sh
     - *lb-tear-down
 

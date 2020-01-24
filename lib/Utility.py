@@ -331,12 +331,14 @@ def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark
   cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber - 1)
   cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
 
-  #sh_cmd = command + ' ' + ipcg_file + ' ' + cubex_file
-  #log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
-  #log.get_logger().log(
-  #    '\nTHIS IS THE OLD VERSION OF PIRA/PGIS!!! WE NEED TO PASS -c IN FRONT OF CUBE FILE!!!!\n', level='warn')
-  #out, _ = shell(sh_cmd)
-  #log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
+  # PIRA version 1 runner, i.e., only consider raw runtime of single rum
+  if pgis_cfg_file is None:
+    log.get_logger().log('Utility::run_analyser_command: using PIRA 1 Analyzer', level='info')
+    sh_cmd = command + ' ' + ipcg_file + ' -c ' + cubex_file
+    log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
+    out, _ = shell(sh_cmd)
+    log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
+    return
 
   extrap_cfg_file = pgis_cfg_file
   # extrap_file_path = analyser_dir + '/' + extrap_cfg_file
@@ -345,7 +347,6 @@ def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark
   log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
   log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
-
 
 
 def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, benchmark_name: str) -> None:

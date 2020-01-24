@@ -47,7 +47,7 @@ cd gol
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../../pira.py --version 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../gol.tp $testDir/gol-config.json
+python3 ../../../../pira.py --version 2 --tape ../gol.tp $testDir/gol-config.json
 
 pirafailed=$?
 

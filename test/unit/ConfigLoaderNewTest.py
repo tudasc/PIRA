@@ -103,7 +103,7 @@ class TestConfigLoader(unittest.TestCase):
     self.assertEqual(flvs, dep_aw_flavors[expected_item])
 
     args = cfg.get_args(b, i_01)
-    self.assertListEqual(args, dep_aw_run[expected_item]['args'])
+    self.assertListEqual(args[0], dep_aw_run[expected_item]['args'])
 
   def test_config_item02(self):
     cfg = self.loader.load_conf('./input/unit_input_001.json')
@@ -134,7 +134,7 @@ class TestConfigLoader(unittest.TestCase):
     self.assertEqual(flvs, dep_aw_flavors[expected_item])
 
     args = cfg.get_args(b, i_02)
-    self.assertListEqual(args, dep_aw_run[expected_item]['args'])
+    self.assertListEqual(args[0], dep_aw_run[expected_item]['args'])
     self.assertFalse(cfg.is_submitter(b, i_02))
 
   @unittest.skip('Global flavors are currently not implemented')

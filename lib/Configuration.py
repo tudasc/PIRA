@@ -290,8 +290,8 @@ class PiraConfiguration:
   def has_local_flavors(self, b: str, it: str) -> bool:
     return len(self.flavors[b][it]['flavors']) > 0
 
-  def get_args(self, b: str, it: str) -> typing.List[str]:
-    return self.items[b][it]['args']
+  def get_args(self, b: str, it: str) -> typing.List[typing.List[str]]:
+    return [self.items[b][it]['args']]
 
   def get_cleaner_path(self, b: str, i: str) -> str:
     return self.items[b][i]['builders']

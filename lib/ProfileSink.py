@@ -34,12 +34,28 @@ class ProfileSinkBase:
 
 
 class NopSink(ProfileSinkBase):
-
+  '''
+  NopSink: To be used whenever a sink is required as an argument, but not needed for functionality
+  '''
   def __init__(self):
     super().__init__()
 
   def process(self, exp_dir, target_conf, instr_config):
     self._sink_target = exp_dir
+
+
+class PiraOneProfileSink(ProfileSinkBase):
+  '''
+  PiraOneProfileSink: To be used in PIRA version 1 mode.
+  '''
+  def __init__(self):
+    super().__init__()
+
+  def process(self, exp_dir, target_conf, instr_config):
+    self._sink_target = exp_dir
+
+  def output_pgis_config(self, benchmark, analyzer_dir):
+    return None
 
 
 class ExtrapProfileSink(ProfileSinkBase):
