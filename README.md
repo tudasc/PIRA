@@ -1,7 +1,7 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 # PIRA
 
-The **P**erformance **I**nstrumentation **R**efinement **A**utomation *PIRA* framework approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base when using an instrumentation tool, e.g., Score-P.
+The **P**erformance **I**nstrumentation **R**efinement **A**utomation framework *PIRA* approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base when using an instrumentation tool, e.g., Score-P.
 For more information please see our papers [1](https://dl.acm.org/citation.cfm?id=3281071) and [2](https://www.researchgate.net/publication/337831656_Automatic_Instrumentation_Refinement_for_Empirical_Performance_Modeling).
 
 ## General Approach
