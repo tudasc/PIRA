@@ -2,6 +2,12 @@ echo "Running the PIRA tests"
 
 tester=''
 
+didfail=0
+
+export PYTHONPATH=$PWD:$PYTHONPATH
+# This seems to be specific to my machine...
+export PATH=~/.local/bin:$PATH
+
 command -v pytest
 if [ $? -eq 1 ]; then
   echo -e "[PIRA]: No pytest found.\n"
@@ -19,12 +25,6 @@ fi
 if [ -z $tester ]; then
   exit -1
 fi
-
-didfail=0
-
-export PYTHONPATH=$PWD:$PYTHONPATH
-# This seems to be specific to my machine...
-export PATH=~/.local/bin:$PATH
 
 cd test/unit
 for i in `find . -iname "*.py"`; do 
