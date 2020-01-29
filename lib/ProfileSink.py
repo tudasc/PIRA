@@ -141,7 +141,7 @@ class ExtrapProfileSink(ProfileSinkBase):
       cubex_name = experiment_dir + '/' + target_config.get_flavor() + '-' + target_config.get_target() + '.cubex'
       log.get_logger().log(cubex_name)
 
-      if not u.check_file(cubex_name):
+      if not u.is_file(cubex_name):
         log.get_logger().log('ExtrapProfileSink::check_and_prepare: Returned experiment cube name is no file: ' +
                              cubex_name)
       else:

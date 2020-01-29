@@ -6,10 +6,11 @@ Description: Module implementing the main workflow of PIRA.
 
 from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader
 from lib.ConfigurationLoader import ConfigurationLoader as CLoader
-from lib.Configuration import TargetConfiguration, PiraConfiguration, ExtrapConfiguration, InvocationConfiguration
+from lib.Configuration import TargetConfiguration, PiraConfiguration, ExtrapConfiguration, InvocationConfiguration, PiraConfigurationErrorException
 from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as B
 from lib.Analyzer import Analyzer as A
+from lib.Checker import Checker as checker
 import lib.Logging as log
 import lib.Utility as util
 import lib.BatchSystemHelper as bat_sys
@@ -132,10 +133,12 @@ def main(arguments) -> None:
   try:
     if arguments.version is 1:
       config_loader = CLoader()
+      configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
+      checker.check_configfile_v1(configuration)
     else:
       config_loader = SCLoader()
-
-    configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
+      configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
+      checker.check_configfile_v2(configuration)
 
     if bat_sys.check_queued_job():
       # FIXME: Implement

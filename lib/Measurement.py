@@ -263,11 +263,11 @@ class ScorepSystemHelper:
     scorep_init_file_name = 'scorep.init.c'
     log.get_logger().log('ScorepMeasurementSystem::check_build_prerequisites: global home dir: ' + u.get_home_dir())
     pira_scorep_resource = u.get_home_dir() + '/resources/scorep.init.c'
-    if not u.check_file(scorep_init_file_name):
+    if not u.is_file(scorep_init_file_name):
       u.copy_file(pira_scorep_resource, u.get_cwd() + '/' + scorep_init_file_name)
 
     # In case something goes wrong with copying
-    if u.check_file(scorep_init_file_name):
+    if u.is_file(scorep_init_file_name):
       u.shell('gcc -c ' + scorep_init_file_name)
     else:
       raise MeasurementSystemException('ScorepMeasurementSystem::check_build_prerequisites: Missing ' +

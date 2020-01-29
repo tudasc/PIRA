@@ -96,7 +96,7 @@ def read_batch_queued_job():
 
 
 def check_queued_job():
-  return util.check_file(queued_job_filename)
+  return util.is_file(queued_job_filename)
 
 
 def get_runtime_of_submitted_job(job_id):
