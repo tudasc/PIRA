@@ -21,8 +21,8 @@ class TestUtility(unittest.TestCase):
     self.assertFalse(u.check_provided_directory('/glibberish/asdf'))
 
   def test_check_file(self):
-    self.assertTrue(u.check_file('/bin/sh'))
-    self.assertFalse(u.check_file('/bin/ushsdnsdhh'))
+    self.assertTrue(u.is_file('/bin/sh'))
+    self.assertFalse(u.is_file('/bin/ushsdnsdhh'))
 
   def test_shell_dry_run(self):
     command = 'echo "Hello world!"'
@@ -116,6 +116,15 @@ class TestUtility(unittest.TestCase):
     res = u.is_valid_file_name(file_name)
     self.assertFalse(res)
 
+  def test_get_tempdir(self):
+    tempdir = u.get_tempdir()
+
+  def test_make_dir(self):
+    u.make_dir("/home")
+
+  def test_remove_dir(self):
+    u.make_dirs(u.get_tempdir() + "/rm_dir_test")
+    u.remove_dir(u.get_tempdir() + "/rm_dir_test")
 
 if __name__ == '__main__':
   unittest.main()

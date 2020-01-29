@@ -6,9 +6,12 @@ Description: Module to read the PIRA configuration from file.
 
 import lib.Utility as util
 import lib.Logging as log
-from lib.Configuration import PiraConfiguration, PiraConfigurationII, PiraItem, PiraConfigurationAdapter
+from lib.Configuration import PiraConfiguration, PiraConfigurationII, PiraItem, PiraConfigurationAdapter, PiraConfigurationErrorException
 from lib.ArgumentMapping import CmdlineCartesianProductArgumentMapper, CmdlineLinearArgumentMapper, ArgumentMapperFactory
+import sys
+import os
 
+import sys
 import json
 import typing
 """ 
@@ -47,8 +50,13 @@ class ConfigurationLoader:
       file_content = util.read_file(config_file)
       json_tree = json.loads(file_content)
       configuration = self.construct_from_json(json_tree)
+      #self.check_paths(configuration)
       self.config_cache[config_file] = configuration
       return configuration
+
+    except PiraConfigurationErrorException as e:
+      log.get_logger().log(str(e), level='error')
+      sys.exit()
 
     except Exception as e:
       print('Exception occured ' + str(e))
@@ -91,6 +99,31 @@ class ConfigurationLoader:
 
     return conf
 
+  def check_paths(self, conf):
+    error_message ="Error in configuration-file:\n\n"
+    exception_occured = False
+    for build_dir in conf.directories:
+      if not(util.check_provided_directory(build_dir)):
+        error_message += "Build-directory " +build_dir+ " does not exist.\n\n"
+        exception_occured = True
+      for item in conf.builds[build_dir][_ITEMS]:
+        for inst_ana in conf.items[build_dir][item]["instrument_analysis"]:
+          if not(util.check_provided_directory(inst_ana)):
+            error_message += "Instrument-analysis directory " + inst_ana + " does not exist.\n"
+            exception_occured = True
+        if not(util.check_provided_directory(conf.items[build_dir][item]["builders"])):
+          error_message += "Builders-directory " + conf.items[build_dir][item]["builders"] + " does not exist.\n"
+          exception_occured = True
+        for arg in conf.items[build_dir][item]["args"]:
+          if not(util.check_provided_directory(arg)):
+            error_message += "args" + arg + "does not exist.\n"
+            exception_occured = True
+          if not(util.check_provided_directory(conf.items[build_dir][item]["runner"])):
+            error_message += "runner" + conf.items[build_dir][item]["runner"] + "does not exist.\n"
+            exception_occured = True
+      if exception_occured:
+        raise PiraConfigurationErrorException(error_message)
+
 
 class SimplifiedConfigurationLoader:
 
@@ -99,7 +132,7 @@ class SimplifiedConfigurationLoader:
     self.base_mapper = None
 
   def load_conf(self, config_file: str) -> PiraConfiguration:
-    if not util.check_file(config_file):
+    if not util.is_file(config_file):
       raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file location "' + config_file + '" [no such file].')
 
     config_abs = util.get_absolute_path(config_file)
@@ -112,7 +145,8 @@ class SimplifiedConfigurationLoader:
       self.parse_from_json(json_tree)
 
     except Exception as e:
-      log.get_logger().log('SimplifiedConfigurationLoader::load_conf: Caught exception "' + str(e))
+     log.get_logger().log('SimplifiedConfigurationLoader::load_conf: Caught exception "' + str(e))
+
 
     return PiraConfigurationAdapter(self._config)
 
@@ -194,3 +228,41 @@ class SimplifiedConfigurationLoader:
         pira_item = self.create_item_from_json(item_key, item_tree)
 
         self._config.add_item(directory_for_item, pira_item)
+
+  def check_paths(self,config) :
+    error_message = "Error in configuration-file:\n\n"
+    exception_occured = False
+
+    for dir in config.get_directories():
+      if not(util.check_provided_directory(dir)):
+        error_message += "Directory " + dir + " does not exist.\n"
+        exception_occured = True
+      for item in config.get_items(dir):
+        if not(util.check_provided_directory(item.get_analyzer_dir())):
+          error_message += "Analyzer-Directory " + item.get_analyzer_dir() + " does not exist\n"
+          exception_occured = True
+        if not(util.check_provided_directory(item.get_analyzer_dir())):
+          error_message += "Cubes-Directory " + item.get_cubes_dir() + " does not exist\n"
+          exception_occured = True
+        if not(util.check_provided_directory(item.get_functor_base_path())):
+          error_message += "Functors-Base-Directory " + item.get_functor_base_path() + " does not exist\n"
+          exception_occured = True
+        for flavor in item.get_flavors():
+          if not(util.is_file(item.get_functor_base_path() + "/analyse_" + item._name + "_" + flavor + ".py")):
+            error_message += "analyse-functor of flavor " + flavor + " does not exist.\n"
+            exception_occured = True
+          if not(util.is_file(item.get_functor_base_path() + "/clean_" + item._name + "_" + flavor + ".py")):
+            error_message += "clean-functor of flavor " + flavor + " does not exist.\n"
+            exception_occured = True
+          if not(util.is_file(item.get_functor_base_path() + "/no_instr_" + item._name + "_" + flavor + ".py")):
+            error_message += "no_instr-functor of flavor " + flavor + " does not exist.\n"
+            exception_occured = True
+          if not(util.is_file(item.get_functor_base_path() + "/runner_" + item._name + "_" + flavor + ".py")):
+            error_message += "runner-functor of flavor " + flavor + " does not exist.\n"
+            exception_occured = True
+          if not(util.is_file(item.get_functor_base_path() + "/" + item._name + "_" + flavor + ".py")):
+            error_message += "plain-functor of flavor " + flavor + " does not exist.\n"
+            exception_occured = True
+
+    if exception_occured:
+      raise PiraConfigurationErrorException(error_message)

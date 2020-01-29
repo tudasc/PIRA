@@ -62,7 +62,7 @@ class Analyzer:
         tracker = tt.TimeTracker()
         
         # TODO: Alternate between expansion and pure filtering.
-        if iterationNumber > 0 and util.check_file(instr_files):
+        if iterationNumber > 0 and util.is_file(instr_files):
           logging.get_logger().log('Analyzer::analyze_local: instr_file available')
           util.rename(instr_files, prev_instr_file)
           tracker.m_track('Analysis', util, 'run_analyser_command', command, analyzer_dir, flavor, benchmark_name,

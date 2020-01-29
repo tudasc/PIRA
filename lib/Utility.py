@@ -15,15 +15,18 @@ from random import choice
 from string import ascii_uppercase
 from timeit import timeit
 import shutil
+import tempfile
 
 import typing
 
 queued_job_filename = './queued_job.tmp'
 home_directory = ''
 
-
+def exit(code="1"):
+  sys.exit(code)
 
 # --- Files / Directories --- #
+
 
 def set_home_dir(home_dir: str) -> None:
   global home_directory
@@ -58,6 +61,16 @@ def copy_file(source_file: str, target_file: str) -> None:
   shutil.copyfile(source_file, target_file)
 
 
+
+def lines_in_file(file_name: str) -> int:
+  if is_file(file_name):
+    content = read_file(file_name)
+    lines = len(content.split('\n'))
+    return lines
+
+  log.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
+  return 0
+
 def check_provided_directory(path: str) -> bool:
   if os.path.isdir(path):
     return True
@@ -88,6 +101,15 @@ def is_absolute_path(path: str) -> bool:
 def create_directory(path: str) -> None:
   os.makedirs(path)
 
+def get_tempdir():
+  return tempfile.gettempdir()
+
+def make_dir(path):
+  if not(check_provided_directory(path)):
+    os.mkdir(path)
+
+def make_dirs(path):
+  os.makedirs(path,0o777,True)
 
 def write_file(file_path: str, file_content: str) -> str:
   log.get_logger().log('Utility::write_file: file_path to write: ' + file_path)
@@ -99,11 +121,15 @@ def get_base_dir(file_path: str) -> str:
   return os.path.dirname(file_path)
 
 
+def is_file(path: str) -> bool:
+  if os.path.isfile(path):
+    return True
+  return False
+
 def check_file(path: str) -> bool:
   if os.path.exists(path):
     return True
   return False
-
 
 def is_valid_file_name(file_name: str) -> bool:
   import re
@@ -122,9 +148,13 @@ def remove(path: str) -> None:
     for d in dirs:
       shutil.rmtree(os.path.join(root, d))
 
+def remove_dir(path: str):
+  if os.path.isdir(path):
+    shutil.rmtree(path)
+
 
 def remove_file(path: str) -> bool:
-  if check_file(path):
+  if is_file(path):
     os.remove(path)
     return True
   return False
