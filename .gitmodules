@@ -1,0 +1,12 @@
+[submodule "extern/src/scorep-mod"]
+	path = extern/src/scorep-mod
+	url = git@git.rwth-aachen.de:tuda-sc/projects/score-p-v6.git
+[submodule "extern/src/cgcollector"]
+	path = extern/src/cgcollector
+	url = git@git.rwth-aachen.de:tuda-sc/projects/cgcollector.git
+[submodule "extern/src/llvm-instrumenter"]
+	path = extern/src/llvm-instrumenter
+	url = git@git.rwth-aachen.de:tuda-sc/projects/llvm-instrumentation.git
+[submodule "extern/src/PGIS"]
+	path = extern/src/PGIS
+	url = git@git.rwth-aachen.de:tuda-sc/projects/pgis.git

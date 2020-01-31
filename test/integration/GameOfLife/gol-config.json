@@ -1,0 +1,26 @@
+{
+    "builds": {
+        "%gol": {
+            "items": {
+                "gol": {
+                    "analyzer": "../../../extern/install/pgis/bin/",
+                    "argmap": {
+                        "mapper": "Linear",
+												"size": [50, 80, 110, 150, 300, 500]
+                    },
+                    "cubes": "/tmp/pira",
+                    "flavors": [
+                        "ct"
+                    ],
+                    "functors": "./functors",
+                    "mode": "CT"
+                }
+            }
+        }
+    },
+    "directories": {
+        "gol": "./gol/serial_non_template"
+    },
+    "glob-flavors": [],
+    "glob-submitter": {}
+}
