@@ -18,9 +18,9 @@ cd $exttardir
 #cd $extsourcedir
 
 echo "Getting PIRA call graph collector utility tool"
-wget https://github.com/jplehr/CGCollector/archive/cgcollector-v0.1.tar.gz
-tar xzf cgcollector-v0.1.tar.gz
-mv CGCollector-cgcollector-v0.1/* $extsourcedir/cgcollector
+wget https://github.com/jplehr/CGCollector/archive/cgc-v0.1.1.tar.gz
+tar xzf cgc-v0.1.1.tar.gz
+mv CGCollector-cgc-v0.1.1/* $extsourcedir/cgcollector
 
 cd $exttardir
 #cd $extsourcedir
@@ -42,7 +42,7 @@ cd $exttardir
 #cd $extsourcedir
 
 echo "Getting PIRA PGIS analysis engine"
-wget https://github.com/jplehr/PGIS/archive/pgis-v0.1.0.tar.gz
-tar xzf pgis-v0.1.0.tar.gz
-mv PGIS-pgis-v0.1.0/* $extsourcedir/PGIS
+wget https://github.com/jplehr/PGIS/archive/pgis-v0.1.1.tar.gz
+tar xzf pgis-v0.1.1.tar.gz
+mv PGIS-pgis-v0.1.1/* $extsourcedir/PGIS
 
