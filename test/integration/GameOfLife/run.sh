@@ -52,6 +52,7 @@ python3 ../../../../pira.py --version 2 --extrap-dir /tmp/piraII --extrap-prefix
 pirafailed=$?
 
 rm -rf /tmp/piraII
+rm -r /tmp/pira-*
 cd $testDir
 rm -rf gol
 

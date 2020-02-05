@@ -64,6 +64,7 @@ build-dependencies:
     GIT_STRATEGY: fetch
   script:
     - cd resources
+    - ./remove_builds.sh
     - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l)
     - *lb-tear-down
 
@@ -92,6 +93,9 @@ run-prepare-integration:
   variables:
     GIT_STRATEGY: none
   script:
+    - cd resources
+    - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l) # This should not do anything, as all dependencies are already built.
+    - cd ..
     - cd test/integration
     - . prepare_environment.sh
     - *lb-tear-down
