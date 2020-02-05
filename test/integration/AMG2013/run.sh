@@ -64,6 +64,7 @@ python3 ../../../pira.py --version 2 --iterations 2 --repetitions 2 --extrap-dir
 pirafailed=$?
 
 rm -rf /tmp/piraII
+rm -r /tmp/pira-*
 cd $testDir
 rm -rf AMG2013
 

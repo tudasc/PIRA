@@ -9,20 +9,27 @@ export TEST_DIR=$testDir
 
 # We need to be able to generate a compile_commands.json library
 echo -e "\n----- Getting and building bear (v 2.4.2) -----"
-wget https://github.com/rizsotto/Bear/archive/2.4.2.tar.gz
-tar xzf 2.4.2.tar.gz
-mv Bear-2.4.2 bear
-cd bear
-mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=../install .. 2>&1 > /dev/null
-make all 2>&1 > /dev/null
-make install 2>&1 > /dev/null
 
-cd ..
+if [ ! -f 2.4.2.tar.gz ]; then
+	echo "Fetching Bear release 2.4.2"
+  wget https://github.com/rizsotto/Bear/archive/2.4.2.tar.gz
+  tar xzf 2.4.2.tar.gz
+  mv Bear-2.4.2 bear
+  cd bear
+  mkdir build && cd build
+  cmake -DCMAKE_INSTALL_PREFIX=../install .. 2>&1 > /dev/null
+  make all 2>&1 > /dev/null
+  make install 2>&1 > /dev/null
+  cd ..
+else
+  cd bear
+fi
+
 export PATH=$PWD/install/bin:$PATH
 echo $PATH
 cd ..
 
 # XXX Currently required from PGIS
-mkdir $PWD/../../extern/install/pgis/bin/out
-
+if [ ! -d $PWD/../../extern/install/pgis/bin/out ]; then
+  mkdir $PWD/../../extern/install/pgis/bin/out
+fi
