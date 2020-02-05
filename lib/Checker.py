@@ -1,7 +1,7 @@
 """
 File: Checker.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-Description: Checks if files and paths in config-file are vaild.
+Description: Checks if files and paths in config-file are valid.
 """
 import lib.Utility as util
 import lib.Configuration as config
@@ -19,18 +19,21 @@ class Checker:
         error_message += "Build-directory " +build_dir+ " does not exist.\n\n"
         exception_occured = True
 
-      for item in configuration.builds[build_dir]['items']:
-        analysis_functor_dir = configuration.items[build_dir][item]['instrument_analysis'][0]
 
+      for item in configuration.builds[build_dir]['items']:
+
+        analysis_functor_dir = configuration.items[build_dir][item]['instrument_analysis'][0]
         if not (util.check_provided_directory(analysis_functor_dir)):
           error_message += "Analysis-functor dir " + analysis_functor_dir  + " does not exist.\n"
           exception_occured = True
 
         analysis_binary_dir = configuration.items[build_dir][item]['instrument_analysis'][2]
         if not (util.check_provided_directory(analysis_binary_dir)):
-          error_message += "Analysis-functor dir " + analysis_binary_dir  + " does not exist.\n"
+          error_message += "Analysis-binary dir " + analysis_binary_dir  + " does not exist.\n"
           exception_occured = True
 
+        #instead of promping an error, we just create a log if the cubes-Directory does not exist.
+        # This is due to that the directory is created in ProfileSink
         cubes_dir = configuration.items[build_dir][item]['instrument_analysis'][1]
         if not(util.check_provided_directory(cubes_dir)):
           log.get_logger().log("Creating Cubes-Directory" + cubes_dir , level='info')
@@ -59,12 +62,13 @@ class Checker:
     error_message = "Error in configuration-file:\n\n"
     exception_occured = False
 
+    # check if directories exist
+
     for dir in configuration.get_directories():
       if not (util.check_provided_directory(configuration.get_place(dir))):
         error_message += "Directory " + dir + " does not exist.\n"
         exception_occured = True
 
-      # check if directories exist
       for item in configuration.get_items(dir):
         if not (util.check_provided_directory(item.get_analyzer_dir())):
           error_message += "Analyzer-Directory " + item.get_analyzer_dir() + " does not exist\n"
@@ -89,25 +93,13 @@ class Checker:
 
         # check if functor-files exist
         for flavor in flavors:
-          if not (util.is_file(item.get_functor_base_path() + "/analyse_" + item._name + underscore + flavor + ".py")):
-            error_message += "analyse-functor of flavor " + flavor + " does not exist" + ".\n"
-            exception_occured = True
 
-          if not (util.is_file(item.get_functor_base_path() + "/clean_" + item._name + underscore + flavor + ".py")):
-            error_message += "clean-functor of flavor " + flavor + " does not exist.\n"
-            exception_occured = True
+          functors =['analyse_','clean_','no_instr_','runner_','']
 
-          if not (util.is_file(item.get_functor_base_path() + "/no_instr_" + item._name + underscore + flavor + ".py")):
-            error_message += "no_instr-functor of flavor " + flavor + " does not exist.\n"
-            exception_occured = True
-
-          if not (util.is_file(item.get_functor_base_path() + "/runner_" + item._name + underscore + flavor + ".py")):
-            error_message += "runner-functor of flavor " + flavor + " does not exist.\n"
-            exception_occured = True
-
-          if not (util.is_file(item.get_functor_base_path() + "/" + item._name + underscore + flavor + ".py")):
-            error_message += "plain-functor of flavor " + flavor + " in item " + item._name + " does not exist.\n"
-            exception_occured = True
+          for functor in functors:
+            if not (util.is_file(item.get_functor_base_path() + "/" + functor + item._name + underscore + flavor + ".py")):
+              error_message += functor + "-functor of flavor " + flavor + " does not exist" + ".\n"
+              exception_occured = True
 
 
     if exception_occured:
