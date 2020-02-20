@@ -1,20 +1,17 @@
 """
 File: ConfigLoaderNewTest.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-Description: Tests for the argument mapping
+Description: Tests for the ConfigurationLoader module.
 """
 
-import sys
-sys.path.append('../')
+import lib.Logging as L
+from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader
+from lib.Configuration import PiraConfigurationAdapter, PiraConfigurationII
 
 import unittest
 import typing
 
-from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader
-import lib.Logging as logging
-import lib.Utility as util
-
-logger = logging.get_logger()
+logger = L.get_logger()
 logger.set_state('debug')
 logger.set_state('info')
 logger.set_state('warn')
@@ -271,14 +268,17 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     for (exp, arg) in zip(expected, args):
       self.assertEqual(exp, tuple(arg))
 
-  @unittest.skip('This test needs to run, when the configuration checks are correctly implemented.')
   def test_basic_config_001(self):
     cfg = self.loader.load_conf('../inputs/configs/basic_config_001.json')
 
     self.assertIsNotNone(cfg)
-    self.assertFalse(cfg.is_valid())
-    # TODO Figure out how we can check that we generate the correct errors
+    self.assertFalse(cfg.is_empty())
 
+  def test_relative_paths(self):
+    cfg = self.loader.load_conf('../inputs/configs/basic_config_005.json')
+    self.assertFalse(cfg.is_empty())
+    self.assertTrue(isinstance(cfg, PiraConfigurationAdapter))
+    self.assertTrue(isinstance(cfg.get_adapted(), PiraConfigurationII))
 
 
 if __name__ == '__main__':
