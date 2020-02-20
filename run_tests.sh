@@ -37,4 +37,6 @@ done
   coverage combine
 cd ../..
 
+echo "Failed tests: $didfail"
+
 exit $didfail

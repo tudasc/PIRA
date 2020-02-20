@@ -5,9 +5,9 @@ Description: Module to load and manage the user-supplied functors.
 """
 
 import typing
-import lib.Utility as u
+import lib.Utility as U
+import lib.Logging as L
 from lib.Configuration import PiraConfiguration, PiraConfigurationErrorException
-import lib.Logging as log
 from lib.Exception import PiraException
 
 
@@ -24,6 +24,9 @@ class FunctorManager:
   class __FunctorManagerImpl:
 
     def __init__(self, cfg: PiraConfiguration) -> None:
+      if cfg.is_empty():
+        raise FunctorManagementException('Cannot construct from empty Configuration')
+
       self.config = cfg
       self.functor_cache = {}
 
@@ -48,9 +51,9 @@ class FunctorManager:
       try:
         _ = self.functor_cache[name]
       except KeyError:
-        self.functor_cache[name] = u.load_functor(path, name)
+        self.functor_cache[name] = U.load_functor(path, name)
 
-      log.get_logger().log(
+      L.get_logger().log(
           'FunctorManager::get_or_load: The retrieved ' + func + ' functor: ' + str(self.functor_cache[name]),
           level='debug')
 
@@ -60,7 +63,7 @@ class FunctorManager:
       p = self.config.get_builder_path(build, item)
       n = self.get_builder_name(build, item, flavor)
       if base:
-        n = u.concat_a_b_with_sep('no_instr', n, '_')
+        n = U.concat_a_b_with_sep('no_instr', n, '_')
       wnm = self.get_builder_file(build, item, flavor)
       return p, n, wnm
 
@@ -84,57 +87,57 @@ class FunctorManager:
 
     def get_raw_name(self, build: str, item: str, flavor: str) -> str:
       b_nm = self.config.get_benchmark_name(item)
-      raw_nm = u.concat_a_b_with_sep(b_nm, flavor, '_')
+      raw_nm = U.concat_a_b_with_sep(b_nm, flavor, '_')
       return raw_nm
 
     def get_cleaner_name(self, build: str, item: str, flavor: str) -> str:
       raw_nm = self.get_raw_name(build, item, flavor)
-      cl_nm = u.concat_a_b_with_sep('clean', raw_nm, '_')
+      cl_nm = U.concat_a_b_with_sep('clean', raw_nm, '_')
       return cl_nm
 
     def get_cleaner_file(self, build: str, item: str, flavor: str) -> str:
       path = self.config.get_cleaner_path(build, item)
       nm = self.get_cleaner_name(build, item, flavor)
-      file_path = u.concat_a_b_with_sep(path, nm, '/')
-      full_path = u.concat_a_b_with_sep(file_path, 'py', '.')
+      file_path = U.concat_a_b_with_sep(path, nm, '/')
+      full_path = U.concat_a_b_with_sep(file_path, 'py', '.')
       return full_path
 
     def get_builder_name(self, build: str, item: str, flavor: str) -> str:
       raw_nm = self.get_raw_name(build, item, flavor)
       # FIXME: remove as soon as the new uniform naming is in place
       return raw_nm
-      cl_nm = u.concat_a_b_with_sep('build', raw_nm, '_')
+      cl_nm = U.concat_a_b_with_sep('build', raw_nm, '_')
       return cl_nm
 
     def get_builder_file(self, build: str, item: str, flavor: str) -> str:
       path = self.config.get_builder_path(build, item)
       nm = self.get_builder_name(build, item, flavor)
-      file_path = u.concat_a_b_with_sep(path, nm, '/')
-      full_path = u.concat_a_b_with_sep(file_path, 'py', '.')
+      file_path = U.concat_a_b_with_sep(path, nm, '/')
+      full_path = U.concat_a_b_with_sep(file_path, 'py', '.')
       return full_path
 
     def get_analyzer_name(self, build: str, item: str, flavor: str) -> str:
       raw_nm = self.get_raw_name(build, item, flavor)
-      cl_nm = u.concat_a_b_with_sep('analyse', raw_nm, '_')
+      cl_nm = U.concat_a_b_with_sep('analyse', raw_nm, '_')
       return cl_nm
 
     def get_analyzer_file(self, build: str, item: str, flavor: str) -> str:
       path = self.config.get_analyzer_path(build, item)
       nm = self.get_analyzer_name(build, item, flavor)
-      file_path = u.concat_a_b_with_sep(path, nm, '/')
-      full_path = u.concat_a_b_with_sep(file_path, 'py', '.')
+      file_path = U.concat_a_b_with_sep(path, nm, '/')
+      full_path = U.concat_a_b_with_sep(file_path, 'py', '.')
       return full_path
 
     def get_runner_name(self, build: str, item: str, flavor: str) -> str:
       raw_nm = self.get_raw_name(build, item, flavor)
-      cl_nm = u.concat_a_b_with_sep('runner', raw_nm, '_')
+      cl_nm = U.concat_a_b_with_sep('runner', raw_nm, '_')
       return cl_nm
 
     def get_runner_file(self, build: str, item: str, flavor: str) -> str:
       path = self.config.get_runner_path(build, item)
       nm = self.get_runner_name(build, item, flavor)
-      file_path = u.concat_a_b_with_sep(path, nm, '/')
-      full_path = u.concat_a_b_with_sep(file_path, 'py', '.')
+      file_path = U.concat_a_b_with_sep(path, nm, '/')
+      full_path = U.concat_a_b_with_sep(file_path, 'py', '.')
       return full_path
 
   instance = None

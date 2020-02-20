@@ -3,8 +3,8 @@ File: BatchSystemHelper.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Needs attention
 """
-import lib.Utility as util
-import lib.Logging as log
+import lib.Utility as U
+import lib.Logging as L
 
 queued_job_filename = './queued_job.tmp'
 
@@ -82,7 +82,7 @@ def create_batch_queued_temp_file(job_id, benchmark_name, iterationNumber, DBInt
       myfile.close()
 
   except:
-    log.get_logger().log('Unable to create batch system temporary file. Exit.', level='error')
+    L.get_logger().log('Unable to create batch system temporary file. Exit.', level='error')
     exit(1)
 
 
@@ -91,12 +91,12 @@ def read_batch_queued_job():
     lines = [line.rstrip('\n') for line in open(queued_job_filename)]
     return lines
   else:
-    log.get_logger().log('Batch system queued file does not exist. Exit.', level='error')
+    L.get_logger().log('Batch system queued file does not exist. Exit.', level='error')
     exit(1)
 
 
 def check_queued_job():
-  return util.is_file(queued_job_filename)
+  return U.is_file(queued_job_filename)
 
 
 def get_runtime_of_submitted_job(job_id):
@@ -106,4 +106,4 @@ def get_runtime_of_submitted_job(job_id):
 
 
 def remove_queued_job_tmp_file():
-  util.remove(queued_job_filename)
+  U.remove(queued_job_filename)

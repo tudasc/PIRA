@@ -6,15 +6,15 @@ Description: Module that provides to main data structures.
 
 import sys
 sys.path.append('..')
-import lib.Logging as log
-import lib.Exception as PE
-import lib.Utility as u
+import lib.Logging as L
+import lib.Exception as E
+import lib.Utility as U
 
 
 import typing
 
 
-class PiraConfigurationErrorException(PE.PiraException):
+class PiraConfigurationErrorException(E.PiraException):
   def __init__(self, m):
     super().__init__(m)
 
@@ -30,17 +30,20 @@ class PiraItem:
     self._mode = None
     self._run_options = None
 
+  def __str__(self):
+    return '[PiraItem] ' + self._name
+
   def get_name(self):
     return self._name
 
   def get_analyzer_dir(self):
-    if u.is_absolute_path(self._analyzer_dir):
+    if U.is_absolute_path(self._analyzer_dir):
       return self._analyzer_dir
 
     return self._base_path + '/' + self._analyzer_dir
 
   def get_cubes_dir(self):
-    if u.is_absolute_path(self._cubes_dir):
+    if U.is_absolute_path(self._cubes_dir):
       return self._cubes_dir
 
     return self._base_path + '/' + self._cubes_dir
@@ -49,7 +52,7 @@ class PiraItem:
     return self._flavors
 
   def get_functor_base_path(self):
-    if u.is_absolute_path(self._functor_base_path):
+    if U.is_absolute_path(self._functor_base_path):
       return self._functor_base_path
 
     return self._base_path + '/' + self._functor_base_path
@@ -87,6 +90,7 @@ class PiraConfigurationII:
   def __init__(self):
     self._directories = {}
     self._abs_base_path = None
+    self._empty = True
 
   def add_item(self, name, item) -> None:
     try:
@@ -104,8 +108,8 @@ class PiraConfigurationII:
   def get_place(self, build):
     place = build
     for k in self._directories.keys():
-      if build == k:
-        if not u.is_absolute_path(k):
+      if place == k:
+        if not U.is_absolute_path(k):
           place = self._abs_base_path + '/' + str(k)
     return place
 
@@ -118,8 +122,8 @@ class PiraConfigurationII:
   def get_absolute_base_path(self):
     return self._abs_base_path
 
-  def is_valid(self) -> bool:
-    return True
+  def is_empty(self) -> bool:
+    return self._empty
 
 
 class PiraConfigurationAdapter:
@@ -189,8 +193,8 @@ class PiraConfigurationAdapter:
     io = self.get_item_w_name(build, item)
     return io.get_run_options().as_list()
 
-  def is_valid(self) -> bool:
-    return True
+  def is_empty(self) -> bool:
+    return self._pcii.is_empty()
 
 
 class PiraConfiguration:
@@ -218,9 +222,10 @@ class PiraConfiguration:
     self.stop_iteration = {}
     self.is_first_iteration = {}
     self.base_mapper = None
+    self._empty = True
 
-  def is_valid(self) -> bool:
-    return True
+  def is_empty(self) -> bool:
+    return self._empty
 
   def set_build_directories(self, dirs) -> None:
     self.directories = dirs
@@ -297,7 +302,7 @@ class PiraConfiguration:
     return self.items[b][i]['builders']
 
   def get_builder_path(self, b: str, i: str) -> str:
-    log.get_logger().log('Old: get_builder_path: ' + self.items[b][i]['builders'], level='debug')
+    L.get_logger().log('Old: get_builder_path: ' + self.items[b][i]['builders'], level='debug')
     return self.items[b][i]['builders']
 
   def get_analyzer_path(self, b: str, i: str) -> str:
@@ -308,7 +313,7 @@ class PiraConfiguration:
 
   # FIXME Rename some more reasonable // get_builder_path
   def get_flavor_func(self, build: str, item: str) -> str:
-    log.get_logger().log('Using a deprecated function: get_flavor_func', level='warn')
+    L.get_logger().log('Using a deprecated function: get_flavor_func', level='warn')
     return self.items[build][item]['builders']
 
   # TODO: We should lift all the accesses to these functor paths etc to the FunctorManagement
@@ -423,7 +428,7 @@ class TargetConfiguration:
 
   def get_args_for_invocation(self) -> str:
     if self._args_for_invocation is None:
-      log.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
+      L.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
 
     return self._args_for_invocation
 

@@ -1,0 +1,22 @@
+{
+  "builds":{
+		"%base": {
+			"items": {
+				"test_item": {
+					"analyzer": "/tmp",
+					"cubes": "/tmp",
+					"flavors": [ "ct" ],
+					"functors": "../functors",
+					"mode": "ct",
+					"argmap": {
+						"mapper": "Linear",
+						"p1": [ "1" ]
+					}
+				}
+			}
+		}
+	},
+	"directories": {
+		"base": "/tmp"
+	}
+}

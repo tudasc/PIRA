@@ -7,11 +7,11 @@ Description: Module to create different Runner objects, depending on the configu
 import sys
 sys.path.append('..')
 
+import lib.Logging as L
 from lib.Configuration import PiraConfiguration, ExtrapConfiguration, InvocationConfiguration
-from lib.Configuration import PiraConfigurationII, PiraConfigurationAdapter
+from lib.Configuration import PiraConfigurationII, PiraConfigurationAdapter, PiraConfigurationErrorException
 from lib.Runner import LocalRunner, LocalScalingRunner
 from lib.ProfileSink import NopSink, ExtrapProfileSink, PiraOneProfileSink
-import lib.Logging as log
 
 
 class PiraRunnerFactory:
@@ -24,30 +24,35 @@ class PiraRunnerFactory:
     return LocalRunner(self._config, PiraOneProfileSink(), self._invoc_cfg.get_num_repetitions())
 
   def get_scalability_runner(self, extrap_config: ExtrapConfiguration):
+    if self._config.is_empty():
+      raise PiraConfigurationErrorException('Configuration is None in RunnerFactory')
+
     pc_ii = None
     params = None
     ro = None
     if isinstance(self._config, PiraConfigurationAdapter):
-      log.get_logger().log('PiraRunnerFactory::get_scalability_runner: Configuration is PiraConfigurationAdapter')
+      L.get_logger().log('PiraRunnerFactory::get_scalability_runner: Configuration is PiraConfigurationAdapter')
       pc_ii = self._config.get_adapted()
+    elif isinstance(self._config, PiraConfigurationII):
+      pc_ii = self._config
 
     if pc_ii is not None:
-      log.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is not none.')
+      L.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is not none.')
 
     if pc_ii is not None and isinstance(pc_ii, PiraConfigurationII):
-      log.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is PiraConfigurationII')
+      L.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is PiraConfigurationII')
       params = {}
-      log.get_logger().log('PiraRunnerFactory::get_scalability_runner: Preparing params')
+      L.get_logger().log('PiraRunnerFactory::get_scalability_runner: Preparing params')
       for k in pc_ii.get_directories():
-        log.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(k))
+        L.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(k))
         for pi in pc_ii.get_items(k):
-          log.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(pi))
+          L.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(pi))
           # This should be only one element anyway.
           # for p in pi.get_run_options():
           ro = pi.get_run_options()
     #        for pa in p.get_params():
     #          params[pa] = True
-    #  log.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(params))
+    #  L.get_logger().log('PiraRunnerFactory::get_scalability_runner: ' + str(params))
     if params is None:
       raise RuntimeError('PiraRunnerFactory::get_scalability_runner: Cannot use extra-p with old configuration')
 

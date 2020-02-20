@@ -7,9 +7,9 @@ Description: Module to run the target software.
 import sys
 sys.path.append('..')
 
-import lib.FunctorManagement as fm
-import lib.Utility as u
-import lib.tables as pirasql
+import lib.FunctorManagement as F
+import lib.Utility as U
+import lib.tables as T
 from lib.Exception import PiraException
 
 import sqlite3 as db
@@ -55,7 +55,7 @@ class DBManager:
         raise DBException('Problem creating tables')
 
     def insert_data_application(self, values):
-      self.create_table(pirasql.create_application_table)
+      self.create_table(T.create_application_table)
       sql = ''' INSERT INTO Application(AppID,App_Name,Global_Flavor,Global_Submitter)
                 VALUES(?,?,?,?) '''
 
@@ -63,7 +63,7 @@ class DBManager:
       self.conn.commit()
 
     def insert_data_builds(self, values):
-      self.create_table(pirasql.create_builds_table)
+      self.create_table(T.create_builds_table)
       sql = ''' INSERT INTO Builds(BuildID,Build_Name,Prefix,Flavors,AppName)
                 VALUES(?,?,?,?,?) '''
 
@@ -71,7 +71,7 @@ class DBManager:
       self.conn.commit()
 
     def insert_data_items(self, values):
-      self.create_table(pirasql.create_items_table)
+      self.create_table(T.create_items_table)
       sql = ''' INSERT INTO Items(ItemID,Item_Name,Inst_Analysis_Functor_Path,Builders_Funtor_Path,Run_Args,Runner_Functor_Path,Submitter_Functor_Path,Exp_Data_Dir_Base_Path,BuildName)
                 VALUES(?,?,?,?,?,?,?,?,?) '''
 
@@ -79,7 +79,7 @@ class DBManager:
       self.conn.commit()
 
     def insert_data_experiment(self, values):
-      self.create_table(pirasql.create_experiment_table)
+      self.create_table(T.create_experiment_table)
       sql = ''' INSERT INTO Experiment(Experiment_ID,BenchmarkName,Iteration_No,IsWithInstrumentation,CubeFilePath,Runtime,Item_ID)
                 VALUES(?,?,?,?,?,?,?) '''
       self.cursor.execute(sql, values)
@@ -95,11 +95,11 @@ class DBManager:
       :returns: unique ID for current item
   
       """
-      build_tuple = (u.generate_random_string(), build, '', flavor, build)
+      build_tuple = (U.generate_random_string(), build, '', flavor, build)
       self.insert_data_builds(build_tuple)
       # XXX My implementation returns the full path, including the file extension.
       #     In case something in the database goes wild, this could be it.
-      func_manager = fm.FunctorManager()
+      func_manager = F.FunctorManager()
       analyse_functor = func_manager.get_analyzer_file(build, item, flavor)
       build_functor = func_manager.get_builder_file(build, item, flavor)
       run_functor = func_manager.get_runner_file(build, item, flavor)
@@ -109,7 +109,7 @@ class DBManager:
       submitter_functor = config.get_runner_func(build, item) + '/slurm_submitter_' + benchmark_name + flavor
       exp_dir = config.get_analyser_exp_dir(build, item)
 
-      db_item_id = u.generate_random_string()
+      db_item_id = U.generate_random_string()
       db_item_data = (db_item_id, benchmark_name, analyse_functor, build_functor, '', run_functor, submitter_functor,
                       exp_dir, build)
       self.insert_data_items(db_item_data)

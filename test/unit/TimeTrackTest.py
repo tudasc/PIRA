@@ -4,12 +4,9 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: Tests for the argument mapping
 """
 
-import sys
-sys.path.append('../')
-
 import unittest
 
-import lib.TimeTracking as tt
+import lib.TimeTracking as T
 
 
 class Dummy:
@@ -29,24 +26,24 @@ def func1(arg):
 
 class TestTimeTracking(unittest.TestCase):
   def test_create(self):
-    tracker = tt.TimeTracker()
+    tracker = T.TimeTracker()
 
   def test_f_track(self):
-    tracker = tt.TimeTracker()
+    tracker = T.TimeTracker()
     r, time = tracker.f_track('invocation', func)
     self.assertGreater(time[0], -1.0)
     self.assertGreater(time[1], -1.0)
     self.assertEqual(r, 0)
 
   def test_f_track_arg(self):
-    tracker = tt.TimeTracker()
+    tracker = T.TimeTracker()
     r, time = tracker.f_track('invocation 2', func1, 2)
     self.assertGreater(time[0], -1.0)
     self.assertGreater(time[1], -1.0)
     self.assertEqual(r, 3);
 
   def test_m_track(self):
-    tracker = tt.TimeTracker()
+    tracker = T.TimeTracker()
     obj = Dummy(1)
     r, time = tracker.m_track('obj invocation', obj, 'func')
     self.assertGreater(time[0], -1.0)
