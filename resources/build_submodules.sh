@@ -191,7 +191,7 @@ if [ ! -d "$extsourcedir/json" ]; then
 fi
 
 echo "[PIRA] Building PGIS analysis engine"
-cd $extsourcedir/PGIS
+cd $extsourcedir/pgis
 
 # TODO Remove when merged
 stat .git 2>&1>/dev/null
@@ -199,7 +199,7 @@ if [ $? -eq 0 ]; then
   git checkout devel 2>&1 > /dev/null
 fi
 
-check_directory_or_file_exists $extsourcedir/PGIS/build
+check_directory_or_file_exists $extsourcedir/pgis/build
 
 if [ $? -ne 0 ]; then
   rm -rf build
