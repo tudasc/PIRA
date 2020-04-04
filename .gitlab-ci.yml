@@ -35,7 +35,7 @@ stages:
   - git submodule update extern/src/cgcollector;
   - git submodule update extern/src/llvm-instrumenter;
   - git submodule update --force extern/src/scorep-mod;
-  - git submodule update extern/src/PGIS;
+  - git submodule update extern/src/pgis;
 
 # Only test that the submodules configured in here are accessible, so we do not block the Pipeline unneccessary long
 # GIT_STRATEGY: clone is used to always start with a clean checkout of the repository.

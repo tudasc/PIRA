@@ -44,5 +44,5 @@ cd $exttardir
 echo "Getting PIRA PGIS analysis engine"
 wget https://github.com/jplehr/PGIS/archive/pgis-v0.1.1.tar.gz
 tar xzf pgis-v0.1.1.tar.gz
-mv PGIS-pgis-v0.1.1/* $extsourcedir/PGIS
+mv PGIS-pgis-v0.1.1/* $extsourcedir/pgis
 

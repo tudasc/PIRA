@@ -7,6 +7,6 @@
 [submodule "extern/src/llvm-instrumenter"]
 	path = extern/src/llvm-instrumenter
 	url = git@git.rwth-aachen.de:tuda-sc/projects/llvm-instrumentation.git
-[submodule "extern/src/PGIS"]
-	path = extern/src/PGIS
+[submodule "extern/src/pgis"]
+	path = extern/src/pgis
 	url = git@git.rwth-aachen.de:tuda-sc/projects/pgis.git

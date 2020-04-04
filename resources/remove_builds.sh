@@ -34,6 +34,6 @@ remove_if_exists $extsourcedir/llvm-instrumenter/build
 remove_if_exists $extsourcedir/scorep-mod/scorep-build
 remove_if_exists $extsourcedir/cgcollector/build
 remove_if_exists $extsourcedir/extrap/extrap-3.0/build
-remove_if_exists $extsourcedir/PGIS/build
+remove_if_exists $extsourcedir/pgis/build
 
 
