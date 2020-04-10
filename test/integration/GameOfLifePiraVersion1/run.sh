@@ -40,14 +40,14 @@ bear make gol 2>&1 > /dev/null
 cgcollector main.cpp 2>&1 > /dev/null
 cgcollector SerialGoL.cpp 2>&1 > /dev/null
 cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
-cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/ct-gol.ipcg
+cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/gol_ct.ipcg
 cd ../..
 
 cd gol
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../../pira.py --version 2 --tape ../gol.tp $testDir/gol-config.json
+python3 ../../../../pira.py --version 2 --tape ../gol.tp $testDir/gol_config.json
 
 pirafailed=$?
 

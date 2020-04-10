@@ -3,7 +3,7 @@
 		"%amg2013": {
 			"items": {
 				"amg": {
-					"analyzer": "/home/j_lehr/all_repos/gh-jplehr-pgoe-EXPERIMENTAL",
+					"analyzer": "../../../extern/install/pgis/bin/",
 					"argmap": {
 						"mapper": "Linear",
 							"X":[
@@ -14,18 +14,18 @@
 								40
 							]
 					},
-					"cubes": "/tmp/pira-amg",
+					"cubes": "/tmp/pira_amg",
 					"flavors": [
-						"ct-mpi"
+						"ct_mpi"
 					],
-					"functors": "/home/j_lehr/all_repos/gh-jplehr-pira-resources/functors/amg2013",
+					"functors": "./functors",
 					"mode": "CT"
 				}
 			}
 		}
 	},
 	"directories": {
-		"amg2013": "/home/j_lehr/all_repos/gh-jplehr-typeart-benchmarks/amg2013"
+		"amg2013": "./AMG2013"
 	},
   "glob-flavors":[],
   "glob-submitter":{}

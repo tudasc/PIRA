@@ -80,11 +80,11 @@ It provides a Clang-based call-graph tool that collects all required information
 You can find the `cgcollector` tool in the subdirectory `./extern/src/cgcollector`.
 
 The final graph (currently) needs to be placed into the directory of the **PGIS** that is used for the CG analysis, i.e., copy the generated whole program file into the PGIS directory.
-Currently, it is important that the file in the PGIS directory is named following the pattern `flavor-item.ipcg`, more on the terms flavor and item in the next section.
+Currently, it is important that the file in the PGIS directory is named following the pattern `item_flavor.ipcg`. An item stands for a target application. More on the terms flavor and item in the next section.
 
 ~~~{.sh}
 # Assuming $PIRA holds the top-level PIRA directory
-cp my-app.ipcg $PIRA/extern/install/pgis/bin/flavor-target.ipcg
+cp my-app.ipcg $PIRA/extern/install/pgis/bin/item_flavor.ipcg
 ~~~
 
 #### Configuration
@@ -92,6 +92,8 @@ cp my-app.ipcg $PIRA/extern/install/pgis/bin/flavor-target.ipcg
 The PIRA configuration contains all the required information for PIRA to run the automatic process.
 The various directories that need to be specified in the configuration can either be *absolute* paths, or *paths, relative to the location of the configuration file*.
 The examples are taken from the GameOfLife example in `./test/integration/GameOfLife`.
+
+##### Directory and items
 
 The user specifies: *the directory* in which to look for subsequently defined *items*, in the example, the directory is `./gol/serial_non_template`.
 These directories are given aliases, which are dereferenced using the '%' sign.
@@ -115,13 +117,17 @@ An item in PIRA is a target application, built in a specific way, which is the r
 }
 ```
 
+##### Analyzer
+
 Every item specifies which *analyzer* should be used.
 The default is the analyzer that ships with PIRA, and which can be found in `./extern/src/pgis`.
 The particular analyzer is responsible for steering the instrumentation refinement, and is, therefore, an essential part of the PIRA framework.
 
+##### Argmap
+
 The *argmap* field specifies the different arguments that are passed to the target application when running the performance experiments.
 How the arguments are passed to the target application is defined by different *mappers*.
-In the example, a *Linear* mapper is used, which simply iterates the values of the parameter named *size* in the order given in the list.
+In the example, a *linear* mapper is used, which simply iterates the values of the parameter named *size* in the order given in the list.
 
 ```{.json}
 "argmap": {
@@ -129,6 +135,7 @@ In the example, a *Linear* mapper is used, which simply iterates the values of t
     "size": [50, 80, 110, 150, 300, 500]
 }
 ```
+##### Cubes
 
 The *cubes* field is the location where PIRA should store the obtained Score-P profiles.
 It will construct a directory tree in that location, so the user can, after PIRA finished, also easily invoke the Extra-P modeling tool by simply passing it the respective location, i.e., */tmp/pira* in the example.
@@ -136,9 +143,12 @@ It will construct a directory tree in that location, so the user can, after PIRA
 ```{.json}
 "cubes": "/tmp/pira"
 ```
+##### Flavors
 
 The *flavors* field adds another level of possible distinction, as target applications can be built in different *flavors*.
 An example would be to specify different math libraries that the target application should link against.
+
+##### Functors
 
 Finally, the *functors* directory points PIRA to the location where it looks for the user-provided Python functions that ultimately tell PIRA how to build, run, and analyze the target application.
 In the example, PIRA is pointed to a directory called *functors* relative to the location of the configuration.
@@ -150,6 +160,7 @@ In the example, PIRA is pointed to a directory called *functors* relative to the
 "functors": "./functors",
 "mode": "CT"
 ```
+##### Mode
 
 The *mode* field, in this version of PIRA, is ignored.
 
@@ -157,7 +168,7 @@ The *mode* field, in this version of PIRA, is ignored.
 
 As of now, the user needs to implement five different functors:
 
-* `analyse_<ITEM>_<FLAVOR>.py`: invokes the analyzer.
+* `analyze_<ITEM>_<FLAVOR>.py`: invokes the analyzer.
 * `clean_<ITEM>_<FLAVOR>.py`: cleans the build directory.
 * `<ITEM>_<FLAVOR>.py`: build the instrumented version.
 * `no_instr_<ITEM>_<FLAVOR>.py`: builds the vanilla version.
