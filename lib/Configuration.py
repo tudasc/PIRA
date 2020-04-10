@@ -162,7 +162,7 @@ class PiraConfigurationAdapter:
     io = self.get_item_w_name(build, item)
     return io.get_functor_base_path()
 
-  def get_analyser_dir(self, build, item):
+  def get_analyzer_dir(self, build, item):
     io = self.get_item_w_name(build, item)
     return io.get_analyzer_dir()
 
@@ -185,7 +185,7 @@ class PiraConfigurationAdapter:
     io = self.get_item_w_name(build, item)
     return io.get_functor_base_path()
 
-  def get_analyser_exp_dir(self, build, item):
+  def get_analyzer_exp_dir(self, build, item):
     io = self.get_item_w_name(build, item)
     return io.get_cubes_dir()
 
@@ -321,16 +321,16 @@ class PiraConfiguration:
   def get_runner_func(self, build: str, item: str) -> str:
     return self.items[build][item]['runner']
 
-  def get_analyse_func(self, build, item) -> str:
+  def get_analyze_func(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][0]
 
-  def get_analyser_exp_dir(self, build, item) -> str:
+  def get_analyzer_exp_dir(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][1]
 
-  def get_analyser_dir(self, build, item) -> str:
+  def get_analyzer_dir(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][2]
 
-  def get_analyse_slurm_func(self, build, item) -> str:
+  def get_analyze_slurm_func(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][3]
 
   def is_submitter(self, build: str, item: str) -> bool:

@@ -151,7 +151,7 @@ class ExtrapProfileSink(ProfileSinkBase):
         U.rename(cur_ep_dir, new_dir_name)
 
       U.create_directory(cur_ep_dir)
-      cubex_name = experiment_dir + '/' + target_config.get_flavor() + '-' + target_config.get_target() + '.cubex'
+      cubex_name = U.get_cubex_file(experiment_dir, target_config.get_target(), target_config.get_flavor())      
       L.get_logger().log(cubex_name)
 
       if not U.is_file(cubex_name):

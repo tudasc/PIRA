@@ -337,55 +337,57 @@ def build_clean_functor_filename(benchmark_name: str, flavor: str) -> str:
   return 'clean_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
-def build_analyse_functor_filename(IsForDB: bool, benchmark_name: str, flavor: str) -> str:
+def build_analyze_functor_filename(IsForDB: bool, benchmark_name: str, flavor: str) -> str:
   if IsForDB:
-    return '/analyse_' + concat_a_b_with_sep(benchmark_name, flavor, '')
+    return '/analyze_' + concat_a_b_with_sep(benchmark_name, flavor, '')
   else:
-    return 'analyse_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
+    return 'analyze_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
-def build_instr_file_path(analyser_dir: str, flavor: str, benchmark_name: str) -> str:
-  return analyser_dir + "/" + 'out/instrumented-' + flavor + '-' + benchmark_name + '.txt'
+def build_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -> str:
+  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '.txt'
 
 
-def build_previous_instr_file_path(analyser_dir: str, flavor: str, benchmark_name: str) -> str:
-  return analyser_dir + "/" + 'out/instrumented-' + flavor + '-' + benchmark_name + 'previous.txt'
+def build_previous_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -> str:
+  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + 'previous.txt'
 
 
 def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
-  return base_dir + "/" + flavor + '-' + b_name + '.ipcg'
+  return base_dir + "/" + b_name + '_' + flavor + '.ipcg'
+
+def get_cubex_file(cubex_dir: str, b_name: str, flavor: str) -> str:
+  return cubex_dir + '/' + flavor + '-' + b_name + '.cubex'
 
 
-def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
+def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
                          iterationNumber: int, pgis_cfg_file: str) -> None:
-  ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
+  ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
   cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber - 1)
-  cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
+  cubex_file = get_cubex_file(cubex_dir, benchmark_name, flavor)
 
   # PIRA version 1 runner, i.e., only consider raw runtime of single rum
   if pgis_cfg_file is None:
-    L.get_logger().log('Utility::run_analyser_command: using PIRA 1 Analyzer', level='info')
+    L.get_logger().log('Utility::run_analyzer_command: using PIRA 1 Analyzer', level='info')
     sh_cmd = command + ' ' + ipcg_file + ' -c ' + cubex_file
-    L.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
+    L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
     out, _ = shell(sh_cmd)
-    L.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
+    L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
     return
 
   extrap_cfg_file = pgis_cfg_file
-  # extrap_file_path = analyser_dir + '/' + extrap_cfg_file
+  # extrap_file_path = analyzer_dir + '/' + extrap_cfg_file
   # sh_cmd = command + ' --model-filter -e ' + extrap_file_path + ' ' + ipcg_file
   sh_cmd = command + ' -e ' + pgis_cfg_file + ' ' + ipcg_file
-  L.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
+  L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
-  L.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
+  L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
 
-
-def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, benchmark_name: str) -> None:
-  ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
+def run_analyzer_command_noInstr(command: str, analyzer_dir: str, flavor: str, benchmark_name: str) -> None:
+  ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
   sh_cmd = command + ' --static ' + ipcg_file
-  L.get_logger().log('Utility::run_analyser_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
+  L.get_logger().log('Utility::run_analyzer_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
-  L.get_logger().log('Utility::run_analyser_command_noInstr: Output of analyzer:\n' + out, level='debug')
+  L.get_logger().log('Utility::run_analyzer_command_noInstr: Output of analyzer:\n' + out, level='debug')
 
 
 def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:

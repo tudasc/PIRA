@@ -32,7 +32,7 @@ class Analyzer:
   def analyze_local(self, flavor: str, build: str, benchmark: str, kwargs: dict, iterationNumber: int) -> str:
     fm = F.FunctorManager()
     analyze_functor = fm.get_or_load_functor(build, benchmark, flavor, 'analyze')
-    analyzer_dir = self.config.get_analyser_dir(build, benchmark)
+    analyzer_dir = self.config.get_analyzer_dir(build, benchmark)
     kwargs['analyzer_dir'] = analyzer_dir
 
     # The invoke args can be retrieved from the configuration object.
@@ -51,7 +51,7 @@ class Analyzer:
     else:
       L.get_logger().log('Analyzer::analyze_local: Using passive mode')
       try:
-        exp_dir = self.config.get_analyser_exp_dir(build, benchmark)
+        exp_dir = self.config.get_analyzer_exp_dir(build, benchmark)
         isdirectory_good = U.check_provided_directory(analyzer_dir)
         command = analyze_functor.passive(benchmark, **kwargs)
 
@@ -70,27 +70,29 @@ class Analyzer:
         tracker = T.TimeTracker()
         
         # TODO: Alternate between expansion and pure filtering.
+
         if iterationNumber > 0 and U.is_file(instr_files):
           L.get_logger().log('Analyzer::analyze_local: instr_file available')
           U.rename(instr_files, prev_instr_file)
-          tracker.m_track('Analysis', U, 'run_analyser_command', command, analyzer_dir, flavor, benchmark_name,
+          tracker.m_track('Analysis', U, 'run_analyzer_command', command, analyzer_dir, flavor, benchmark_name,
+
                           exp_dir, iterationNumber, pgis_cfg_file)
           L.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
         else:
-          tracker.m_track('Initial analysis', U, 'run_analyser_command_noInstr', command, analyzer_dir, flavor,
+
+          tracker.m_track('Initial analysis', U, 'run_analyzer_command_noInstr', command, analyzer_dir, flavor,
                           benchmark_name)
-          U.run_analyser_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
+          U.run_analyzer_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
 
         self.tear_down(build, exp_dir)
         return instr_files
 
       except Exception as e:
         L.get_logger().log(str(e), level='error')
-
         raise Exception('Problem in Analyzer')
 
-  def analyse_slurm(self, flavors, build, benchmark, kwargs, config):
-    L.get_logger().log('Analyzer::analyse_slurm: Not implemented. Aborting.', level='error')
+  def analyze_slurm(self, flavors, build, benchmark, kwargs, config):
+    L.get_logger().log('Analyzer::analyze_slurm: Not implemented. Aborting.', level='error')
     assert(False)
 
   def set_up(self):

@@ -53,13 +53,13 @@ done
 find . -name "*.ipcg" -exec cgmerge amg.ipcg {} + 2>&1 > /dev/null
 # Move the CG to where PIRA expects it
 echo $PWD
-cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/ct-mpi-amg.ipcg
+cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/amg_ct_mpi.ipcg
 cd ..
 
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../pira.py --version 2 --iterations 2 --repetitions 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg-config.json
+python3 ../../../pira.py --version 2 --iterations 2 --repetitions 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg_config.json
 
 pirafailed=$?
 

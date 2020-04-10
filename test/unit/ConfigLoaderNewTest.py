@@ -82,11 +82,11 @@ class TestConfigLoader(unittest.TestCase):
     self.assertIn(builder, dep_aw_builders[i_01])
 
     expected_item = 'item01'
-    anal_func_dir = cfg.get_analyse_func(b, i_01)
+    anal_func_dir = cfg.get_analyze_func(b, i_01)
     self.assertEqual(anal_func_dir, dep_aw_ins_anal[expected_item][0])
-    cube_path = cfg.get_analyser_exp_dir(b, i_01)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_01)
     self.assertEqual(cube_path, dep_aw_ins_anal[expected_item][1])
-    tool_path = cfg.get_analyser_dir(b, i_01)
+    tool_path = cfg.get_analyzer_dir(b, i_01)
     self.assertEqual(tool_path, dep_aw_ins_anal[expected_item][2])
 
     runner = cfg.get_runner_func(b, i_01)
@@ -113,11 +113,11 @@ class TestConfigLoader(unittest.TestCase):
     self.assertIn(builder, dep_aw_builders[i_02])
 
     expected_item = 'item02'
-    anal_func_dir = cfg.get_analyse_func(b, i_02)
+    anal_func_dir = cfg.get_analyze_func(b, i_02)
     self.assertEqual(anal_func_dir, dep_aw_ins_anal[expected_item][0])
-    cube_path = cfg.get_analyser_exp_dir(b, i_02)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_02)
     self.assertEqual(cube_path, dep_aw_ins_anal[expected_item][1])
-    tool_path = cfg.get_analyser_dir(b, i_02)
+    tool_path = cfg.get_analyzer_dir(b, i_02)
     self.assertEqual(tool_path, dep_aw_ins_anal[expected_item][2])
 
     runner = cfg.get_runner_func(b, i_02)
@@ -185,9 +185,9 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     expected_item = 'item01'
     anal_func_dir = cfg.get_analyzer_path(b, i_01)
     self.assertEqual(anal_func_dir, n_functor_path[expected_item])
-    cube_path = cfg.get_analyser_exp_dir(b, i_01)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_01)
     self.assertEqual(cube_path, n_cube_path[expected_item])
-    tool_path = cfg.get_analyser_dir(b, i_01)
+    tool_path = cfg.get_analyzer_dir(b, i_01)
     self.assertEqual(tool_path, n_analysis_path)
 
     runner = cfg.get_runner_func(b, i_01)
@@ -216,9 +216,9 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     expected_item = 'item02'
     anal_func_dir = cfg.get_analyzer_path(b, i_02)
     self.assertEqual(anal_func_dir, n_functor_path[expected_item])
-    cube_path = cfg.get_analyser_exp_dir(b, i_02)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_02)
     self.assertEqual(cube_path, n_cube_path[expected_item])
-    tool_path = cfg.get_analyser_dir(b, i_02)
+    tool_path = cfg.get_analyzer_dir(b, i_02)
     self.assertEqual(tool_path, n_analysis_path)
 
     runner = cfg.get_runner_func(b, i_02)
@@ -246,9 +246,9 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     expected_item = 'item01'
     anal_func_dir = cfg.get_analyzer_path(b, i_01)
     self.assertEqual(anal_func_dir, n_functor_path[expected_item])
-    cube_path = cfg.get_analyser_exp_dir(b, i_01)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_01)
     self.assertEqual(cube_path, '/where/to/put/cube/files/item01')
-    tool_path = cfg.get_analyser_dir(b, i_01)
+    tool_path = cfg.get_analyzer_dir(b, i_01)
     self.assertEqual(tool_path, n_analysis_path)
 
     runner = cfg.get_runner_func(b, i_01)

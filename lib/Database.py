@@ -99,18 +99,19 @@ class DBManager:
       self.insert_data_builds(build_tuple)
       # XXX My implementation returns the full path, including the file extension.
       #     In case something in the database goes wild, this could be it.
+
       func_manager = F.FunctorManager()
-      analyse_functor = func_manager.get_analyzer_file(build, item, flavor)
+      analyze_functor = func_manager.get_analyzer_file(build, item, flavor)
       build_functor = func_manager.get_builder_file(build, item, flavor)
       run_functor = func_manager.get_runner_file(build, item, flavor)
       # TODO implement the get_submitter_file(build, item, flavor) method!
 
       benchmark_name = config.get_benchmark_name(item)
       submitter_functor = config.get_runner_func(build, item) + '/slurm_submitter_' + benchmark_name + flavor
-      exp_dir = config.get_analyser_exp_dir(build, item)
+      exp_dir = config.get_analyzer_exp_dir(build, item)
 
       db_item_id = U.generate_random_string()
-      db_item_data = (db_item_id, benchmark_name, analyse_functor, build_functor, '', run_functor, submitter_functor,
+      db_item_data = (db_item_id, benchmark_name, analyze_functor, build_functor, '', run_functor, submitter_functor,
                       exp_dir, build)
       self.insert_data_items(db_item_data)
 
