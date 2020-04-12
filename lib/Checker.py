@@ -90,7 +90,7 @@ class Checker:
 
         # check if functor-files exist
         for flavor in flavors:
-          functors = ['analyse_', 'clean_', 'no_instr_', 'runner_', '']
+          functors = ['analyze_', 'clean_', 'no_instr_', 'runner_', '']
 
           for functor in functors:
             path_to_check = item.get_functor_base_path() + '/'+ functor + item._name + underscore + flavor + '.py'

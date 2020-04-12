@@ -139,9 +139,9 @@ class ScorepSystemHelper:
     if not is_instr_run:
       return
 
-    exp_dir = self.config.get_analyser_exp_dir(build, item)
+    exp_dir = self.config.get_analyzer_exp_dir(build, item)
     L.get_logger().log(
-        'ScorepSystemHelper::_set_up: Retrieved analyser experiment directory: ' + exp_dir, level='debug')
+        'ScorepSystemHelper::_set_up: Retrieved analyzer experiment directory: ' + exp_dir, level='debug')
     effective_dir = U.get_cube_file_path(exp_dir, flavor, it_nr)
     if not U.check_provided_directory(effective_dir):
       L.get_logger().log(

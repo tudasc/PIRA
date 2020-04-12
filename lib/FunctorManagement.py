@@ -118,7 +118,7 @@ class FunctorManager:
 
     def get_analyzer_name(self, build: str, item: str, flavor: str) -> str:
       raw_nm = self.get_raw_name(build, item, flavor)
-      cl_nm = U.concat_a_b_with_sep('analyse', raw_nm, '_')
+      cl_nm = U.concat_a_b_with_sep('analyze', raw_nm, '_')
       return cl_nm
 
     def get_analyzer_file(self, build: str, item: str, flavor: str) -> str:

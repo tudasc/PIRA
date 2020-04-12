@@ -98,13 +98,13 @@ class TestFunctorManager(unittest.TestCase):
     self.assertEqual(cl_file, self.b_i_01 + '/' + expected_file_name)
 
   def test_get_analyze_functor_filename(self):
-    expected_file_name = 'analyse_item01_vanilla'
+    expected_file_name = 'analyze_item01_vanilla'
 
     cl_func_name = self.fm.get_analyzer_name(self.build, self.i_01, self.flavor)
     self.assertEqual(cl_func_name, expected_file_name)
 
   def test_get_analyze_functor_wholefile(self):
-    expected_file_name = 'analyse_item01_vanilla.py'
+    expected_file_name = 'analyze_item01_vanilla.py'
     cl_file = self.fm.get_analyzer_file(self.build, self.i_01, self.flavor)
     self.assertEqual(cl_file, self.ia_i_01 + '/' + expected_file_name)
 
@@ -143,7 +143,7 @@ class TestFunctorManager(unittest.TestCase):
     self.assertEqual(whole_nm, self.r_i_01 + '/' + expected_file_name + '.py')
 
   def test_get_analyzer(self):
-    expected_file_name = 'analyse_item01_vanilla'
+    expected_file_name = 'analyze_item01_vanilla'
     path, name, whole_nm = self.fm.get_analyzer(self.build, self.i_01, self.flavor)
     self.assertEqual(path, self.ia_i_01)
     self.assertEqual(name, expected_file_name)

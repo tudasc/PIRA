@@ -12,13 +12,13 @@ from lib.Configuration import PiraConfiguration, PiraConfigurationErrorException
 
 
 functor_files = [
-  "/home/pira/build_dir/item1/functors/analyse_item1_ct.py",
+  "/home/pira/build_dir/item1/functors/analyze_item1_ct.py",
   "/home/pira/build_dir/item1/functors/clean_item1_ct.py",
   "/home/pira/build_dir/item1/functors/no_instr_item1_ct.py",
   "/home/pira/build_dir/item1/functors/item1_ct.py",
   "/home/pira/build_dir/item1/functors/runner_item1_ct.py",
 
-  "/home/pira/build_dir/item2/functors/analyse_item2.py",
+  "/home/pira/build_dir/item2/functors/analyze_item2.py",
   "/home/pira/build_dir/item2/functors/clean_item2.py",
   "/home/pira/build_dir/item2/functors/no_instr_item2.py",
   "/home/pira/build_dir/item2/functors/item2.py",
