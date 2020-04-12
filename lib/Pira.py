@@ -25,11 +25,11 @@ import sys
 
 def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_config: TargetConfiguration) -> None:
   try:
-    L.get_logger().log('run_setup phase.', level='debug')
     instrument = False
     pira_iterations = pira_iters 
 
     # Build without any instrumentation
+    L.get_logger().log('Building vanilla version for baseline measurements', level='info')
     vanilla_builder = BU(target_config, instrument)
     tracker = T.TimeTracker()
     tracker.m_track('Vanilla Build', vanilla_builder, 'build')
