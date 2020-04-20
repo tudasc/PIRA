@@ -33,7 +33,10 @@ which wrap.py
 mkdir $PWD/../../../extern/install/pgis/bin/out
 
 # Download the target application
-wget https://asc.llnl.gov/CORAL-benchmarks/Throughput/amg20130624.tgz
+stat amg20130624.tgz
+if [ $? -ne 0 ]; then
+  wget https://asc.llnl.gov/CORAL-benchmarks/Throughput/amg20130624.tgz
+fi
 tar xzf amg20130624.tgz
 cd AMG2013
 
@@ -47,10 +50,11 @@ echo -e "\n----- Build AMG2013 / build call graph -----"
 bear make CC="OMPI_CC=clang mpicc"
 # Now cgcollector can read the compile_commands.json file, to retrieve the commands required
 for f in $(find . -name "*.c"); do
-	cgcollector $f
+	echo "Processing $f"
+	cgc $f
 done
 # Build the full whole-program call-graph
-find . -name "*.ipcg" -exec cgmerge amg.ipcg {} + 2>&1 > /dev/null
+find . -name "*.ipcg" -exec cgmerge amg.ipcg {} + 2>&1 > ../cgcollector.log
 # Move the CG to where PIRA expects it
 echo $PWD
 cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/amg_ct_mpi.ipcg

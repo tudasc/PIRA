@@ -115,13 +115,14 @@ export PATH=$extinstalldir/scorep/bin:$PATH
 # Extra-P (https://www.scalasca.org/software/extra-p/download.html)
 echo "[PIRA] Building Extra-P (for PIRA II modeling)"
 echo "[PIRA] Getting prerequisites ... (requires Qt 5)"
-pip3 install --user PyQt5 2>&1 > /dev/null
+set MAKEFLAGS=-j$parallel_jobs
+python -m pip install --user PyQt5 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
   echo "[PIRA] Installting Extra-P dependency PyQt5 failed."
   exit 1
 fi
 
-pip3 install --user matplotlib 2>&1 > /dev/null
+python -m pip install --user matplotlib 2>&1 > /dev/null
 if [ $? -ne 0 ]; then
   echo "[PIRA] Installting Extra-P dependency matplotlib failed."
   exit 1

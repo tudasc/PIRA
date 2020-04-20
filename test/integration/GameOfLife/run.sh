@@ -37,8 +37,8 @@ mv GameOfLife-PIRA-testing gol
 echo -e "\n----- Build GameOfLife / build call graph -----"
 cd gol/serial_non_template
 bear make gol 2>&1 > /dev/null
-cgcollector main.cpp 2>&1 > /dev/null
-cgcollector SerialGoL.cpp 2>&1 > /dev/null
+cgc main.cpp 2>&1 > /dev/null
+cgc SerialGoL.cpp 2>&1 > /dev/null
 cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
 cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/gol_ct.ipcg
 cd ../..
