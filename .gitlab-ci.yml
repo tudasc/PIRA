@@ -47,6 +47,7 @@ download:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: clone
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - *get-submodules
     - *lb-tear-down
@@ -62,6 +63,7 @@ build-dependencies:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd resources
     - ./remove_builds.sh
@@ -76,6 +78,9 @@ run-unit-tests:
   tags:
     - hlb0001
   before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   coverage: /^TOTAL.+?(\d+\%)$/
   script:
     - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
@@ -92,6 +97,7 @@ run-prepare-integration:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd resources
     - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l) # This should not do anything, as all dependencies are already built.
@@ -108,6 +114,7 @@ run-gameoflife-test:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - echo 'Running GameOfLife (PIRA II) integration test'
     - cd test/integration/GameOfLife
@@ -121,6 +128,7 @@ run-amg2013-test:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - echo 'Running AMG integration test'
     - cd test/integration/AMG2013
@@ -134,6 +142,7 @@ run-gameoflife-v1-test:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - echo 'Running GameOfLife (PIRA I) integration test'
     - cd test/integration/GameOfLifePiraVersion1
@@ -154,6 +163,7 @@ run-release-prepare:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: clone
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd resources
     - ./get_externals.sh
@@ -170,6 +180,7 @@ run-release-tests:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - ./run_tests.sh
     - echo 'Running release tests'
