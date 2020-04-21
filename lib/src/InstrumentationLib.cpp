@@ -67,7 +67,7 @@ static void insertCall(Function &CurFn, StringRef Func, Instruction *InsertionPt
   report_fatal_error(Twine("Unknown instrumentation function: '") + Func + "'");
 }
 
-static bool runOnFunction(Function &F, bool PostInlining) {
+static bool instrumentFunction(Function &F, bool PostInlining) {
   StringRef EntryAttr = PostInlining ? "instrument-function-entry-inlined" : "instrument-function-entry";
 
   StringRef ExitAttr = PostInlining ? "instrument-function-exit-inlined" : "instrument-function-exit";
@@ -123,6 +123,60 @@ static bool runOnFunction(Function &F, bool PostInlining) {
   return Changed;
 }
 
+static bool instrumentateCallSites(Function &F, const std::unordered_set<std::string> &CallsToInstrument,
+                                   bool PostInlining) {
+  StringRef CallSiteEntryFunc = "__cyg_profile_func_enter";
+  StringRef CallSiteExitFunc = "__cyg_profile_func_exit";
+
+  bool Changed = false;
+  for (BasicBlock &BB : F) {
+    for (Instruction &I : BB) {
+      if (auto *Call = dyn_cast<CallInst>(&I)) {
+        if (auto *CalledFunc = Call->getCalledFunction()) {
+          if (CallsToInstrument.find(CalledFunc->getName().str()) != CallsToInstrument.end()) {
+            if (!CallSiteEntryFunc.empty()) {
+              std::cerr << "[LLVMInstrumentor] [DEBUG]: Inserting Call Site Entry Instrumentation" << std::endl;
+              DebugLoc DL = Call->getDebugLoc();
+              insertCall(*CalledFunc, CallSiteEntryFunc, Call, DL);
+              Changed = true;
+            }
+            if (!CallSiteExitFunc.empty()) {
+              std::cerr << "[LLVMInstrumentor] [DEBUG]: Inserting Call Site Exit Instrumentation" << std::endl;
+              if (Call->isMustTailCall()) {
+                std::cerr << "[LLVMInstrumentor] [Error]: Can not insert call site instrumentation in function "
+                          << Call->getName().str() << " because is is declared as \"must tail call\"" << std::endl;
+                exit(-1);
+              }
+              DebugLoc DL = Call->getDebugLoc();
+              insertCall(*CalledFunc, CallSiteExitFunc, Call->getNextNode(), DL);
+              Changed = true;
+            }
+          }
+        }
+      } else if (auto *Invoke = dyn_cast<InvokeInst>(&I)) {
+        if (auto *CalledFunc = Invoke->getCalledFunction()) {
+          if (CallsToInstrument.find(CalledFunc->getName().str()) != CallsToInstrument.end()) {
+            if (!CallSiteEntryFunc.empty()) {
+              std::cerr << "[LLVMInstrumentor] [DEBUG]: Inserting Call Site Entry Instrumentation" << std::endl;
+              DebugLoc DL = Invoke->getDebugLoc();
+              insertCall(*CalledFunc, CallSiteEntryFunc, Invoke, DL);
+              Changed = true;
+            }
+            if (!CallSiteExitFunc.empty()) {
+              std::cerr << "[LLVMInstrumentor] [DEBUG]: Inserting Call Site Exit Instrumentation" << std::endl;
+              DebugLoc DL = Invoke->getDebugLoc();
+              auto IP = &*Invoke->getNormalDest()->getFirstInsertionPt();
+              insertCall(*CalledFunc, CallSiteExitFunc, IP, DL);
+              Changed = true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return Changed;
+}
+
 namespace {
 
 struct FilteringEntryExitInstrumenter : public FunctionPass {
@@ -152,13 +206,26 @@ struct FilteringEntryExitInstrumenter : public FunctionPass {
         std::string linebuffer;
         std::string_view linebuffer_view;
 
+        enum class ParserState {
+          Normal /*Content without special meaning*/,
+          Block /*Func filter block*/,
+          Include /*include directive that has no item yet*/,
+          IncludeFinished /*include directive that can be finished*/,
+        };
+
         /// Returns the next token in the filter file as the parameter out.
         /// Skips all whitespace and comments, returns false if no token exists
-        auto get_next_token = [&filter, &linebuffer, &linebuffer_view](std::string_view &out) {
+        auto get_next_token = [&filter, &linebuffer, &linebuffer_view](std::string_view &out, ParserState state) {
           const std::string whitespace = " \t\r";
           auto first_not_whitespace = linebuffer_view.find_first_not_of(whitespace);
           while (first_not_whitespace == std::string_view::npos || linebuffer_view[first_not_whitespace] == '#') {
             if (!std::getline(filter, linebuffer)) {
+              if (state != ParserState::Normal) {
+                std::cerr << "[LLVMInstrumentor] [Error]: Unexpected ending "
+                             "in filter file."
+                          << std::endl;
+                exit(-1);
+              }
               return false;
             }
             linebuffer_view = linebuffer;
@@ -181,17 +248,10 @@ struct FilteringEntryExitInstrumenter : public FunctionPass {
           exit(-1);
         };
 
-        enum class ParserState {
-          Normal /*Content without special meaning*/,
-          Block /*Func filter block*/,
-          Include /*include directive that has no item yet*/,
-          IncludeFinished /*include directive that can be finished*/,
-          IncludeMangled /*incude directive with mangeld keyword that has no item yet*/,
-        };
         ParserState state = ParserState::Normal;
 
         std::string_view token;
-        while (state == ParserState::IncludeFinished || get_next_token(token)) {
+        while (state == ParserState::IncludeFinished || get_next_token(token, state)) {
           if (token == "SCOREP_REGION_NAMES_BEGIN") {
             if (state == ParserState::Normal) {
               state = ParserState::Block;
@@ -211,40 +271,52 @@ struct FilteringEntryExitInstrumenter : public FunctionPass {
               parser_error(token);
             }
           } else {
-            if (state == ParserState::Include || state == ParserState::IncludeFinished ||
-                state == ParserState::IncludeMangled) {
-              if (token == "MANGLED") {
-                // an include can never start with mangled
-                parser_error(token);
-              }
-              std::string prev_token(token);
-              // Look ahead one token to check if we need to handle a mangeled name
-              if (!get_next_token(token)) {
-                std::cerr << "[LLVMInstrumentor] [Error]: Unexpected ending "
-                             "in filter file."
-                          << std::endl;
-                exit(-1);
-              }
-              if (token == "MANGLED") {
-                if (state == ParserState::IncludeMangled || state == ParserState::IncludeFinished) {
-                  // two mangled can never follow each other
-                  parser_error(token);
-                }
-                // Do nothing and just go to the next token
-                state = ParserState::IncludeMangled;
-              } else {
-                state = ParserState::IncludeFinished;
-                const auto start_wildcard = prev_token.find_first_of("*?[]");
+            if (state != ParserState::Include) {
+              parser_error(token);
+            }
+            // Helper function to parse a function name. sets token to the next token
+            auto get_func_name = [&]() {
+              // Function to check if a string contains an unsupported wildcard
+              auto warn_unsupported_wildcard = [](const std::string &name) {
+                const auto start_wildcard = name.find_first_of("*?[]");
                 if (start_wildcard != std::string::npos) {
                   std::cerr << "[LLVMInstrumentor] [Warning]: Unsupported "
                                "wildcard in \""
-                            << prev_token << "\"" << std::endl;
+                            << name << "\"" << std::endl;
                 }
-                filterList.insert(prev_token);
+              };
+
+              std::string prev_token(token);
+              // Look ahead one token to check if we need to handle a mangeled name
+              get_next_token(token, state);
+              if (token != "MANGLED") {
+                warn_unsupported_wildcard(prev_token);
+                return prev_token;
+              } else {
+                // Skip MANGLED keyword
+                get_next_token(token, state);
+                prev_token = token;
+                get_next_token(token, state);
+                warn_unsupported_wildcard(prev_token);
+                return prev_token;
+              }
+            };
+            const auto fname = get_func_name();
+            if (token == "->") {
+              get_next_token(token, state);
+              const auto called_function = get_func_name();
+              const auto csli = callSiteList.find(fname);
+              if (csli != callSiteList.end()) {
+                csli->second.insert(called_function);
+              } else {
+                std::unordered_set<std::string> called_func_set;
+                called_func_set.insert(called_function);
+                callSiteList.insert({fname, called_func_set});
               }
             } else {
-              parser_error(token);
+              filterList.insert(fname);
             }
+            state = ParserState::IncludeFinished;
           }
         }
         if (state != ParserState::Normal) {
@@ -259,15 +331,23 @@ struct FilteringEntryExitInstrumenter : public FunctionPass {
   void getAnalysisUsage(AnalysisUsage &AU) const override { AU.addPreserved<GlobalsAAWrapperPass>(); }
   bool isFiltered(Function &F) const { return filterList.find(F.getName().str()) != filterList.end(); }
   bool runOnFunction(Function &F) override {
+    bool changed = false;
     if (isFiltered(F)) {
       std::cerr << "[LLVMInstrumentor] [DEBUG]: Running on " + F.getName().str() << std::endl;
-      return ::runOnFunction(F, false);
+      changed = ::instrumentFunction(F, false);
     }
-    return false;
+    const auto c = callSiteList.find(F.getName());
+    if (c != callSiteList.end()) {
+      std::cerr << "[LLVMInstrumentor] [DEBUG]: Running call site instrumentation on " + F.getName().str() << std::endl;
+      changed = ::instrumentateCallSites(F, c->second, false) || changed;
+    }
+    return changed;
   }
   StringRef getPassName() const override { return "Filtering Entry Exit Instrumentation"; }
 
   std::unordered_set<std::string> filterList;  // whitelist filter
+  std::unordered_map<std::string, std::unordered_set<std::string>>
+      callSiteList;  // List of all call sites that should be instrumented
 };
 char FilteringEntryExitInstrumenter::ID = 0;
 
@@ -278,7 +358,7 @@ struct FilteringPostInlineEntryExitInstrumenter : public FunctionPass {
     //*PassRegistry::getPassRegistry());
   }
   void getAnalysisUsage(AnalysisUsage &AU) const override { AU.addPreserved<GlobalsAAWrapperPass>(); }
-  bool runOnFunction(Function &F) override { return ::runOnFunction(F, true); }
+  bool runOnFunction(Function &F) override { return ::instrumentFunction(F, true); }
 };
 char FilteringPostInlineEntryExitInstrumenter::ID = 0;
 }  // namespace
