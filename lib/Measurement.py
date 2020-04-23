@@ -293,7 +293,8 @@ class ScorepSystemHelper:
     for l in file_content:
       if l.find('MPI_') > -1:
         L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: Remove ' + l)
-        all_MPI_functions.remove(l)
+        # prevent double removal
+        if l in all_MPI_functions: all_MPI_functions.remove(l)
 
     # Generate the .c file using the mpi wrap.py script
     L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: About to filter ' + str(len(all_MPI_functions)) + ' MPI functions')
