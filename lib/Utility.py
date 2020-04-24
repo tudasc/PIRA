@@ -250,10 +250,6 @@ def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool
       return str(out.decode('utf-8')), -1.0
 
   except subprocess.CalledProcessError as e:
-    if e.returncode == 1:
-      if command.find('grep '):
-        return '', .0
-
     err_out = ''
     L.get_logger().log('Utility::shell: Attempt to write stderr file', level='debug')
     err_out += stderr_fd.read()
