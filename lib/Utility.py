@@ -250,6 +250,7 @@ def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool
       return str(out.decode('utf-8')), -1.0
 
   except subprocess.CalledProcessError as e:
+    stderr_fd.seek(0) # jump to beginning of file
     err_out = ''
     L.get_logger().log('Utility::shell: Attempt to write stderr file', level='debug')
     err_out += stderr_fd.read()
