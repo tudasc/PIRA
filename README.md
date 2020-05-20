@@ -22,7 +22,7 @@ Whether a function event should actually be recorded is decided at runtime in th
 
 ### Requirements
 
-PIRA is tested with a recent version of CMake (>= 3.5) and Clang/LLVM release 9.0.1.
+PIRA is tested with a (somewhat) recent version of CMake (>= 3.5), Clang/LLVM release 9.0.1 and requires Python 3.
 
 ### Obtaining PIRA
 
