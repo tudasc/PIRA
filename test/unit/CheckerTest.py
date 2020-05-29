@@ -3,11 +3,13 @@ File: CheckerTest.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Tests for the Checker-module
 """
+import sys
+sys.path.insert(1,'../../')
 import unittest
 import lib.Utility as U
 import lib.Logging as L
 import lib.Checker as C
-import lib.ConfigurationLoader as CO
+import lib.ConfigurationLoader as CL
 from lib.Configuration import PiraConfiguration, PiraConfigurationErrorException, PiraConfigurationII, PiraItem, PiraConfigurationAdapter
 
 
@@ -104,6 +106,9 @@ class CheckerTestCase(unittest.TestCase):
   def test_checker_v1_valid_config(self):
     C.Checker.check_configfile_v1(self.config_v1)
 
+  def test_checker_v1_general_valid_config(self):
+    C.Checker.check_configfile(self.config_v1,1)
+
   def test_checker_v1_dirs_missing(self):
     for directory in directories_to_create:
       U.remove_dir(tempdir + directory)
@@ -112,6 +117,9 @@ class CheckerTestCase(unittest.TestCase):
 
   def test_checker_v2_valid_config(self):
     C.Checker.check_configfile_v2(self.config_v2)
+
+  def test_checker_v2_general_valid_config(self):
+    C.Checker.check_configfile(self.config_v2,2)
 
   def test_checker_v2_adapter_valid_config(self):
     C.Checker.check_configfile_v2(self.config_adapter)
@@ -129,7 +137,7 @@ class CheckerTestCase(unittest.TestCase):
       self.create_tempfiles()
 
   def test_check_basic_config_005(self):
-    cl = CO.SimplifiedConfigurationLoader()
+    cl = CL.SimplifiedConfigurationLoader()
     cfg = cl.load_conf('../inputs/configs/basic_config_005.json')
     C.Checker.check_configfile_v2(cfg)
 
