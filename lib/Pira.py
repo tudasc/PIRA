@@ -26,8 +26,10 @@ import sys
 def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_config: TargetConfiguration) -> None:
   try:
     instrument = False
-    pira_iterations = pira_iters 
-
+    pira_iterations = pira_iters
+    hybrid_filtering = target_config.is_hybrid_filtering()
+    compile_time_filtering = target_config.is_compile_time_filtering()
+    hybrid_filter_iters = target_config.get_hybrid_filter_iters()
     # Build without any instrumentation
     L.get_logger().log('Building vanilla version for baseline measurements', level='info')
     vanilla_builder = BU(target_config, instrument)
@@ -55,10 +57,11 @@ def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_con
 
       # After baseline measurement is complete, do the instrumented build/run
       # This is only necessary in every iteration when run in compile-time mode.
-      if x is 0 or target_config.is_compile_time_filtering():
-        instrument = True
-        instr_builder = BU(target_config, instrument, instr_file)
-        tracker.m_track('Instrument Build', instr_builder, 'build')
+      # For hybrid-filtering this is done after the specified amount of iterations
+      if (hybrid_filtering and (x % hybrid_filter_iters is 0)) or x is 0 or compile_time_filtering:
+          instrument = True
+          instr_builder = BU(target_config, instrument, instr_file)
+          tracker.m_track('Instrument Build', instr_builder, 'build')
 
       #Run Phase
       L.get_logger().log('Running profiling measurements', level='info')
@@ -100,6 +103,8 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
 def show_pira_invoc_info(cmdline_args) -> None:
   invoc_cfg = process_args_for_invoc(cmdline_args)
   cf_str = 'compile-time filtering'
+  if invoc_cfg.is_hybrid_filtering():
+    cf_str = 'hybrid filtering: rebuilding every ' + str(invoc_cfg.get_hybrid_filter_iters()) + ' iterations'
   if not invoc_cfg.is_compile_time_filtering():
     cf_str = 'runtime filtering'
   L.get_logger().log(
@@ -110,10 +115,12 @@ def show_pira_invoc_info(cmdline_args) -> None:
 def process_args_for_invoc(cmdline_args) -> None:
   path_to_config = cmdline_args.config
   compile_time_filter = not cmdline_args.runtime_filter
+  hybrid_filter_iters = cmdline_args.hybrid_filter_iters
   pira_iters = cmdline_args.iterations
   num_reps = cmdline_args.repetitions
 
-  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter, pira_iters, num_reps)
+
+  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter, pira_iters, num_reps, hybrid_filter_iters)
 
   return invoc_cfg
 
@@ -131,12 +138,12 @@ def main(arguments) -> None:
   try:
     if arguments.version is 1:
       config_loader = CLoader()
-      configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
-      checker.check_configfile_v1(configuration)
     else:
       config_loader = SCLoader()
-      configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
-      checker.check_configfile_v2(configuration)
+
+    configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
+    checker.check_configfile(configuration,arguments.version)
+
 
     if B.check_queued_job():
       # FIXME: Implement
@@ -184,7 +191,7 @@ def main(arguments) -> None:
               db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
               # Create configuration object for the item currently processed.
               place = configuration.get_place(build)
-              t_config = TargetConfiguration(place, build, item, flavor, db_item_id, invoc_cfg.is_compile_time_filtering())
+              t_config = TargetConfiguration(place, build, item, flavor, db_item_id, invoc_cfg.is_compile_time_filtering(), invoc_cfg.get_hybrid_filter_iters())
 
               # Execute using a local runner, given the generated target description
               execute_with_config(runner, analyzer, invoc_cfg.get_pira_iters(), t_config)

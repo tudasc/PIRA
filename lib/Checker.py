@@ -19,7 +19,6 @@ class Checker:
         error_message += "Build-directory " +build_dir+ " does not exist.\n\n"
         exception_occured = True
 
-
       for item in configuration.builds[build_dir]['items']:
         analysis_functor_dir = configuration.items[build_dir][item]['instrument_analysis'][0]
         if not (U.check_provided_directory(analysis_functor_dir)):
@@ -100,6 +99,11 @@ class Checker:
               error_message += functor + "-functor of flavor " + flavor + " does not exist" + ".\n"
               exception_occured = True
 
-
     if exception_occured:
       raise C.PiraConfigurationErrorException(error_message)
+
+  def check_configfile(configuration, version):
+    if version is 1:
+      Checker.check_configfile_v1(configuration)
+    else:
+      Checker.check_configfile_v2(configuration)

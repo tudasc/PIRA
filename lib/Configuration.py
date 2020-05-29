@@ -364,7 +364,7 @@ class TargetConfiguration:
   """  The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. 
   Using TargetConfiguration all steps of building and executing are possible.  """
 
-  def __init__(self, place: str, build: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True):
+  def __init__(self, place: str, build: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True, hybrid_filter_iters: int = 0):
     """  Initializes the TargetConfiguration with its necessary parameters.
 
     :place: str: TODO
@@ -379,6 +379,7 @@ class TargetConfiguration:
     self._flavor: str = flavor
     self._db_item_id: str = db_item_id
     self._compile_time_filtering = compile_time_filter
+    self._hybrid_filter_iters = hybrid_filter_iters
     self._instr_file = ''
     self._args_for_invocation = None
 
@@ -439,6 +440,12 @@ class TargetConfiguration:
     """ Returns whether this PIRA instance uses compile-time filtering"""
     return self._compile_time_filtering
 
+  def get_hybrid_filter_iters(self) -> str:
+    return self._hybrid_filter_iters
+
+  def is_hybrid_filtering(self) -> bool:
+    return not self.get_hybrid_filter_iters() == 0
+
   def set_instr_file(self, instr_file: str) -> None:
     self._instr_file = instr_file
 
@@ -480,17 +487,24 @@ class ExtrapConfiguration:
 
 class InvocationConfiguration:
 
-  def __init__(self, path_to_config: str, compile_time_filter: bool, pira_iters: int, num_reps: int):
+  def __init__(self, path_to_config: str, compile_time_filter: bool, pira_iters: int, num_reps: int, hybrid_filter_iters: int = 0):
     self._path_to_cfg = path_to_config
     self._compile_time_filtering = compile_time_filter
     self._pira_iters = pira_iters
     self._num_repetitions = num_reps
+    self._hybrid_filter_iters = hybrid_filter_iters
 
   def get_path_to_cfg(self) -> str:
     return self._path_to_cfg
 
   def is_compile_time_filtering(self) -> bool:
     return self._compile_time_filtering
+
+  def get_hybrid_filter_iters(self) -> int:
+    return self._hybrid_filter_iters
+
+  def is_hybrid_filtering(self) -> bool:
+    return not self.get_hybrid_filter_iters() == 0
 
   def get_pira_iters(self) -> int:
     return self._pira_iters

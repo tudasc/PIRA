@@ -22,6 +22,7 @@ parser.add_argument('config', help='The configuration json file.')
 # --- Pira "mode" options
 parser.add_argument('--version', help='Which config file version to use', choices=[1, 2], default=1, type=int)
 parser.add_argument('--runtime-filter', help='Use run-time filtering', default=False, action='store_true')
+parser.add_argument('--hybrid-filter-iters', help='Do compiletime-filtering after x iterations', default=0, type=int)
 parser.add_argument('--iterations', help='Number of Pira iterations', default=3, type=int)
 parser.add_argument('--repetitions', help='Number of measurement repetitions', default=3, type=int)
 

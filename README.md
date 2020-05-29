@@ -73,6 +73,20 @@ The steps are:
 3. Implement the required PIRA functors. For the example, simple example functors are provided, which may also work for other applications.
 4. Invoke PIRA with the respective configuration.
 
+#### Arguments for Invoking PIRA
+
+* ```--config``` Path to the config-file
+* ```--version [1,2]``` PIRA can be run in two different versions. Version 1 uses a single data set and the original PGIS selection to converge towards runtime hot-spots. 
+Instead, version 2 uses the Extra-P based PGIS selection to converge towards model hot-spots. The two versions use different configuration-files.
+ There is a sample configuration-file for version 2 included in the test-directory.
+* ```--iterations [number] ``` Number of Pira iterations, the default value is 3.
+* ```--repetitions [number]``` Number of measurement repetitions, the default value is 3.
+* ```--runtime-filter``` Use run-time filtering, the default is false. In compile-time filtering, the functions are not instrumented at compile-time, reducing the overall measurement influence significantly, but requiring the target to be rebuilt in each iteration.
+In contrast, with runtime filtering, the compiler inserts instrumentation hooks in every function of the target application.
+* ```--hybrid-filter-iters [number]``` Use runtime-filtering and switch to compile-time-filtering after x iterations.
+* ```--extrap-dir``` The base directory where the extra-p folder structure is placed.
+
+
 #### Whole Program Call Graph
 
 PIRA uses source-code information to construct initial instrumentations and decide which functions to add to an instrumentation during the iterative refinement.
@@ -90,7 +104,7 @@ cp my-app.ipcg $PIRA/extern/install/pgis/bin/item_flavor.ipcg
 #### Configuration
 
 The PIRA configuration contains all the required information for PIRA to run the automatic process.
-The various directories that need to be specified in the configuration can either be *absolute* paths, or *paths, relative to the location of the configuration file*.
+The various directories that need to be specified in the configuration can either be *absolute* paths, or *paths, relative to the execution path of pira*.
 The examples are taken from the GameOfLife example in `./test/integration/GameOfLife`.
 
 ##### Directory and items
