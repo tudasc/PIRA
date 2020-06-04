@@ -4,9 +4,6 @@
 [submodule "extern/src/cgcollector"]
 	path = extern/src/cgcollector
 	url = git@git.rwth-aachen.de:tuda-sc/projects/cgcollector.git
-[submodule "extern/src/llvm-instrumenter"]
-	path = extern/src/llvm-instrumenter
-	url = git@git.rwth-aachen.de:tuda-sc/projects/llvm-instrumentation.git
 [submodule "extern/src/pgis"]
 	path = extern/src/pgis
 	url = git@git.rwth-aachen.de:tuda-sc/projects/pgis.git

@@ -14,12 +14,19 @@ extinstalldir=$scriptdir/../extern/install
 parallel_jobs="$1"
 add_flags="$2"
 
-CC=clang
-CXX=clang++
+# using mpicc for compilation leads to errors in PGIS (for whatever reason)
+if [ "$CC" == "mpicc" ]; then
+  export CC=gcc
+  export CXX=g++
+fi
+
 
 function check_directory_or_file_exists {
   dir_to_check=$1
-  stat $dir_to_check 2>&1>/dev/null
+
+	# According to https://unix.stackexchange.com/questions/590694/posix-compliant-way-to-redirect-stdout-and-stderr-to-a-file
+	# This is also POSIC compliant
+	stat $dir_to_check >/dev/null 2>&1
 
   if [ $? -ne 0 ]; then
     return 1
@@ -33,19 +40,22 @@ if [ $? -eq 1 ]; then
   exit -1
 fi
 # Very primitive version check to bail out early enough
-clangversion=$($CXX --version | grep 9.0)
+clangversion=$(clang++ --version | grep 9.0)
 if [ -z "$clangversion" ]; then
   echo -e "[PIRA] Wrong version of Clang.\nPIRA requires a source build of Clang 9.0.\nNo suitable Clang version found in PATH"
   exit -1
 fi
 
+### ====================
+## Actual work starts
+### =====================
+
 # LLVM Instrumenter
 echo "[PIRA] Configuring and building LLVM-instrumentation"
-llvm_dir=$extsourcedir/llvm-instrumenter
+llvm_dir=$extsourcedir/llvm-instrumentation
 
 cd $llvm_dir
 check_directory_or_file_exists $llvm_dir/build
-
 if [ $? -ne 0 ]; then
   echo "[PIRA] Rebuilding LLVM-Instrumenter."
   rm -rf build
@@ -70,9 +80,8 @@ echo "[PIRA] Configuring and building Score-P"
 cd $extsourcedir/scorep-mod
 
 check_directory_or_file_exists $extsourcedir/scorep-mod/scorep-build
-
 if [ $? -ne 0 ]; then
-  bash set_instrumenter_directory.sh $extsourcedir/llvm-instrumenter/build/lib
+  bash set_instrumenter_directory.sh $extsourcedir/llvm-instrumentation/build/lib
 
   # TODO We should check whether a cube / scorep install was found and if so, bail out, to know exactly which scorep/cube we get.
   aclocalversion=$( aclocal --version | grep 1.13 )
@@ -140,7 +149,6 @@ fi
 cd ./extrap-3.0
 
 check_directory_or_file_exists $extsourcedir/extrap/extrap-3.0/build
-
 if [ $? -ne 0 ]; then
   echo "[PIRA] Building Extra-P"
   rm -rf build
@@ -200,12 +208,13 @@ if [ $? -eq 0 ]; then
   git checkout devel 2>&1 > /dev/null
 fi
 
-check_directory_or_file_exists $extsourcedir/pgis/build
+echo "Using Compiler: $CC / $CXX"
 
+check_directory_or_file_exists $extsourcedir/pgis/build
 if [ $? -ne 0 ]; then
   rm -rf build
   mkdir build && cd build
-  cmake -DSPDLOG_BUILD_SHARED=ON -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis .. 2>&1 > /dev/null
+  cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSPDLOG_BUILD_SHARED=ON -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis .. 2>&1 > /dev/null
   if [ $? -ne 0 ]; then
     echo "[PIRA] Configuring PGIS failed."
     exit 1
@@ -232,7 +241,6 @@ if [ $? -eq 0 ]; then
 fi
 
 check_directory_or_file_exists $extsourcedir/cgcollector/build
-
 if [ $? -ne 0 ]; then
   rm -rf build
   mkdir build && cd build
@@ -258,7 +266,6 @@ cd $scriptdir
 cd $extsourcedir
 
 check_directory_or_file_exists $extsourcedir/mpiwrap
-
 if [ $? -ne 0 ]; then
   rm -r mpiwrap
   mkdir mpiwrap && cd mpiwrap

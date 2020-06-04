@@ -6,8 +6,9 @@
 # download-test and pira unit test are always carried out. For every branch.
 stages:
   - download-test
-  - unit-test
+  - pira-unit-test
   - dependence-build-test
+  - deps-unit-test
   - prepare-integration-test
   - integration-test
   - prepare-release-test
@@ -33,7 +34,6 @@ stages:
 .get-submodules: &get-submodules
   - git submodule init;
   - git submodule update extern/src/cgcollector;
-  - git submodule update extern/src/llvm-instrumenter;
   - git submodule update --force extern/src/scorep-mod;
   - git submodule update extern/src/pgis;
 
@@ -50,6 +50,23 @@ download:
     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - *get-submodules
+    - *lb-tear-down
+
+# Runs the unit tests 
+# Also uses the GIT_STRATEGY fetch.
+# XXX should this be split into multiple, i.e., 1 job per unit test suite?
+pira:
+  stage: pira-unit-test
+  tags:
+    - hlb0001
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  coverage: /^TOTAL.+?(\d+\%)$/
+  script:
+    - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
+    - ./run_tests.sh
     - *lb-tear-down
 
 # Download repositories again, but this time we use git fetch to reduce the amount of time needed to get updates 
@@ -70,21 +87,18 @@ build-dependencies:
     - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l)
     - *lb-tear-down
 
-# Runs the unit tests 
-# Also uses the GIT_STRATEGY fetch.
-# XXX should this be split into multiple, i.e., 1 job per unit test suite?
-run-unit-tests:
-  stage: unit-test
+# Runs the llvm-instrumentation unit tests
+llvm-instrumentation:
+  stage: deps-unit-test
   tags:
     - hlb0001
   before_script: *lb-setup
   variables:
-    GIT_STRATEGY: fetch
+    GIT_STRATEGY: none
     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
-  coverage: /^TOTAL.+?(\d+\%)$/
   script:
-    - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
-    - ./run_tests.sh
+    - cd extern/src/llvm-instrumentation/test
+    - $HOME/all_repos/gh-llvm-llvm-project/llvm/utils/lit/lit.py -v .
     - *lb-tear-down
 
 # Runs the larger integration tests

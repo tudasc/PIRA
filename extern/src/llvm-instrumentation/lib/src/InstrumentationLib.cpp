@@ -6,7 +6,14 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// Modifications by JP Lehr 2019
+// This version is shipped as part of the PIRA project
+// 
+// Modifications 2019 - 2020
+//
+// Jan-Patrick Lehr
+// Jonas Rickert
+//
+//
 
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/IR/DebugInfoMetadata.h"

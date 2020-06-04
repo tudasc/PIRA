@@ -10,7 +10,10 @@ extsourcedir=$scriptdir/../extern/src
 
 function check_directory_or_file_exists {
 	dir_to_check=$1
-	(stat $dir_to_check 2>&1)>/dev/null
+	
+	# According to https://unix.stackexchange.com/questions/590694/posix-compliant-way-to-redirect-stdout-and-stderr-to-a-file
+	# This is also POSIC compliant
+	stat $dir_to_check >/dev/null 2>&1
 
 	if [ $? -ne 0 ]; then
 		return 1
@@ -29,11 +32,28 @@ function remove_if_exists {
   fi
 }
 
+if [ -z "$1" ] || [ "llvm-instrumentation" == "$1" ]; then
+	echo "Testing llvm-instrumentation"
+  remove_if_exists $extsourcedir/llvm-instrumentation/build
+fi
 
-remove_if_exists $extsourcedir/llvm-instrumenter/build
-remove_if_exists $extsourcedir/scorep-mod/scorep-build
-remove_if_exists $extsourcedir/cgcollector/build
-remove_if_exists $extsourcedir/extrap/extrap-3.0/build
-remove_if_exists $extsourcedir/pgis/build
+if [ -z "$1" ] || [ "scorep" == "$1" ]; then
+	echo "Testing scorep"
+  remove_if_exists $extsourcedir/scorep-mod/scorep-build
+fi
 
+if [ -z "$1" ] || [ "cgcollector" == "$1" ]; then
+	echo "Testing cgcollector"
+  remove_if_exists $extsourcedir/cgcollector/build
+fi
+
+if [ -z "$1" ] || [ "extrap" == "$1" ]; then
+	echo "Testing extrap"
+  remove_if_exists $extsourcedir/extrap/extrap-3.0/build
+fi
+
+if [ -z "$1" ] || [ "pgis" == "$1" ]; then
+	echo "Testing pgis"
+  remove_if_exists $extsourcedir/pgis/build
+fi
 
