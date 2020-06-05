@@ -15,6 +15,25 @@ from lib.Exception import PiraException
 import json
 
 
+class FolderRenamer:
+
+  class __FolderRenamerImpl:
+    def __init__(self) -> None:
+      self.currentStr = U.generate_random_string()
+
+    def get_renamed_folder(self, old_folder: str) -> str:
+      return old_folder + '_' + self.currentStr
+
+  instance = None
+
+  def __init__(self):
+    if not FolderRenamer.instance:
+      FolderRenamer.instance = FolderRenamer.__FolderRenamerImpl()
+
+  def __getattr__(self, name):
+    return getattr(self.instance, name)
+
+
 class ProfileSinkException(PiraException):
 
   def __init__(self, msg):
@@ -146,7 +165,9 @@ class ExtrapProfileSink(ProfileSinkBase):
           'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort\n' + cur_ep_dir, level='error')
     else:
       if U.check_provided_directory(cur_ep_dir):
-        new_dir_name = cur_ep_dir + '_' + U.generate_random_string()
+        renamer = FolderRenamer()
+        #new_dir_name = cur_ep_dir + '_' + U.generate_random_string()
+        new_dir_name = renamer.get_renamed_folder(cur_ep_dir)
         L.get_logger().log('ExtrapProfileSink::check_and_prepare: Moving old experiment directory to: ' + new_dir_name, level='info')
         U.rename(cur_ep_dir, new_dir_name)
 

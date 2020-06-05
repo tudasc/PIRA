@@ -8,6 +8,7 @@
 scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"
 
 echo -e "Setting up paths\n"
+export PIRA_DIR="$scriptdir/.."
 export PATH=$scriptdir/../extern/install/mpiwrap:$scriptdir/../extern/install/pgis/bin:$scriptdir/../extern/install/cgcollector/bin:$scriptdir/../extern/install/scorep/bin:$PATH
 export LD_LIBRARY_PATH=$scriptdir/../extern/install/cgcollector/lib:/$scriptdir/../extern/install/extrap/lib:$scriptdir/../extern/install/pgis/lib:$scriptdir/../extern/install/scorep/lib:$LD_LIBRARY_PATH
 echo -e "-- PATH --\n" $PATH
