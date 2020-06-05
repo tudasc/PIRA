@@ -195,6 +195,8 @@ echo "[PIRA] Getting json library"
 cd $extsourcedir
 if [ ! -d "$extsourcedir/json" ]; then
     git clone https://github.com/nlohmann/json json 2>&1 > /dev/null
+		cd json
+		git checkout v3.7.3
 fi
 
 echo "[PIRA] Building PGIS analysis engine"
@@ -242,7 +244,7 @@ check_directory_or_file_exists $extsourcedir/cgcollector/build
 if [ $? -ne 0 ]; then
   rm -rf build
   mkdir build && cd build
-  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/cgcollector -DJSON_INCLUDE_PATH=$extsourcedir/json/single_include .. 2>&1 > /dev/null
+  cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/cgcollector -DJSON_INCLUDE_PATH=$extsourcedir/json/single_include .. 2>&1 > /dev/null
   if [ $? -ne 0 ]; then
     echo "[PIRA] Configuring CGCollector failed."
     exit 1
