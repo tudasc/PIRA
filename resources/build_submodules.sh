@@ -15,10 +15,8 @@ parallel_jobs="$1"
 add_flags="$2"
 
 # using mpicc for compilation leads to errors in PGIS (for whatever reason)
-if [ "$CC" == "mpicc" ]; then
-  export CC=gcc
-  export CXX=g++
-fi
+export CC=gcc
+export CXX=g++
 
 
 function check_directory_or_file_exists {
@@ -208,13 +206,13 @@ if [ $? -eq 0 ]; then
   git checkout devel 2>&1 > /dev/null
 fi
 
-echo "Using Compiler: $CC / $CXX"
-
 check_directory_or_file_exists $extsourcedir/pgis/build
 if [ $? -ne 0 ]; then
   rm -rf build
   mkdir build && cd build
+	echo "[PIRA] Configuring PGIS"
   cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSPDLOG_BUILD_SHARED=ON -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis .. 2>&1 > /dev/null
+	echo "[PIRA] Configuring PGIS done"
   if [ $? -ne 0 ]; then
     echo "[PIRA] Configuring PGIS failed."
     exit 1
