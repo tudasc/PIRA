@@ -34,13 +34,13 @@ function check_directory_or_file_exists {
 
 command -v clang++
 if [ $? -eq 1 ]; then
-  echo -e "[PIRA]: No Clang found.\nPIRA requires a source build of Clang 9.0.\nNo suitable Clang version found in PATH"
+  echo -e "[PIRA]: No Clang found.\nPIRA requires a source build of Clang/LLVM 10.\nNo suitable Clang version found in PATH"
   exit -1
 fi
 # Very primitive version check to bail out early enough
-clangversion=$(clang++ --version | grep 9.0)
+clangversion=$(clang++ --version | grep 10.0)
 if [ -z "$clangversion" ]; then
-  echo -e "[PIRA] Wrong version of Clang.\nPIRA requires a source build of Clang 9.0.\nNo suitable Clang version found in PATH"
+  echo -e "[PIRA] Wrong version of Clang.\nPIRA requires a source build of Clang/LLVM 10.\nNo suitable Clang version found in PATH"
   exit -1
 fi
 
@@ -238,6 +238,7 @@ cd $extsourcedir/cgcollector
 stat .git 2>&1>/dev/null
 if [ $? -eq 0 ]; then
   git checkout devel 2>&1 > /dev/null
+	git checkout feat/llvm10
 fi
 
 check_directory_or_file_exists $extsourcedir/cgcollector/build

@@ -7,8 +7,8 @@ void foo() {
 }
 
 // CHECK-LABEL: define dso_local i32 @main(
-// CHECK: store i32 %argc
-// CHECK: store i8** %argv
+// CHECK: store i32 0, i32* %3
+// CHECK: store i8** %1, i8*** %5
 int main(int argc, char **argv) {
   return 0;
 }
