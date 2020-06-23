@@ -238,7 +238,6 @@ cd $extsourcedir/cgcollector
 stat .git 2>&1>/dev/null
 if [ $? -eq 0 ]; then
   git checkout devel 2>&1 > /dev/null
-	git checkout feat/llvm10
 fi
 
 check_directory_or_file_exists $extsourcedir/cgcollector/build
