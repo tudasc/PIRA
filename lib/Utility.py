@@ -365,7 +365,7 @@ def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark
   # PIRA version 1 runner, i.e., only consider raw runtime of single rum
   if pgis_cfg_file is None:
     L.get_logger().log('Utility::run_analyzer_command: using PIRA 1 Analyzer', level='info')
-    sh_cmd = command + ' ' + ipcg_file + ' -c ' + cubex_file
+    sh_cmd = command + ' --scorep-out ' + ipcg_file + ' -c ' + cubex_file
     L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
     out, _ = shell(sh_cmd)
     L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
@@ -374,14 +374,14 @@ def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark
   extrap_cfg_file = pgis_cfg_file
   # extrap_file_path = analyzer_dir + '/' + extrap_cfg_file
   # sh_cmd = command + ' --model-filter -e ' + extrap_file_path + ' ' + ipcg_file
-  sh_cmd = command + ' -e ' + pgis_cfg_file + ' ' + ipcg_file
+  sh_cmd = command + ' --scorep-out -e ' + pgis_cfg_file + ' ' + ipcg_file
   L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
   L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
 
 def run_analyzer_command_noInstr(command: str, analyzer_dir: str, flavor: str, benchmark_name: str) -> None:
   ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
-  sh_cmd = command + ' --static ' + ipcg_file
+  sh_cmd = command + ' --scorep-out --static ' + ipcg_file
   L.get_logger().log('Utility::run_analyzer_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
   L.get_logger().log('Utility::run_analyzer_command_noInstr: Output of analyzer:\n' + out, level='debug')
