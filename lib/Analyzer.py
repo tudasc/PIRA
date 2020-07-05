@@ -82,7 +82,6 @@ class Analyzer:
 
           tracker.m_track('Initial analysis', U, 'run_analyzer_command_noInstr', command, analyzer_dir, flavor,
                           benchmark_name)
-          U.run_analyzer_command_noInstr(command, analyzer_dir, flavor, benchmark_name)
 
         self.tear_down(build, exp_dir)
         return instr_files
