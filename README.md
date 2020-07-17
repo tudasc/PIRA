@@ -93,6 +93,22 @@ PIRA uses source-code information to construct initial instrumentations and deci
 It provides a Clang-based call-graph tool that collects all required information and outputs the information in a `.json` file.
 You can find the `cgcollector` tool in the subdirectory `./extern/src/cgcollector`.
 
+Applying the CGCollector usually happens in two steps. 
+
+1. At first, `cgc` is invoked on every source file in the project. e.g.:
+
+    ~~~{.sh}
+    for f in $(find ./src -type f \( -iname  "*.c" -o -iname "*.cpp" \) ); do
+        cgc $f
+    done
+    ~~~
+2. The `.ipcg`-files created in step 1 are then merged to a general file using `cgmerge`. (Note that `find` might have unexpected behaivor by splitting the command, depending on the number of ipcg-files. This can be solved by creating an "empty" ipcg file, which is then merged into itself.) e.g.:
+   
+    ~~~{.sh}
+    echo "null" > $IPCG_FILENAME
+    find ./src -name "*.ipcg" -exec cgmerge $IPCG_FILENAME $IPCG_FILENAME {} +
+    ~~~
+
 The final graph (currently) needs to be placed into the directory of the **PGIS** that is used for the CG analysis, i.e., copy the generated whole program file into the PGIS directory.
 Currently, it is important that the file in the PGIS directory is named following the pattern `item_flavor.ipcg`. An item stands for a target application. More on the terms flavor and item in the next section.
 
