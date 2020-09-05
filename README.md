@@ -1,4 +1,5 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
 # PIRA
 
 The **P**erformance **I**nstrumentation **R**efinement **A**utomation framework *PIRA* approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base when using an instrumentation tool, e.g., Score-P.
@@ -75,23 +76,31 @@ The steps are:
 
 #### Arguments for Invoking PIRA
 
-* ```--config``` Path to the config-file
-* ```--version [1,2]``` PIRA can be run in two different versions. Version 1 uses a single data set and the original PGIS selection to converge towards runtime hot-spots. 
-Instead, version 2 uses the Extra-P based PGIS selection to converge towards model hot-spots. The two versions use different configuration-files.
- There is a sample configuration-file for version 2 included in the test-directory.
-* ```--iterations [number] ``` Number of Pira iterations, the default value is 3.
-* ```--repetitions [number]``` Number of measurement repetitions, the default value is 3.
+* ```config``` Path to the config-file (required argument)
+* ```--config-version [1,2]``` Version of PIRA configuration, 2 is the default and encouraged; 1 is deprecated.
 * ```--runtime-filter``` Use run-time filtering, the default is false. In compile-time filtering, the functions are not instrumented at compile-time, reducing the overall measurement influence significantly, but requiring the target to be rebuilt in each iteration.
 In contrast, with runtime filtering, the compiler inserts instrumentation hooks in every function of the target application.
-* ```--hybrid-filter-iters [number]``` Use runtime-filtering and switch to compile-time-filtering after x iterations.
+* ```--iterations [number] ``` Number of Pira iterations, the default value is 3.
+* ```--repetitions [number]``` Number of measurement repetitions, the default value is 3.
+* ```--tape``` Location where an (somewhat extensive) logging tape should be written to.
 * ```--extrap-dir``` The base directory where the extra-p folder structure is placed.
+* ```--extrap-prefix``` Extra-P prefix, should be a sequence of characters.
+* ```--version``` Prints the version number of the PIRA installation
+
+#### Highly Experimental Arguments to PIRA
+
+* ```--hybrid-filter-iters [number]``` Re-compile after [number] iterations, in between use runtime filtering.
+* ```--export``` Attaches the generated Extra-P models and data set sizes into the target's IPCG file.
+* ```--export-runtime-only``` Requires `--export`; Attaches only the median runtime value of all repetitions to the functions. Single data set.
 
 
 #### Whole Program Call Graph
 
 PIRA uses source-code information to construct initial instrumentations and decide which functions to add to an instrumentation during the iterative refinement.
 It provides a Clang-based call-graph tool that collects all required information and outputs the information in a `.json` file.
-You can find the `cgcollector` tool in the subdirectory `./extern/src/cgcollector`.
+You can find the `cgcollector` tool in the subdirectory `./extern/src/metacg/cgcollector`.
+
+More information on the CGCollector and its components can be found in the [MetaCG](https://github.com/tudasc/MetaCG) documentation.
 
 Applying the CGCollector usually happens in two steps. 
 
@@ -150,7 +159,7 @@ An item in PIRA is a target application, built in a specific way, which is the r
 ##### Analyzer
 
 Every item specifies which *analyzer* should be used.
-The default is the analyzer that ships with PIRA, and which can be found in `./extern/src/pgis`.
+The default is the analyzer that ships with PIRA, and which can be found in `./extern/src/metacg/pgis`.
 The particular analyzer is responsible for steering the instrumentation refinement, and is, therefore, an essential part of the PIRA framework.
 
 ##### Argmap
@@ -222,13 +231,11 @@ In addition, different PIRA components may pass additional arguments.
 
 *Important*: We now ship our own Score-P version, thus, it is no longer required to adjust compile commands in PIRA.
 As a result, some of the additionally passed functor arguments might go away, or are deprecated.
-This can be seen in the `./test/integration/GameOfLife` example functors.
+Check out the functors in `test/integration/AMG2013` for example usages of the different information.
 
 ##### All Functors
 
-* ***CC***: C compiler. For example, as used in $(CC) in Makefiles.
-* ***CXX***: C++ compiler. For example, as used $(CXX) in Makefiles.
-* ***PIRANAME***: The name of the executable that PIRA expects to be generated and callable.
+Currently, no information is passed to all functors
 
 ##### Analysis Functor
 
@@ -236,8 +243,6 @@ This can be seen in the `./test/integration/GameOfLife` example functors.
 
 ##### Build Functor
 
-* ***CLFLAGS***: Additionally needed linker flags for C.
-* ***CXXLFLAGS***: Additionally needed linker flags for C++.
 * ***filter-file***: The path to the generated white list filter file (to be passed to scorep).
 
 ##### Run Functor
