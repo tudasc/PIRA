@@ -18,14 +18,13 @@ stages:
 .lb-setup: &lb-setup
   - eval $(ssh-agent -s)
   - ssh-add ~/.ssh/gitlab_rsa
-  - module use /home/groups/sc/modules/modulefiles
   - module load gcc/8 git llvm/10.0.0 cmake python/3 openmpi
 
 .lb-tear-down: &lb-tear-down
   - rm -rf $(dirname $(echo $SSH_AUTH_SOCK))
   - ssh-agent -k
 
-# To be executed after the all integration tests have run
+# To be executed after all the integration tests have run
 # TODO Find a better way to do this.
 .rm-bear-directory: &rm-bear-directory
   - rm -rf test/integration/bear
@@ -33,9 +32,10 @@ stages:
 # Pull-in the git submodules that are used during development
 .get-submodules: &get-submodules
   - git submodule init;
-  - git submodule update extern/src/cgcollector;
   - git submodule update --force extern/src/scorep-mod;
-  - git submodule update extern/src/pgis;
+  - git submodule update extern/src/metacg;
+ #- git submodule update extern/src/pgis;
+ #- git submodule update extern/src/cgcollector;
 
 # Only test that the submodules configured in here are accessible, so we do not block the Pipeline unneccessary long
 # GIT_STRATEGY: clone is used to always start with a clean checkout of the repository.

@@ -39,6 +39,7 @@ cd gol/serial_non_template
 bear make gol 2>&1 > /dev/null
 cgc main.cpp 2>&1 > /dev/null
 cgc SerialGoL.cpp 2>&1 > /dev/null
+echo "null" > gol.ipcg
 cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
 cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/gol_ct.ipcg
 cd ../..
@@ -47,7 +48,7 @@ cd gol
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../../pira.py --version 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../gol.tp $testDir/gol_config.json
+python3 ../../../../pira.py --config-version 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../gol.tp $testDir/gol_config.json
 
 pirafailed=$?
 

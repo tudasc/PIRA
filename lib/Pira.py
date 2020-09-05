@@ -136,13 +136,13 @@ def main(arguments) -> None:
   U.set_home_dir(home_dir)
 
   try:
-    if arguments.version is 1:
+    if arguments.config_version is 1:
       config_loader = CLoader()
     else:
       config_loader = SCLoader()
 
     configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
-    checker.check_configfile(configuration,arguments.version)
+    checker.check_configfile(configuration,arguments.config_version)
 
 
     if B.check_queued_job():

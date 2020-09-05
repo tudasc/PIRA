@@ -64,7 +64,7 @@ cd ..
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../pira.py --version 2 --iterations 2 --repetitions 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg_config.json
+python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg_config.json
 
 pirafailed=$?
 

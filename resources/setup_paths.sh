@@ -5,8 +5,11 @@
 # Description: Helper script to build the git submodules useed in PIRA.
 #"""
 
-scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"
+scriptdir="$1"
 
+if [[ -z "$scriptdir" ]]; then
+  scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"
+fi
 
 
 echo -e "Setting up paths\n"

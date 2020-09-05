@@ -23,6 +23,9 @@ from timeit import timeit
 queued_job_filename = './queued_job.tmp'
 home_directory = ''
 
+export_performance_models = False
+export_runtime_only = False
+
 def exit(code="1"):
   sys.exit(code)
 
@@ -39,6 +42,14 @@ def get_home_dir() -> str:
     raise PiraException('Utility::get_home_dir: No Home Directory Set!')
 
   return home_directory
+
+def set_export_perfomance_models(export: bool) -> None:
+  global export_performance_models
+  export_performance_models = export
+
+def set_export_runtime_only(rt_only: bool) -> None:
+  global export_runtime_only
+  export_runtime_only = rt_only
 
 
 def get_cwd() -> str:
@@ -358,6 +369,15 @@ def get_cubex_file(cubex_dir: str, b_name: str, flavor: str) -> str:
 
 def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
                          iterationNumber: int, pgis_cfg_file: str) -> None:
+
+  global export_performance_models
+  global export_runtime_only
+  export_str = ' '
+  if export_performance_models:
+    export_str += ' --export'
+    if export_runtime_only:
+      export_str += ' --runtime-only'
+
   ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
   cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber - 1)
   cubex_file = get_cubex_file(cubex_dir, benchmark_name, flavor)
@@ -374,7 +394,7 @@ def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark
   extrap_cfg_file = pgis_cfg_file
   # extrap_file_path = analyzer_dir + '/' + extrap_cfg_file
   # sh_cmd = command + ' --model-filter -e ' + extrap_file_path + ' ' + ipcg_file
-  sh_cmd = command + ' --scorep-out -e ' + pgis_cfg_file + ' ' + ipcg_file
+  sh_cmd = command + export_str + ' --scorep-out --extrap ' + pgis_cfg_file + ' ' + ipcg_file
   L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
   L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')

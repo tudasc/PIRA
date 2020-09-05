@@ -44,7 +44,7 @@ fi
 
 if [ -z "$1" ] || [ "cgcollector" == "$1" ]; then
 	echo "Testing cgcollector"
-  remove_if_exists $extsourcedir/cgcollector/build
+  remove_if_exists $extsourcedir/metacg/cgcollector/build
 fi
 
 if [ -z "$1" ] || [ "extrap" == "$1" ]; then
@@ -54,6 +54,6 @@ fi
 
 if [ -z "$1" ] || [ "pgis" == "$1" ]; then
 	echo "Testing pgis"
-  remove_if_exists $extsourcedir/pgis/build
+  remove_if_exists $extsourcedir/metacg/pgis/build
 fi
 
