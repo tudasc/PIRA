@@ -6,8 +6,9 @@
 # download-test and pira unit test are always carried out. For every branch.
 stages:
   - download-test
-  - unit-test
+  - pira-unit-test
   - dependence-build-test
+  - deps-unit-test
   - prepare-integration-test
   - integration-test
   - prepare-release-test
@@ -17,14 +18,13 @@ stages:
 .lb-setup: &lb-setup
   - eval $(ssh-agent -s)
   - ssh-add ~/.ssh/gitlab_rsa
-  - module use /home/groups/sc/modules/modulefiles
-  - module load gcc/8 git clang/9.0 cmake python/3 openmpi
+  - module load gcc/8 git llvm/10.0.0 cmake python/3 openmpi
 
 .lb-tear-down: &lb-tear-down
   - rm -rf $(dirname $(echo $SSH_AUTH_SOCK))
   - ssh-agent -k
 
-# To be executed after the all integration tests have run
+# To be executed after all the integration tests have run
 # TODO Find a better way to do this.
 .rm-bear-directory: &rm-bear-directory
   - rm -rf test/integration/bear
@@ -32,10 +32,10 @@ stages:
 # Pull-in the git submodules that are used during development
 .get-submodules: &get-submodules
   - git submodule init;
-  - git submodule update extern/src/cgcollector;
-  - git submodule update extern/src/llvm-instrumenter;
   - git submodule update --force extern/src/scorep-mod;
-  - git submodule update extern/src/PGIS;
+  - git submodule update extern/src/metacg;
+ #- git submodule update extern/src/pgis;
+ #- git submodule update extern/src/cgcollector;
 
 # Only test that the submodules configured in here are accessible, so we do not block the Pipeline unneccessary long
 # GIT_STRATEGY: clone is used to always start with a clean checkout of the repository.
@@ -47,8 +47,26 @@ download:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: clone
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - *get-submodules
+    - *lb-tear-down
+
+# Runs the unit tests 
+# Also uses the GIT_STRATEGY fetch.
+# XXX should this be split into multiple, i.e., 1 job per unit test suite?
+pira:
+  stage: pira-unit-test
+  tags:
+    - hlb0001
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  coverage: /^TOTAL.+?(\d+\%)$/
+  script:
+    - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
+    - ./run_tests.sh
     - *lb-tear-down
 
 # Download repositories again, but this time we use git fetch to reduce the amount of time needed to get updates 
@@ -62,24 +80,25 @@ build-dependencies:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd resources
     - ./remove_builds.sh
     - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l)
     - *lb-tear-down
 
-# Runs the unit tests 
-# Also uses the GIT_STRATEGY fetch.
-# XXX should this be split into multiple, i.e., 1 job per unit test suite?
-run-unit-tests:
-  stage: unit-test
+# Runs the llvm-instrumentation unit tests
+llvm-instrumentation:
+  stage: deps-unit-test
   tags:
     - hlb0001
   before_script: *lb-setup
-  coverage: /^TOTAL.+?(\d+\%)$/
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
-    - export PATH=`pwd`/extern/install/scorep/bin:`pwd`/extern/install/extrap/bin:$PATH
-    - ./run_tests.sh
+    - cd extern/src/llvm-instrumentation/test
+    - $HOME/all_repos/gh-llvm-llvm-project/llvm/utils/lit/lit.py -v .
     - *lb-tear-down
 
 # Runs the larger integration tests
@@ -92,6 +111,7 @@ run-prepare-integration:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd resources
     - ./build_submodules.sh $(cat /proc/cpuinfo | grep processor | wc -l) # This should not do anything, as all dependencies are already built.
@@ -108,6 +128,7 @@ run-gameoflife-test:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - echo 'Running GameOfLife (PIRA II) integration test'
     - cd test/integration/GameOfLife
@@ -121,6 +142,7 @@ run-amg2013-test:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - echo 'Running AMG integration test'
     - cd test/integration/AMG2013
@@ -134,9 +156,24 @@ run-gameoflife-v1-test:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - echo 'Running GameOfLife (PIRA I) integration test'
     - cd test/integration/GameOfLifePiraVersion1
+    - ./run.sh
+    - *lb-tear-down
+
+run-gameoflife-hybrid-test:
+  stage: integration-test
+  tags:
+    - hlb0001
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife-hybrid-filtering integration test'
+    - cd test/integration/GameOfLife_hybrid_filter
     - ./run.sh
     - *lb-tear-down
 
@@ -154,6 +191,7 @@ run-release-prepare:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: clone
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd resources
     - ./get_externals.sh
@@ -170,6 +208,7 @@ run-release-tests:
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - ./run_tests.sh
     - echo 'Running release tests'

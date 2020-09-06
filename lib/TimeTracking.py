@@ -5,7 +5,7 @@ Description: This module allows to track timings of the various bits and pieces 
 """
 
 import os
-import lib.Logging as log
+import lib.Logging as L
 
 
 class TimeTracker():
@@ -21,7 +21,7 @@ class TimeTracker():
     res = function(*args)
     self.stop()
     time_tuple = self.get_time()
-    log.get_logger().log(sec_name + ' took %.3f seconds' % time_tuple[0], level='perf')
+    L.get_logger().log(sec_name + ' took %.3f seconds' % time_tuple[0], level='perf')
     return (res, time_tuple)
 
   def m_track(self, sec_name, obj, method_name, *args):
@@ -30,7 +30,7 @@ class TimeTracker():
     res = obj_method(*args)
     self.stop()
     time_tuple = self.get_time()
-    log.get_logger().log(sec_name + ' took %.3f seconds' % time_tuple[0], level='perf')
+    L.get_logger().log(sec_name + ' took %.3f seconds' % time_tuple[0], level='perf')
     return (res, time_tuple)
 
   def get_time(self):
@@ -49,6 +49,6 @@ class TimeTracker():
       obj_method = getattr(obj, name)
       return obj_method
     except Exception as e:
-      log.get_logger().log('No such attribute', level='error')
+      L.get_logger().log('No such attribute', level='error')
       raise e
     

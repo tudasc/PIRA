@@ -33,7 +33,10 @@ which wrap.py
 mkdir $PWD/../../../extern/install/pgis/bin/out
 
 # Download the target application
-wget https://asc.llnl.gov/CORAL-benchmarks/Throughput/amg20130624.tgz
+stat amg20130624.tgz
+if [ $? -ne 0 ]; then
+  wget https://asc.llnl.gov/CORAL-benchmarks/Throughput/amg20130624.tgz
+fi
 tar xzf amg20130624.tgz
 cd AMG2013
 
@@ -47,19 +50,21 @@ echo -e "\n----- Build AMG2013 / build call graph -----"
 bear make CC="OMPI_CC=clang mpicc"
 # Now cgcollector can read the compile_commands.json file, to retrieve the commands required
 for f in $(find . -name "*.c"); do
-	cgcollector $f
+	echo "Processing $f"
+	cgc $f
 done
 # Build the full whole-program call-graph
-find . -name "*.ipcg" -exec cgmerge amg.ipcg {} + 2>&1 > /dev/null
+echo "null" > amg.ipcg # create empty json file
+find . -name "*.ipcg" -exec cgmerge amg.ipcg amg.ipcg {} + 2>&1 > ../cgcollector.log # merge all ipcg files into amg.ipcg
 # Move the CG to where PIRA expects it
 echo $PWD
-cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/ct-mpi-amg.ipcg
+cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/amg_ct_mpi.ipcg
 cd ..
 
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../pira.py --version 2 --iterations 2 --repetitions 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg-config.json
+python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg_config.json
 
 pirafailed=$?
 

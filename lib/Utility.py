@@ -6,21 +6,25 @@ Description: Module to support other tasks.
 
 import sys
 sys.path.append('..')
+
+import lib.Logging as L
 from lib.Exception import PiraException
+
 import os
 import subprocess
-import lib.Logging as log
 import filecmp
+import shutil
+import tempfile
+import typing
 from random import choice
 from string import ascii_uppercase
 from timeit import timeit
-import shutil
-import tempfile
-
-import typing
 
 queued_job_filename = './queued_job.tmp'
 home_directory = ''
+
+export_performance_models = False
+export_runtime_only = False
 
 def exit(code="1"):
   sys.exit(code)
@@ -39,13 +43,21 @@ def get_home_dir() -> str:
 
   return home_directory
 
+def set_export_perfomance_models(export: bool) -> None:
+  global export_performance_models
+  export_performance_models = export
+
+def set_export_runtime_only(rt_only: bool) -> None:
+  global export_runtime_only
+  export_runtime_only = rt_only
+
 
 def get_cwd() -> str:
   return os.getcwd()
 
 
 def change_cwd(path: str) -> None:
-  log.get_logger().log('Utility::change_cwd: to ' + path, level='debug')
+  L.get_logger().log('Utility::change_cwd: to ' + path, level='debug')
   os.chdir(path)
 
 
@@ -57,7 +69,7 @@ def read_file(file_name: str) -> str:
 
 
 def copy_file(source_file: str, target_file: str) -> None:
-  log.get_logger().log('Utility::copy_file: ' + source_file + ' -to- ' + target_file)
+  L.get_logger().log('Utility::copy_file: ' + source_file + ' -to- ' + target_file)
   shutil.copyfile(source_file, target_file)
 
 
@@ -68,7 +80,7 @@ def lines_in_file(file_name: str) -> int:
     lines = len(content.split('\n'))
     return lines
 
-  log.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
+  L.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
   return 0
 
 def check_provided_directory(path: str) -> bool:
@@ -112,7 +124,7 @@ def make_dirs(path):
   os.makedirs(path,0o777,True)
 
 def write_file(file_path: str, file_content: str) -> str:
-  log.get_logger().log('Utility::write_file: file_path to write: ' + file_path)
+  L.get_logger().log('Utility::write_file: file_path to write: ' + file_path)
   with open(file_path, 'w+') as out_file:
     out_file.write(file_content)
 
@@ -194,7 +206,7 @@ def lines_in_file(file_name: str) -> int:
     lines = len(content.split('\n'))
     return lines
 
-  log.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
+  L.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
   return 0
 
 
@@ -205,7 +217,7 @@ def diff_inst_files(file1: str, file2: str) -> bool:
 
 
 def set_env(env_var: str, val) -> None:
-  log.get_logger().log('Utility::set_env: Setting ' + env_var + ' to ' + str(val), level='debug')
+  L.get_logger().log('Utility::set_env: Setting ' + env_var + ' to ' + str(val), level='debug')
   os.environ[env_var] = val
 
 
@@ -231,17 +243,17 @@ def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
 
 def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool = False) -> typing.Tuple[str, float]:
   if dry:
-    log.get_logger().log('Utility::shell: DRY RUN SHELL CALL: ' + command, level='debug')
+    L.get_logger().log('Utility::shell: DRY RUN SHELL CALL: ' + command, level='debug')
     return '', 1.0
 
   stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
   stderr_fd = open(stderr_fn, 'w+')
   try:
-    log.get_logger().log('Utility::shell: util executing: ' + str(command), level='debug')
+    L.get_logger().log('Utility::shell: util executing: ' + str(command), level='debug')
 
     if time_invoc:
       out, rt = timed_invocation(command, stderr_fd)
-      log.get_logger().log('Util::shell: timed_invocation took: ' + str(rt), level='debug')
+      L.get_logger().log('Util::shell: timed_invocation took: ' + str(rt), level='debug')
       return str(out.decode('utf-8')), rt
 
     else:
@@ -249,27 +261,24 @@ def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool
       return str(out.decode('utf-8')), -1.0
 
   except subprocess.CalledProcessError as e:
-    if e.returncode == 1:
-      if command.find('grep '):
-        return '', .0
-
+    stderr_fd.seek(0) # jump to beginning of file
     err_out = ''
-    log.get_logger().log('Utility::shell: Attempt to write stderr file', level='debug')
+    L.get_logger().log('Utility::shell: Attempt to write stderr file', level='debug')
     err_out += stderr_fd.read()
 
-    log.get_logger().log('Utility::shell: Error output: ' + str(err_out), level='debug')
-    log.get_logger().log('Utility::shell: Caught Exception ' + str(e), level='error')
+    L.get_logger().log('Utility::shell: Error output: ' + str(err_out), level='debug')
+    L.get_logger().log('Utility::shell: Caught Exception ' + str(e), level='error')
     raise Exception('Utility::shell: Running command ' + command + ' did not succeed')
 
   finally:
     stderr_fd.close()
     remove_file(stderr_fn)
-    log.get_logger().log('Utility::shell Cleaning up temp files for subprocess communication.', level='debug')
+    L.get_logger().log('Utility::shell Cleaning up temp files for subprocess communication.', level='debug')
 
 
 def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
   if dry:
-    log.get_logger().log('Utility::shell_for_submitter: SHELL CALL: ' + command, level='debug')
+    L.get_logger().log('Utility::shell_for_submitter: SHELL CALL: ' + command, level='debug')
     return ''
 
   try:
@@ -281,7 +290,7 @@ def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
       if command.find('grep '):
         return ''
 
-    log.get_logger().log('Utility.shell: Caught Exception ' + str(e), level='error')
+    L.get_logger().log('Utility.shell: Caught Exception ' + str(e), level='error')
     raise Exception('Utility::shell_for_submitter: Running command ' + command + ' did not succeed')
 
 
@@ -289,17 +298,17 @@ def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
 
 def load_functor(directory: str, module: str):
   if not check_provided_directory(directory):
-    log.get_logger().log('Utility::load_functor: Functor directory invalid', level='warn')
+    L.get_logger().log('Utility::load_functor: Functor directory invalid', level='warn')
   if not is_valid_file_name(directory + '/' + module):
-    log.get_logger().log('Utility::load_functor: Functor filename invalid', level='warn')
+    L.get_logger().log('Utility::load_functor: Functor filename invalid', level='warn')
 
   # TODO: Add error if functor path does not exist!!!
-  log.get_logger().log('Utility::load_functor: Appending ' + directory + ' to system path.', level='debug')
+  L.get_logger().log('Utility::load_functor: Appending ' + directory + ' to system path.', level='debug')
   append_to_sys_path(directory)
   # Adding 'fromList' argument loads exactly the module.
   functor = __import__(module)
   remove_from_sys_path(directory)
-  log.get_logger().log('Utility::load_functor: Returning from load_functor', level='debug')
+  L.get_logger().log('Utility::load_functor: Returning from load_functor', level='debug')
   return functor
 
 
@@ -336,59 +345,70 @@ def build_clean_functor_filename(benchmark_name: str, flavor: str) -> str:
   return 'clean_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
-def build_analyse_functor_filename(IsForDB: bool, benchmark_name: str, flavor: str) -> str:
+def build_analyze_functor_filename(IsForDB: bool, benchmark_name: str, flavor: str) -> str:
   if IsForDB:
-    return '/analyse_' + concat_a_b_with_sep(benchmark_name, flavor, '')
+    return '/analyze_' + concat_a_b_with_sep(benchmark_name, flavor, '')
   else:
-    return 'analyse_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
+    return 'analyze_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
-def build_instr_file_path(analyser_dir: str, flavor: str, benchmark_name: str) -> str:
-  return analyser_dir + "/" + 'out/instrumented-' + flavor + '-' + benchmark_name + '.txt'
+def build_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -> str:
+  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '.txt'
 
 
-def build_previous_instr_file_path(analyser_dir: str, flavor: str, benchmark_name: str) -> str:
-  return analyser_dir + "/" + 'out/instrumented-' + flavor + '-' + benchmark_name + 'previous.txt'
+def build_previous_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -> str:
+  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + 'previous.txt'
 
 
 def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
-  return base_dir + "/" + flavor + '-' + b_name + '.ipcg'
+  return base_dir + "/" + b_name + '_' + flavor + '.ipcg'
+
+def get_cubex_file(cubex_dir: str, b_name: str, flavor: str) -> str:
+  return cubex_dir + '/' + flavor + '-' + b_name + '.cubex'
 
 
-def run_analyser_command(command: str, analyser_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
+def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
                          iterationNumber: int, pgis_cfg_file: str) -> None:
-  ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
+
+  global export_performance_models
+  global export_runtime_only
+  export_str = ' '
+  if export_performance_models:
+    export_str += ' --export'
+    if export_runtime_only:
+      export_str += ' --runtime-only'
+
+  ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
   cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber - 1)
-  cubex_file = cubex_dir + '/' + flavor + '-' + benchmark_name + '.cubex'
+  cubex_file = get_cubex_file(cubex_dir, benchmark_name, flavor)
 
   # PIRA version 1 runner, i.e., only consider raw runtime of single rum
   if pgis_cfg_file is None:
-    log.get_logger().log('Utility::run_analyser_command: using PIRA 1 Analyzer', level='info')
-    sh_cmd = command + ' ' + ipcg_file + ' -c ' + cubex_file
-    log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
+    L.get_logger().log('Utility::run_analyzer_command: using PIRA 1 Analyzer', level='info')
+    sh_cmd = command + ' --scorep-out ' + ipcg_file + ' -c ' + cubex_file
+    L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
     out, _ = shell(sh_cmd)
-    log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
+    L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
     return
 
   extrap_cfg_file = pgis_cfg_file
-  # extrap_file_path = analyser_dir + '/' + extrap_cfg_file
+  # extrap_file_path = analyzer_dir + '/' + extrap_cfg_file
   # sh_cmd = command + ' --model-filter -e ' + extrap_file_path + ' ' + ipcg_file
-  sh_cmd = command + ' -e ' + pgis_cfg_file + ' ' + ipcg_file
-  log.get_logger().log('Utility::run_analyser_command: INSTR: Run cmd: ' + sh_cmd)
+  sh_cmd = command + export_str + ' --scorep-out --extrap ' + pgis_cfg_file + ' ' + ipcg_file
+  L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
-  log.get_logger().log('Utility::run_analyser_command: Output of analyzer:\n' + out, level='debug')
+  L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
 
-
-def run_analyser_command_noInstr(command: str, analyser_dir: str, flavor: str, benchmark_name: str) -> None:
-  ipcg_file = get_ipcg_file_name(analyser_dir, benchmark_name, flavor)
-  sh_cmd = command + ' --static ' + ipcg_file
-  log.get_logger().log('Utility::run_analyser_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
+def run_analyzer_command_noInstr(command: str, analyzer_dir: str, flavor: str, benchmark_name: str) -> None:
+  ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
+  sh_cmd = command + ' --scorep-out --static ' + ipcg_file
+  L.get_logger().log('Utility::run_analyzer_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
   out, _ = shell(sh_cmd)
-  log.get_logger().log('Utility::run_analyser_command_noInstr: Output of analyzer:\n' + out, level='debug')
+  L.get_logger().log('Utility::run_analyzer_command_noInstr: Output of analyzer:\n' + out, level='debug')
 
 
 def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:
-  log.get_logger().log('Utility::get_cube_file_path: ' + experiment_dir + '-' + flavor + '-' + str(iter_nr))
+  L.get_logger().log('Utility::get_cube_file_path: ' + experiment_dir + '-' + flavor + '-' + str(iter_nr))
   return experiment_dir + '-' + flavor + '-' + str(iter_nr)
 
 

@@ -1,20 +1,17 @@
 """
 File: ConfigLoaderNewTest.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-Description: Tests for the argument mapping
+Description: Tests for the ConfigurationLoader module.
 """
 
-import sys
-sys.path.append('../')
+import lib.Logging as L
+from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader
+from lib.Configuration import PiraConfigurationAdapter, PiraConfigurationII
 
 import unittest
 import typing
 
-from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader
-import lib.Logging as logging
-import lib.Utility as util
-
-logger = logging.get_logger()
+logger = L.get_logger()
 logger.set_state('debug')
 logger.set_state('info')
 logger.set_state('warn')
@@ -85,11 +82,11 @@ class TestConfigLoader(unittest.TestCase):
     self.assertIn(builder, dep_aw_builders[i_01])
 
     expected_item = 'item01'
-    anal_func_dir = cfg.get_analyse_func(b, i_01)
+    anal_func_dir = cfg.get_analyze_func(b, i_01)
     self.assertEqual(anal_func_dir, dep_aw_ins_anal[expected_item][0])
-    cube_path = cfg.get_analyser_exp_dir(b, i_01)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_01)
     self.assertEqual(cube_path, dep_aw_ins_anal[expected_item][1])
-    tool_path = cfg.get_analyser_dir(b, i_01)
+    tool_path = cfg.get_analyzer_dir(b, i_01)
     self.assertEqual(tool_path, dep_aw_ins_anal[expected_item][2])
 
     runner = cfg.get_runner_func(b, i_01)
@@ -116,11 +113,11 @@ class TestConfigLoader(unittest.TestCase):
     self.assertIn(builder, dep_aw_builders[i_02])
 
     expected_item = 'item02'
-    anal_func_dir = cfg.get_analyse_func(b, i_02)
+    anal_func_dir = cfg.get_analyze_func(b, i_02)
     self.assertEqual(anal_func_dir, dep_aw_ins_anal[expected_item][0])
-    cube_path = cfg.get_analyser_exp_dir(b, i_02)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_02)
     self.assertEqual(cube_path, dep_aw_ins_anal[expected_item][1])
-    tool_path = cfg.get_analyser_dir(b, i_02)
+    tool_path = cfg.get_analyzer_dir(b, i_02)
     self.assertEqual(tool_path, dep_aw_ins_anal[expected_item][2])
 
     runner = cfg.get_runner_func(b, i_02)
@@ -188,9 +185,9 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     expected_item = 'item01'
     anal_func_dir = cfg.get_analyzer_path(b, i_01)
     self.assertEqual(anal_func_dir, n_functor_path[expected_item])
-    cube_path = cfg.get_analyser_exp_dir(b, i_01)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_01)
     self.assertEqual(cube_path, n_cube_path[expected_item])
-    tool_path = cfg.get_analyser_dir(b, i_01)
+    tool_path = cfg.get_analyzer_dir(b, i_01)
     self.assertEqual(tool_path, n_analysis_path)
 
     runner = cfg.get_runner_func(b, i_01)
@@ -219,9 +216,9 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     expected_item = 'item02'
     anal_func_dir = cfg.get_analyzer_path(b, i_02)
     self.assertEqual(anal_func_dir, n_functor_path[expected_item])
-    cube_path = cfg.get_analyser_exp_dir(b, i_02)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_02)
     self.assertEqual(cube_path, n_cube_path[expected_item])
-    tool_path = cfg.get_analyser_dir(b, i_02)
+    tool_path = cfg.get_analyzer_dir(b, i_02)
     self.assertEqual(tool_path, n_analysis_path)
 
     runner = cfg.get_runner_func(b, i_02)
@@ -249,9 +246,9 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     expected_item = 'item01'
     anal_func_dir = cfg.get_analyzer_path(b, i_01)
     self.assertEqual(anal_func_dir, n_functor_path[expected_item])
-    cube_path = cfg.get_analyser_exp_dir(b, i_01)
+    cube_path = cfg.get_analyzer_exp_dir(b, i_01)
     self.assertEqual(cube_path, '/where/to/put/cube/files/item01')
-    tool_path = cfg.get_analyser_dir(b, i_01)
+    tool_path = cfg.get_analyzer_dir(b, i_01)
     self.assertEqual(tool_path, n_analysis_path)
 
     runner = cfg.get_runner_func(b, i_01)
@@ -271,14 +268,17 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     for (exp, arg) in zip(expected, args):
       self.assertEqual(exp, tuple(arg))
 
-  @unittest.skip('This test needs to run, when the configuration checks are correctly implemented.')
   def test_basic_config_001(self):
     cfg = self.loader.load_conf('../inputs/configs/basic_config_001.json')
 
     self.assertIsNotNone(cfg)
-    self.assertFalse(cfg.is_valid())
-    # TODO Figure out how we can check that we generate the correct errors
+    self.assertFalse(cfg.is_empty())
 
+  def test_relative_paths(self):
+    cfg = self.loader.load_conf('../inputs/configs/basic_config_005.json')
+    self.assertFalse(cfg.is_empty())
+    self.assertTrue(isinstance(cfg, PiraConfigurationAdapter))
+    self.assertTrue(isinstance(cfg.get_adapted(), PiraConfigurationII))
 
 
 if __name__ == '__main__':

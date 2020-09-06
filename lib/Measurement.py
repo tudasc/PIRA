@@ -4,9 +4,9 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: Module hosts measurement support infrastructure.
 """
 
-import lib.Utility as u
-import lib.Logging as log
-import lib.DefaultFlags as defaults
+import lib.Utility as U
+import lib.Logging as L
+import lib.DefaultFlags as D
 from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
 from lib.Exception import PiraException
 
@@ -59,7 +59,7 @@ class RunResult:
 
   def get_average(self, pos: int = 0) -> float:
     if self._nr_of_iterations == 0 or self._nr_of_iterations == []:
-      log.get_logger().log('Calculating average based on 0 repetitions - assuming 1', level='warn')
+      L.get_logger().log('Calculating average based on 0 repetitions - assuming 1', level='warn')
       raise RuntimeError('Calculating average based on 0 repetitions impossible.')
       self._nr_of_iterations = 1
     return self._accumulated_runtime[pos] / self._nr_of_iterations[pos]
@@ -109,7 +109,7 @@ class ScorepSystemHelper:
     except KeyError:
       pass
 
-    log.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
+    L.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
     return ''
 
   def set_up(self, target_config: TargetConfiguration, instrumentation_config: InstrumentConfig,
@@ -127,29 +127,29 @@ class ScorepSystemHelper:
         Prepares the file that Score-P uses to include or exclude. 
         NOTE: The filter_file is a positive list! We want to include these functions!
     '''
-    file_dir = u.get_base_dir(filter_file)
-    file_content = u.read_file(filter_file)
+    file_dir = U.get_base_dir(filter_file)
+    file_content = U.read_file(filter_file)
     scorep_filter_file_content = self.append_scorep_footer(self.prepend_scorep_header(file_content))
     scorep_filter_file_name = file_dir + '/scorep_filter_file.txt'
-    u.write_file(scorep_filter_file_name, scorep_filter_file_content)
+    U.write_file(scorep_filter_file_name, scorep_filter_file_content)
     return scorep_filter_file_name
 
   def _set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
-    log.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run), level='debug')
+    L.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run), level='debug')
     if not is_instr_run:
       return
 
-    exp_dir = self.config.get_analyser_exp_dir(build, item)
-    log.get_logger().log(
-        'ScorepSystemHelper::_set_up: Retrieved analyser experiment directory: ' + exp_dir, level='debug')
-    effective_dir = u.get_cube_file_path(exp_dir, flavor, it_nr)
-    if not u.check_provided_directory(effective_dir):
-      log.get_logger().log(
+    exp_dir = self.config.get_analyzer_exp_dir(build, item)
+    L.get_logger().log(
+        'ScorepSystemHelper::_set_up: Retrieved analyzer experiment directory: ' + exp_dir, level='debug')
+    effective_dir = U.get_cube_file_path(exp_dir, flavor, it_nr)
+    if not U.check_provided_directory(effective_dir):
+      L.get_logger().log(
           'ScorepSystemHelper::_set_up: Experiment directory does not exist.  \nCreating path: ' + effective_dir,
           level='debug')
-      u.create_directory(effective_dir)
+      U.create_directory(effective_dir)
 
-    db_exp_dir = u.build_cube_file_path_for_db(exp_dir, flavor, it_nr)
+    db_exp_dir = U.build_cube_file_path_for_db(exp_dir, flavor, it_nr)
     self.data['cube_dir'] = db_exp_dir
     self.set_exp_dir(exp_dir, flavor, it_nr)
     self.set_memory_size('500M')
@@ -161,19 +161,19 @@ class ScorepSystemHelper:
 
   def set_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
-    u.set_env('SCOREP_TOTAL_MEMORY', self.cur_mem_size)
+    U.set_env('SCOREP_TOTAL_MEMORY', self.cur_mem_size)
 
   def set_profiling_basename(self, flavor: str, base: str, item: str) -> None:
     self.cur_base_name = flavor + '-' + item
-    u.set_env('SCOREP_PROFILING_BASE_NAME', self.cur_base_name)
+    U.set_env('SCOREP_PROFILING_BASE_NAME', self.cur_base_name)
 
   def set_exp_dir(self, exp_dir: str, flavor: str, iterationNumber: int) -> None:
-    effective_dir = u.get_cube_file_path(exp_dir, flavor, iterationNumber)
-    if not u.is_valid_file_name(effective_dir):
+    effective_dir = U.get_cube_file_path(exp_dir, flavor, iterationNumber)
+    if not U.is_valid_file_name(effective_dir):
       raise MeasurementSystemException('Score-p experiment directory invalid.')
 
     self.cur_exp_directory = effective_dir
-    u.set_env('SCOREP_EXPERIMENT_DIRECTORY', self.cur_exp_directory)
+    U.set_env('SCOREP_EXPERIMENT_DIRECTORY', self.cur_exp_directory)
     return
 
   def get_exp_dir(self) -> str:
@@ -182,19 +182,19 @@ class ScorepSystemHelper:
 
   def set_overwrite_exp_dir(self) -> None:
     self.cur_overwrite_exp_dir = 'True'
-    u.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', self.cur_overwrite_exp_dir)
+    U.set_env('SCOREP_OVERWRITE_EXPERIMENT_DIRECTORY', self.cur_overwrite_exp_dir)
 
   def set_enable_unwinding(self) -> None:
     self._enable_unwinding = 'True'
-    u.set_env('SCOREP_ENABLE_UNWINDING', self._enable_unwinding)
+    U.set_env('SCOREP_ENABLE_UNWINDING', self._enable_unwinding)
 
   def set_filter_file(self, file_name: str) -> None:
-    log.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' + file_name)
-    if not u.is_valid_file_name(file_name):
+    L.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' + file_name)
+    if not U.is_valid_file_name(file_name):
       raise MeasurementSystemException('Score-P filter file not valid.')
 
     self.cur_filter_file = file_name
-    u.set_env('SCOREP_FILTERING_FILE', self.cur_filter_file)
+    U.set_env('SCOREP_FILTERING_FILE', self.cur_filter_file)
 
   def append_scorep_footer(self, input_str: str) -> str:
     return input_str + '\nSCOREP_REGION_NAMES_END\n'
@@ -217,7 +217,7 @@ class ScorepSystemHelper:
 
   @classmethod
   def get_instrumentation_flags(cls, instr_file: str, compile_time_filter: bool) -> str:
-    default_provider = defaults.BackendDefaults()
+    default_provider = D.BackendDefaults()
     flags = default_provider.get_default_instrumentation_flag() + ' '
     if compile_time_filter:
       flags += default_provider.get_default_instrumentation_selection_flag() + '=' + instr_file
@@ -230,8 +230,8 @@ class ScorepSystemHelper:
     :instr_file: str: The file name to use for filtering
     :compile_time_filter: bool: Should compile-time filtering be used (default)
     """
-    default_provider = defaults.BackendDefaults()
-    log.get_logger().log('ScorepSystemHelper::get_scorep_compliant_CC_command: ', level='debug')
+    default_provider = D.BackendDefaults()
+    L.get_logger().log('ScorepSystemHelper::get_scorep_compliant_CC_command: ', level='debug')
     cc_str = default_provider.get_default_c_compiler_name() + ' ' + cls.get_instrumentation_flags(
         instr_file, compile_time_filter)
     return '\"' + cc_str + '\"'
@@ -243,7 +243,7 @@ class ScorepSystemHelper:
     :instr_file: str: The file name to use for filtering
     :compile_time_filter: bool: Should compile-time filtering be used (default)
     """
-    default_provider = defaults.BackendDefaults()
+    default_provider = D.BackendDefaults()
     cxx_str = default_provider.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(
         instr_file, compile_time_filter)
     return '\"' + cxx_str + '\"'
@@ -261,14 +261,14 @@ class ScorepSystemHelper:
   @classmethod
   def check_build_prerequisites(cls) -> None:
     scorep_init_file_name = 'scorep.init.c'
-    log.get_logger().log('ScorepMeasurementSystem::check_build_prerequisites: global home dir: ' + u.get_home_dir())
-    pira_scorep_resource = u.get_home_dir() + '/resources/scorep.init.c'
-    if not u.is_file(scorep_init_file_name):
-      u.copy_file(pira_scorep_resource, u.get_cwd() + '/' + scorep_init_file_name)
+    L.get_logger().log('ScorepMeasurementSystem::check_build_prerequisites: global home dir: ' + U.get_home_dir())
+    pira_scorep_resource = U.get_home_dir() + '/resources/scorep.init.c'
+    if not U.is_file(scorep_init_file_name):
+      U.copy_file(pira_scorep_resource, U.get_cwd() + '/' + scorep_init_file_name)
 
     # In case something goes wrong with copying
-    if u.is_file(scorep_init_file_name):
-      u.shell('gcc -c ' + scorep_init_file_name)
+    if U.is_file(scorep_init_file_name):
+      U.shell('gcc -c ' + scorep_init_file_name)
     else:
       raise MeasurementSystemException('ScorepMeasurementSystem::check_build_prerequisites: Missing ' +
                                        scorep_init_file_name)
@@ -278,39 +278,40 @@ class ScorepSystemHelper:
     # Find which MPI functions to filter
     # Get all MPI functions (our filter_file is a WHITELIST)
     mpi_funcs_dump = '/tmp/mpi_funcs.dump'
-    u.shell('wrap.py -d > ' + mpi_funcs_dump)
-    all_MPI_functions_decls = u.read_file(mpi_funcs_dump).split('\n')
+    U.shell('wrap.py -d > ' + mpi_funcs_dump)
+    all_MPI_functions_decls = U.read_file(mpi_funcs_dump).split('\n')
     all_MPI_functions = []
     for fd in all_MPI_functions_decls:
       name = fd[fd.find(' '):fd.find('(')]
       all_MPI_functions.append(name.strip())
 
     MPI_functions_to_filter = []
-    file_content = u.read_file(filter_file).split('\n')
+    file_content = U.read_file(filter_file).split('\n')
     # We always want to measure MPI_Init and MPI_Finalize
     file_content.append('MPI_Init')
     file_content.append('MPI_Finalize')
     for l in file_content:
       if l.find('MPI_') > -1:
-        log.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: Remove ' + l)
-        all_MPI_functions.remove(l)
+        L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: Remove ' + l)
+        # prevent double removal
+        if l in all_MPI_functions: all_MPI_functions.remove(l)
 
     # Generate the .c file using the mpi wrap.py script
-    log.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: About to filter ' + str(len(all_MPI_functions)) + ' MPI functions')
+    L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: About to filter ' + str(len(all_MPI_functions)) + ' MPI functions')
     wrap_script = '{{fn PIRA_Filter'
     for mpi_func in all_MPI_functions:
       wrap_script += ' ' + mpi_func
 
     wrap_script += '}}\n{{callfn}}\n{{endfn}}'
-    default_provider = defaults.BackendDefaults()
+    default_provider = D.BackendDefaults()
     wrap_file = default_provider.get_wrap_w_file()
-    if u.check_file(wrap_file):
-      u.remove_file(wrap_file)
-    u.write_file(wrap_file, wrap_script)
+    if U.check_file(wrap_file):
+      U.remove_file(wrap_file)
+    U.write_file(wrap_file, wrap_script)
 
     wrap_c_path = default_provider.get_wrap_c_file()
     wrap_command = 'wrap.py -o ' + wrap_c_path + ' ' + wrap_file
-    u.shell(wrap_command)
+    U.shell(wrap_command)
     # Compile it to .so file
     compile_mpi_wrapper_command = 'mpicc -shared -fPIC -o ' + default_provider.get_wrap_so_file() + ' ' + wrap_c_path
-    u.shell(compile_mpi_wrapper_command)
+    U.shell(compile_mpi_wrapper_command)

@@ -6,12 +6,32 @@ Description: Module hosts different profile sinks. These can process resulting p
 
 import sys
 sys.path.append('../')
-import lib.Logging as log
-import lib.Utility as u
+
+import lib.Logging as L
+import lib.Utility as U
 from lib.Configuration import TargetConfiguration, InstrumentConfig
 from lib.Exception import PiraException
 
 import json
+
+
+class FolderRenamer:
+
+  class __FolderRenamerImpl:
+    def __init__(self) -> None:
+      self.currentStr = U.generate_random_string()
+
+    def get_renamed_folder(self, old_folder: str) -> str:
+      return old_folder + '_' + self.currentStr
+
+  instance = None
+
+  def __init__(self):
+    if not FolderRenamer.instance:
+      FolderRenamer.instance = FolderRenamer.__FolderRenamerImpl()
+
+  def __getattr__(self, name):
+    return getattr(self.instance, name)
 
 
 class ProfileSinkException(PiraException):
@@ -26,11 +46,14 @@ class ProfileSinkBase:
     self._sink_target = ''
 
   def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig):
-    log.get_logger().log('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
+    L.get_logger().log('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
     raise RuntimeError('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
 
   def get_target(self):
     return self._sink_target
+
+  def has_config_output(self):
+    return False
 
 
 class NopSink(ProfileSinkBase):
@@ -43,6 +66,9 @@ class NopSink(ProfileSinkBase):
   def process(self, exp_dir, target_conf, instr_config):
     self._sink_target = exp_dir
 
+  def has_config_output(self):
+    return False
+
 
 class PiraOneProfileSink(ProfileSinkBase):
   '''
@@ -54,8 +80,11 @@ class PiraOneProfileSink(ProfileSinkBase):
   def process(self, exp_dir, target_conf, instr_config):
     self._sink_target = exp_dir
 
-  def output_pgis_config(self, benchmark, analyzer_dir):
+  def output_config(self, benchmark, analyzer_dir):
     return None
+
+  def has_config_output(self):
+    return False
 
 
 class ExtrapProfileSink(ProfileSinkBase):
@@ -72,14 +101,17 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._total_reps = reps
     self._VALUE = ()
 
-  def output_pgis_config(self, benchmark, output_dir):
-    log.get_logger().log('ExtrapProfileSink::output_pgis_config:\ndir: ' + self._base_dir + '\nprefix: ' +
+  def has_config_output(self):
+    return True
+
+  def output_config(self, benchmark, output_dir):
+    L.get_logger().log('ExtrapProfileSink::output_config:\ndir: ' + self._base_dir + '\nprefix: ' +
                          self._prefix + '\npostfix: ' + self._postfix + '\nreps: ' + str(self._total_reps) +
                          '\nNiter: ' + str(self._iteration + 1))
     s = ''
     for p in self._params:
       s += p + ', '
-    log.get_logger().log('params: ' + s)
+    L.get_logger().log('params: ' + s)
 
     json_str = json.dumps({
         'dir': self._base_dir,
@@ -91,7 +123,7 @@ class ExtrapProfileSink(ProfileSinkBase):
     })
 
     out_file_final = output_dir + '/pgis_cfg_' + benchmark + '.json'
-    u.write_file(out_file_final, json_str)
+    U.write_file(out_file_final, json_str)
     return out_file_final
 
   def get_target(self):
@@ -105,18 +137,18 @@ class ExtrapProfileSink(ProfileSinkBase):
     param_str = ''
     # TODO FIX ME!
     if isinstance(args, list):
-      log.get_logger().log('ExtrapProfileSink::get_param_mapping: isinstance of list')
+      L.get_logger().log('ExtrapProfileSink::get_param_mapping: isinstance of list')
       param_str = str(args[1]) + str(args[2]) + '.' + str(args[4]) + str(args[0])
 
     elif not isinstance(args, tuple):
-      log.get_logger().log('ExtrapProfileSink::get_param_mapping: not isinstance of tuple')
+      L.get_logger().log('ExtrapProfileSink::get_param_mapping: not isinstance of tuple')
       param_str = str(args)  # PiraArgument knows how to unparse to string
 
     else:
       for v in args:
         param_str += v
 
-    log.get_logger().log('ExtrapProfileSink::get_param_mapping: ' + param_str)
+    L.get_logger().log('ExtrapProfileSink::get_param_mapping: ' + param_str)
     return param_str
 
   def get_extrap_dir_name(self, target_config: TargetConfiguration, instr_iteration: int) -> str:
@@ -128,21 +160,23 @@ class ExtrapProfileSink(ProfileSinkBase):
   def check_and_prepare(self, experiment_dir: str, target_config: TargetConfiguration,
                         instr_config: InstrumentConfig) -> str:
     cur_ep_dir = self.get_extrap_dir_name(target_config, instr_config.get_instrumentation_iteration())
-    if not u.is_valid_file_name(cur_ep_dir):
-      log.get_logger().log(
+    if not U.is_valid_file_name(cur_ep_dir):
+      L.get_logger().log(
           'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort\n' + cur_ep_dir, level='error')
     else:
-      if u.check_provided_directory(cur_ep_dir):
-        new_dir_name = cur_ep_dir + '_' + u.generate_random_string()
-        log.get_logger().log('ExtrapProfileSink::check_and_prepare: Moving old experiment directory to: ' + new_dir_name, level='info')
-        u.rename(cur_ep_dir, new_dir_name)
+      if U.check_provided_directory(cur_ep_dir):
+        renamer = FolderRenamer()
+        #new_dir_name = cur_ep_dir + '_' + U.generate_random_string()
+        new_dir_name = renamer.get_renamed_folder(cur_ep_dir)
+        L.get_logger().log('ExtrapProfileSink::check_and_prepare: Moving old experiment directory to: ' + new_dir_name, level='info')
+        U.rename(cur_ep_dir, new_dir_name)
 
-      u.create_directory(cur_ep_dir)
-      cubex_name = experiment_dir + '/' + target_config.get_flavor() + '-' + target_config.get_target() + '.cubex'
-      log.get_logger().log(cubex_name)
+      U.create_directory(cur_ep_dir)
+      cubex_name = U.get_cubex_file(experiment_dir, target_config.get_target(), target_config.get_flavor())      
+      L.get_logger().log(cubex_name)
 
-      if not u.is_file(cubex_name):
-        log.get_logger().log('ExtrapProfileSink::check_and_prepare: Returned experiment cube name is no file: ' +
+      if not U.is_file(cubex_name):
+        L.get_logger().log('ExtrapProfileSink::check_and_prepare: Returned experiment cube name is no file: ' +
                              cubex_name)
       else:
         return cubex_name
@@ -150,12 +184,12 @@ class ExtrapProfileSink(ProfileSinkBase):
     raise ProfileSinkException('ExtrapProfileSink: Could not create target directory or Cube dir bad.')
 
   def do_copy(self, src_cube_name: str, dest_dir: str) -> None:
-    log.get_logger().log('ExtrapProfileSink::do_copy: ' + src_cube_name + ' => ' + dest_dir + '/' + self._filename)
+    L.get_logger().log('ExtrapProfileSink::do_copy: ' + src_cube_name + ' => ' + dest_dir + '/' + self._filename)
     # return  # TODO make this actually work
-    u.copy_file(src_cube_name, dest_dir + '/' + self._filename)
+    U.copy_file(src_cube_name, dest_dir + '/' + self._filename)
 
   def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig) -> None:
-    log.get_logger().log('ExtrapProfileSink::process: ' + str(instr_config.get_instrumentation_iteration()))
+    L.get_logger().log('ExtrapProfileSink::process: ' + str(instr_config.get_instrumentation_iteration()))
     if instr_config.get_instrumentation_iteration() > self._iteration or target_config.get_args_for_invocation(
     ) is not self._VALUE:
       self._iteration = instr_config.get_instrumentation_iteration()

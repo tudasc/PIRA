@@ -6,15 +6,15 @@ Description: Module that provides to main data structures.
 
 import sys
 sys.path.append('..')
-import lib.Logging as log
-import lib.Exception as PE
-import lib.Utility as u
+import lib.Logging as L
+import lib.Exception as E
+import lib.Utility as U
 
 
 import typing
 
 
-class PiraConfigurationErrorException(PE.PiraException):
+class PiraConfigurationErrorException(E.PiraException):
   def __init__(self, m):
     super().__init__(m)
 
@@ -30,17 +30,20 @@ class PiraItem:
     self._mode = None
     self._run_options = None
 
+  def __str__(self):
+    return '[PiraItem] ' + self._name
+
   def get_name(self):
     return self._name
 
   def get_analyzer_dir(self):
-    if u.is_absolute_path(self._analyzer_dir):
+    if U.is_absolute_path(self._analyzer_dir):
       return self._analyzer_dir
 
     return self._base_path + '/' + self._analyzer_dir
 
   def get_cubes_dir(self):
-    if u.is_absolute_path(self._cubes_dir):
+    if U.is_absolute_path(self._cubes_dir):
       return self._cubes_dir
 
     return self._base_path + '/' + self._cubes_dir
@@ -49,7 +52,7 @@ class PiraItem:
     return self._flavors
 
   def get_functor_base_path(self):
-    if u.is_absolute_path(self._functor_base_path):
+    if U.is_absolute_path(self._functor_base_path):
       return self._functor_base_path
 
     return self._base_path + '/' + self._functor_base_path
@@ -87,6 +90,7 @@ class PiraConfigurationII:
   def __init__(self):
     self._directories = {}
     self._abs_base_path = None
+    self._empty = True
 
   def add_item(self, name, item) -> None:
     try:
@@ -104,8 +108,8 @@ class PiraConfigurationII:
   def get_place(self, build):
     place = build
     for k in self._directories.keys():
-      if build == k:
-        if not u.is_absolute_path(k):
+      if place == k:
+        if not U.is_absolute_path(k):
           place = self._abs_base_path + '/' + str(k)
     return place
 
@@ -118,8 +122,8 @@ class PiraConfigurationII:
   def get_absolute_base_path(self):
     return self._abs_base_path
 
-  def is_valid(self) -> bool:
-    return True
+  def is_empty(self) -> bool:
+    return self._empty
 
 
 class PiraConfigurationAdapter:
@@ -158,7 +162,7 @@ class PiraConfigurationAdapter:
     io = self.get_item_w_name(build, item)
     return io.get_functor_base_path()
 
-  def get_analyser_dir(self, build, item):
+  def get_analyzer_dir(self, build, item):
     io = self.get_item_w_name(build, item)
     return io.get_analyzer_dir()
 
@@ -181,7 +185,7 @@ class PiraConfigurationAdapter:
     io = self.get_item_w_name(build, item)
     return io.get_functor_base_path()
 
-  def get_analyser_exp_dir(self, build, item):
+  def get_analyzer_exp_dir(self, build, item):
     io = self.get_item_w_name(build, item)
     return io.get_cubes_dir()
 
@@ -189,8 +193,8 @@ class PiraConfigurationAdapter:
     io = self.get_item_w_name(build, item)
     return io.get_run_options().as_list()
 
-  def is_valid(self) -> bool:
-    return True
+  def is_empty(self) -> bool:
+    return self._pcii.is_empty()
 
 
 class PiraConfiguration:
@@ -218,9 +222,10 @@ class PiraConfiguration:
     self.stop_iteration = {}
     self.is_first_iteration = {}
     self.base_mapper = None
+    self._empty = True
 
-  def is_valid(self) -> bool:
-    return True
+  def is_empty(self) -> bool:
+    return self._empty
 
   def set_build_directories(self, dirs) -> None:
     self.directories = dirs
@@ -297,7 +302,7 @@ class PiraConfiguration:
     return self.items[b][i]['builders']
 
   def get_builder_path(self, b: str, i: str) -> str:
-    log.get_logger().log('Old: get_builder_path: ' + self.items[b][i]['builders'], level='debug')
+    L.get_logger().log('Old: get_builder_path: ' + self.items[b][i]['builders'], level='debug')
     return self.items[b][i]['builders']
 
   def get_analyzer_path(self, b: str, i: str) -> str:
@@ -308,7 +313,7 @@ class PiraConfiguration:
 
   # FIXME Rename some more reasonable // get_builder_path
   def get_flavor_func(self, build: str, item: str) -> str:
-    log.get_logger().log('Using a deprecated function: get_flavor_func', level='warn')
+    L.get_logger().log('Using a deprecated function: get_flavor_func', level='warn')
     return self.items[build][item]['builders']
 
   # TODO: We should lift all the accesses to these functor paths etc to the FunctorManagement
@@ -316,16 +321,16 @@ class PiraConfiguration:
   def get_runner_func(self, build: str, item: str) -> str:
     return self.items[build][item]['runner']
 
-  def get_analyse_func(self, build, item) -> str:
+  def get_analyze_func(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][0]
 
-  def get_analyser_exp_dir(self, build, item) -> str:
+  def get_analyzer_exp_dir(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][1]
 
-  def get_analyser_dir(self, build, item) -> str:
+  def get_analyzer_dir(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][2]
 
-  def get_analyse_slurm_func(self, build, item) -> str:
+  def get_analyze_slurm_func(self, build, item) -> str:
     return self.items[build][item]['instrument_analysis'][3]
 
   def is_submitter(self, build: str, item: str) -> bool:
@@ -359,7 +364,7 @@ class TargetConfiguration:
   """  The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. 
   Using TargetConfiguration all steps of building and executing are possible.  """
 
-  def __init__(self, place: str, build: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True):
+  def __init__(self, place: str, build: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True, hybrid_filter_iters: int = 0):
     """  Initializes the TargetConfiguration with its necessary parameters.
 
     :place: str: TODO
@@ -374,6 +379,7 @@ class TargetConfiguration:
     self._flavor: str = flavor
     self._db_item_id: str = db_item_id
     self._compile_time_filtering = compile_time_filter
+    self._hybrid_filter_iters = hybrid_filter_iters
     self._instr_file = ''
     self._args_for_invocation = None
 
@@ -423,7 +429,7 @@ class TargetConfiguration:
 
   def get_args_for_invocation(self) -> str:
     if self._args_for_invocation is None:
-      log.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
+      L.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
 
     return self._args_for_invocation
 
@@ -433,6 +439,12 @@ class TargetConfiguration:
   def is_compile_time_filtering(self) -> bool:
     """ Returns whether this PIRA instance uses compile-time filtering"""
     return self._compile_time_filtering
+
+  def get_hybrid_filter_iters(self) -> str:
+    return self._hybrid_filter_iters
+
+  def is_hybrid_filtering(self) -> bool:
+    return not self.get_hybrid_filter_iters() == 0
 
   def set_instr_file(self, instr_file: str) -> None:
     self._instr_file = instr_file
@@ -475,17 +487,24 @@ class ExtrapConfiguration:
 
 class InvocationConfiguration:
 
-  def __init__(self, path_to_config: str, compile_time_filter: bool, pira_iters: int, num_reps: int):
+  def __init__(self, path_to_config: str, compile_time_filter: bool, pira_iters: int, num_reps: int, hybrid_filter_iters: int = 0):
     self._path_to_cfg = path_to_config
     self._compile_time_filtering = compile_time_filter
     self._pira_iters = pira_iters
     self._num_repetitions = num_reps
+    self._hybrid_filter_iters = hybrid_filter_iters
 
   def get_path_to_cfg(self) -> str:
     return self._path_to_cfg
 
   def is_compile_time_filtering(self) -> bool:
     return self._compile_time_filtering
+
+  def get_hybrid_filter_iters(self) -> int:
+    return self._hybrid_filter_iters
+
+  def is_hybrid_filtering(self) -> bool:
+    return not self.get_hybrid_filter_iters() == 0
 
   def get_pira_iters(self) -> int:
     return self._pira_iters

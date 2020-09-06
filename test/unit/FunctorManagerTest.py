@@ -4,15 +4,12 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: Tests for the argument mapping
 """
 
-import sys
-sys.path.append('../')
+import lib.ConfigurationLoader as C
+import lib.FunctorManagement as F
+import lib.Configuration as CO
 
 import unittest
 import typing
-
-import lib.ConfigurationLoader as CL
-import lib.FunctorManagement as FM
-import lib.Configuration as CFG
 
 
 class TestFunctorManagerConstruction(unittest.TestCase):
@@ -21,26 +18,37 @@ class TestFunctorManagerConstruction(unittest.TestCase):
   """
 
   def test_construction_from_None(self):
-    FM.FunctorManager.instance = None
-    self.assertIsNone(FM.FunctorManager.instance)
-    self.assertRaises(FM.FunctorManagementException, FM.FunctorManager, None)
+    F.FunctorManager.instance = None
+    self.assertIsNone(F.FunctorManager.instance)
+    self.assertRaises(F.FunctorManagementException, F.FunctorManager, None)
+
+  def test_construction_from_empty_config(self):
+    with self.assertRaises(F.FunctorManagementException):
+      fm = F.FunctorManager(CO.PiraConfiguration())
+
+    with self.assertRaises(F.FunctorManagementException):
+      fm = F.FunctorManager(CO.PiraConfigurationII())
+
+    with self.assertRaises(F.FunctorManagementException):
+      fm = F.FunctorManager(CO.PiraConfigurationAdapter(CO.PiraConfigurationII()))
+
 
   def test_construction_from_config(self):
-    cfg_loader = CL.ConfigurationLoader()
-    fm = FM.FunctorManager(cfg_loader.load_conf('./input/unit_input_001.json'))
+    cfg_loader = C.ConfigurationLoader()
+    fm = F.FunctorManager(cfg_loader.load_conf('./input/unit_input_001.json'))
     fm.reset()
 
   def test_construction_from_classmethod(self):
-    cfg_loader = CL.ConfigurationLoader()
-    fm = FM.FunctorManager.from_config(cfg_loader.load_conf('./input/unit_input_001.json'))
+    cfg_loader = C.ConfigurationLoader()
+    fm = F.FunctorManager.from_config(cfg_loader.load_conf('./input/unit_input_001.json'))
     fm.reset()
 
   def test_construction_is_singleton(self):
-    FM.FunctorManager.instance = None
-    self.assertIsNone(FM.FunctorManager.instance)
-    cfg_loader = CL.ConfigurationLoader()
-    fm = FM.FunctorManager.from_config(cfg_loader.load_conf('./input/unit_input_001.json'))
-    fm2 = FM.FunctorManager()
+    F.FunctorManager.instance = None
+    self.assertIsNone(F.FunctorManager.instance)
+    cfg_loader = C.ConfigurationLoader()
+    fm = F.FunctorManager.from_config(cfg_loader.load_conf('./input/unit_input_001.json'))
+    fm2 = F.FunctorManager()
     self.assertEqual(fm.instance, fm2.instance)
     fm.reset()
 
@@ -57,9 +65,9 @@ class TestFunctorManager(unittest.TestCase):
     self.r_i_01 = '/path/to/runner_functors/item01'
     self.i_01 = 'item01'
     self.flavor = 'vanilla'
-    self.cl = CL.ConfigurationLoader()
+    self.cl = C.ConfigurationLoader()
     self.cfg = self.cl.load_conf('./input/unit_input_001.json')
-    self.fm = FM.FunctorManager(self.cfg)
+    self.fm = F.FunctorManager(self.cfg)
 
   def tearDown(self):
     self.fm.reset()
@@ -90,13 +98,13 @@ class TestFunctorManager(unittest.TestCase):
     self.assertEqual(cl_file, self.b_i_01 + '/' + expected_file_name)
 
   def test_get_analyze_functor_filename(self):
-    expected_file_name = 'analyse_item01_vanilla'
+    expected_file_name = 'analyze_item01_vanilla'
 
     cl_func_name = self.fm.get_analyzer_name(self.build, self.i_01, self.flavor)
     self.assertEqual(cl_func_name, expected_file_name)
 
   def test_get_analyze_functor_wholefile(self):
-    expected_file_name = 'analyse_item01_vanilla.py'
+    expected_file_name = 'analyze_item01_vanilla.py'
     cl_file = self.fm.get_analyzer_file(self.build, self.i_01, self.flavor)
     self.assertEqual(cl_file, self.ia_i_01 + '/' + expected_file_name)
 
@@ -135,7 +143,7 @@ class TestFunctorManager(unittest.TestCase):
     self.assertEqual(whole_nm, self.r_i_01 + '/' + expected_file_name + '.py')
 
   def test_get_analyzer(self):
-    expected_file_name = 'analyse_item01_vanilla'
+    expected_file_name = 'analyze_item01_vanilla'
     path, name, whole_nm = self.fm.get_analyzer(self.build, self.i_01, self.flavor)
     self.assertEqual(path, self.ia_i_01)
     self.assertEqual(name, expected_file_name)
@@ -149,7 +157,7 @@ class FunctorManagerFromConfig(unittest.TestCase):
     self.cfg002 = 'basic_config_002.json'
     self.cfg003 = 'basic_config_003.json'
     self.cfg004 = 'basic_config_004.json'
-    self.scl = CL.SimplifiedConfigurationLoader()
+    self.scl = C.SimplifiedConfigurationLoader()
     self.fm = None
 
   def tearDown(self):
@@ -160,28 +168,28 @@ class FunctorManagerFromConfig(unittest.TestCase):
 
   @unittest.skip('This requires the correct implementation of PiraConfiguration.is_valid()')
   def test_get_invalid_path(self):
-    self.assertRaises(CFG.PiraConfigurationErrorException, FM.FunctorManager, self.scl.load_conf(self.get_filename(self.cfg003)))
+    self.assertRaises(CO.PiraConfigurationErrorException, F.FunctorManager, self.scl.load_conf(self.get_filename(self.cfg003)))
 
   def test_get_valid_path(self):
-    self.fm = FM.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
 
   def test_get_runner_functor(self):
-    self.fm = FM.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
 
   def test_get_builder_functor(self):
-    self.fm = FM.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
 
   def test_get_analyzer_functor(self):
-    self.fm = FM.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
 
   def test_get_builder_command(self):
-    self.fm = FM.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
 
   def test_get_runner_command(self):
-    self.fm = FM.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
 
   def test_get_analyzer_command(self):
-    self.fm = FM.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
 
 
 if __name__ == "__main__":

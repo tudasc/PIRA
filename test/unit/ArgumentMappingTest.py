@@ -4,10 +4,7 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: Tests for the argument mapping
 """
 
-import sys
-sys.path.append('..')
-
-import lib.ArgumentMapping as am
+import lib.ArgumentMapping as A
 
 import unittest
 
@@ -19,8 +16,8 @@ class TestPiraArgument(unittest.TestCase):
     self._arg_val = 'val_arg1'
     self._file_arg = 'file_val'
 
-    self.one_arg_pa = am.PiraArgument(self._arg_name, self._arg_val)
-    self.file_arg_pa = am.PiraArgument(self._arg_name, self._arg_val, self._file_arg)
+    self.one_arg_pa = A.PiraArgument(self._arg_name, self._arg_val)
+    self.file_arg_pa = A.PiraArgument(self._arg_name, self._arg_val, self._file_arg)
 
   def test_arg_indexing(self):
     self.assertEqual(self.one_arg_pa[0], self._arg_name)
@@ -59,13 +56,13 @@ class TestCmdlineLinearArgumentMapper(unittest.TestCase):
                               }
 
   def test_correct_factory(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
 
     self.assertIsNotNone(mapper)
-    self.assertIsInstance(mapper, am.CmdlineLinearArgumentMapper)
+    self.assertIsInstance(mapper, A.CmdlineLinearArgumentMapper)
 
   def test_arg_mapping(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
 
     expected = [ ('arg1', 'a'), 
                  ('arg1', 'b'), 
@@ -74,17 +71,17 @@ class TestCmdlineLinearArgumentMapper(unittest.TestCase):
       self.assertEqual(exp, tuple(mapped))
 
   def test_mapper_as_string(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
 
     expected = 'arg1a.arg1b.arg1c.'
     m_str = mapper.as_string()
     self.assertEqual(expected, m_str)
 
   def test_diff_sizes_except(self):
-    self.assertRaises(RuntimeError, am.ArgumentMapperFactory.get_mapper, self.mapper_diff_sizes)
+    self.assertRaises(RuntimeError, A.ArgumentMapperFactory.get_mapper, self.mapper_diff_sizes)
 
   def test_linear_2_params(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_2_params)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_2_params)
 
     expected = [ ('arg1', 'a', [], 'arg2', 'x', []), 
                  ('arg1', 'b', [], 'arg2', 'y', []), 
@@ -123,13 +120,13 @@ class TestCmdlineCatesianProductArgumentMapper(unittest.TestCase):
                                       }
 
   def test_correct_factory(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
 
     self.assertIsNotNone(mapper)
-    self.assertIsInstance(mapper, am.CmdlineCartesianProductArgumentMapper)
+    self.assertIsInstance(mapper, A.CmdlineCartesianProductArgumentMapper)
 
   def test_arg_mapping(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
 
     expected = [ ('arg1', 'a', 'arg2', 'x'), 
                  ('arg2', 'x', 'arg1', 'a') ]
@@ -138,7 +135,7 @@ class TestCmdlineCatesianProductArgumentMapper(unittest.TestCase):
 
   @unittest.expectedFailure
   def test_arg_mapping_3_params(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_3_params_cartesian)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_3_params_cartesian)
 
     expected = [ ('arg1', 'a', 'arg2', 'b', 'arg3', 'c'),
                  ('arg1', 'a', 'arg3', 'c', 'arg2', 'b'),
@@ -151,7 +148,7 @@ class TestCmdlineCatesianProductArgumentMapper(unittest.TestCase):
       self.assertEqual(exp, mapped)
 
   def test_mapper_as_string(self):
-    mapper = am.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
+    mapper = A.ArgumentMapperFactory.get_mapper(self.mapper_as_in_cfg)
 
     expected = 'arg1a.arg2x.'
     m_str = mapper.as_string()
