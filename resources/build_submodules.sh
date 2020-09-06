@@ -193,7 +193,7 @@ fi
 echo "[PIRA] Getting json library"
 cd $extsourcedir
 if [ ! -d "$extsourcedir/json" ]; then
-    git clone -b b3.7.3 --single-branch https://github.com/nlohmann/json json >${allOutputTo} 2>&1 
+    git clone -b v3.7.3 --single-branch https://github.com/nlohmann/json json >${allOutputTo} 2>&1 
 fi
 
 echo "[PIRA] Building PGIS analysis engine"
