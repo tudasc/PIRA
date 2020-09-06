@@ -2,56 +2,69 @@
 
 # PIRA
 
-The **P**erformance **I**nstrumentation **R**efinement **A**utomation framework *PIRA* approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base when using an instrumentation tool, e.g., Score-P.
-For more information please see our papers [1](https://dl.acm.org/citation.cfm?id=3281071) and [2](https://www.researchgate.net/publication/337831656_Automatic_Instrumentation_Refinement_for_Empirical_Performance_Modeling).
+The **P**erformance **I**nstrumentation **R**efinement **A**utomation framework *PIRA* approaches the time-consuming task of generating a reasonable performance measurement for an unknown code base when using Score-P.
+For more information please see our papers:
+
+<table style="border:0px">
+<tr>
+  <td valign="top"><a name="ref-pira-2018"></a>[PI18]</td>
+  <td>Jan-Patrick Lehr, Alexander Hück, Christian Bischof. <a href="https://doi.org/10.1145/3281070.3281071">PIRA: performance instrumentation refinement automation</a>. In <i>5th ACM SIGPLAN International Workshop on Artificial Intelligence and Empirical Methods for Software Engineering and Parallel Computing Systems (AI-SEPS)</i>, pages 1-10, ACM, 2018.</td>
+</tr>
+<tr>
+  <td valign="top"><a name="ref-pira-2019"></a>[PI19]</td>
+  <td>Jan-Patrick Lehr, Alexandru Calotoiu, Christian Bischof, Felix Wolf. <a href="https://doi.org/10.1109/ProTools49597.2019.00011">Automatic Instrumentation Refinement for Empirical Performance Modeling</a>. In <i>International Workshop on Programming and Performance Visualization Tools (ProTools)</i>, pages 40-47, IEEE, 2019.</td>
+</tr>
+</table>
+
 
 ## General Approach
 
 PIRA runs the following four phases (2-4 are iterated):
 
 1) Build the target application and perform a baseline measurement.
-2) Generate an initial performance instrumentation, based on the statement aggregation selection strategy (cf. [this paper](https://ieeexplore.ieee.org/document/7530067)), and link to the Score-P measurement infrastructure.
-3) Run the instrumented target application to generate a profile in the CUBEX format.
+2) Generate an initial performance instrumentation, based on the statement aggregation selection strategy (cf. [this paper](https://ieeexplore.ieee.org/document/7530067)).
+3) Run the instrumented target application to generate a profile in the cubex format.
 4) Analyze the generated profile to find a new and improved instrumentation.
 
-PIRA supports both *compile-time* and *run-time* filtering of deselected functions, including runtime filtering of MPI functions through automatically generated wrappers.
-In compile-time filtering, the functions are not instrumented at compile-time, reducing the overall measurement influence significantly, but requiring the target to be rebuilt in each iteration.
-In contrast, with runtime filtering, the compiler inserts instrumentation hooks in every function of the target application.
-Whether a function event should actually be recorded is decided at runtime in the linked measurement library.
+PIRA supports both *compile-time* and *run-time* filtering of functions, including runtime filtering of MPI functions through automatically generated wrappers.
+In compile-time filtering, only the desired functions are instrumented at compile-time, reducing the overall measurement influence significantly
+In contrast, in runtime filtering, the compiler inserts instrumentation hooks into  *every* function of the target application, and the filtering happens at runtime.
 
 ## Requirements, obtain PIRA, build it, use it
 
 ### Requirements
 
-PIRA is tested with a (somewhat) recent version of CMake (>= 3.5), Clang/LLVM release 9.0.1 and requires Python 3.
+PIRA requires CMake (>=3.5), Clang/LLVM 10, Python 3, Qt5 and OpenMPI 4.
 
 ### Obtaining PIRA
 
-To obtain PIRA, first, clone the PIRA repository and then pull-in its dependencies using the `get_externals.sh` script provided.
+Clone the PIRA repository and initialize the submodules.
 
 ```{.sh}
-git clone https://github.com/jplehr/pira
+git clone https://github.com/tudasc/pira
 cd pira
-./resources/get_externals.sh
+git submodule update --init
 ```
 
 ### Building PIRA
 
 Second, build the dependent submodules using the script provided.
-The two example commands show that you can pass additional flags, e.g., ```--without-mpi``` to the Score-P configure phase, to customize the build for particular needs.
-You can also specify the number of `make` processes to be spawned for the compilation of PIRA's externals.
+Specify the number of compile processes to be spawned for the compilation of PIRA's externals.
 
 ```{.sh}
 cd resources
-# Example 1: build the dependencies using 8 compile processes, and build Score-P w/o MPI support
-./build_submodules.sh 8 --without-mpi
-# Example 2: build the dependencies using 24 compile processes, and build Score-p w/ MPI support (requires an MPI version to be available)
-./build_submodules.sh 24
+./build_submodules.sh <ncores>
 ```
+
+### PIRA Docker
+
+We provide a (early work) `Dockerfile` to build PIRA to try it out.
 
 ### Using PIRA
 
-To use PIRA, first, set up the required paths, by sourcing the script in the `resources` folder.
+For a full example how to use PIRA, checkout the `run.sh` scripts the `/test/integration` folder.
+
+First, set up the required paths by sourcing the script in the `resources` folder.
 
 ```{.sh}
 cd resources/
@@ -65,7 +78,7 @@ cd ./test/integration/GameOfLife
 ./run.sh
 ```
 
-The scripts performs all steps required from the start, i.e., preparing all components for a new target code, to finally invoke PIRA.
+The script performs all steps required from the start, i.e., preparing all components for a new target code, to finally invoke PIRA.
 In the subsequent sections, the steps are explained in more detail.
 The steps are:
 
@@ -102,7 +115,7 @@ You can find the `cgcollector` tool in the subdirectory `./extern/src/metacg/cgc
 
 More information on the CGCollector and its components can be found in the [MetaCG](https://github.com/tudasc/MetaCG) documentation.
 
-Applying the CGCollector usually happens in two steps. 
+Applying the CGCollector usually happens in two steps.
 
 1. At first, `cgc` is invoked on every source file in the project. e.g.:
 
@@ -111,7 +124,9 @@ Applying the CGCollector usually happens in two steps.
         cgc $f
     done
     ~~~
-2. The `.ipcg`-files created in step 1 are then merged to a general file using `cgmerge`. (Note that `find` might have unexpected behaivor by splitting the command, depending on the number of ipcg-files. This can be solved by creating an "empty" ipcg file, which is then merged into itself.) e.g.:
+2. The `.ipcg`-files created in step 1 are then merged to a general file using `cgmerge`.
+    1. Create an output file, solely containing the string `"null"`
+		2. If your project contains more than one `mein` function, please only merge the file with the correct `main` function.
    
     ~~~{.sh}
     echo "null" > $IPCG_FILENAME
