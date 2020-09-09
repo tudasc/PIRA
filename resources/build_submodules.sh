@@ -270,6 +270,14 @@ if [ $? -ne 0 ]; then
   mkdir $extinstalldir/mpiwrap
   cp wrap-master/wrap.py $extinstalldir/mpiwrap/wrap.py
 else
+  check_directory_or_file_exists $extinstalldir/mpiwrap
+  if [ $? -ne 0 ]; then
+    mkdir $extinstalldir/mpiwrap
+	fi
+  check_directory_or_file_exists $extinstalldir/mpiwrap/wrap.py
+  if [ $? -ne 0 ]; then
+    cp $extsourcedir/mpiwrap/wrap-master/wrap.py $extinstalldir/mpiwrap/wrap.py
+	fi
   echo "[PIRA] mpiwrap already installed"
 fi
 
