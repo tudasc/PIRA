@@ -11,7 +11,7 @@ from lib.Configuration import PiraConfiguration, TargetConfiguration, Instrument
 from lib.Exception import PiraException
 
 import typing
-
+import getpass
 
 class MeasurementSystemException(PiraException):
   """  This exception is thrown if problems in the runtime occur.  """
@@ -277,7 +277,8 @@ class ScorepSystemHelper:
   def prepare_MPI_filtering(cls, filter_file: str) -> None:
     # Find which MPI functions to filter
     # Get all MPI functions (our filter_file is a WHITELIST)
-    mpi_funcs_dump = '/tmp/mpi_funcs.dump'
+    user = getpass.getuser()
+    mpi_funcs_dump = '/tmp/' + user + '_mpi_funcs.dump'
     U.shell('wrap.py -d > ' + mpi_funcs_dump)
     all_MPI_functions_decls = U.read_file(mpi_funcs_dump).split('\n')
     all_MPI_functions = []
