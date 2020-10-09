@@ -277,8 +277,7 @@ class ScorepSystemHelper:
   def prepare_MPI_filtering(cls, filter_file: str) -> None:
     # Find which MPI functions to filter
     # Get all MPI functions (our filter_file is a WHITELIST)
-    user = getpass.getuser()
-    mpi_funcs_dump = '/tmp/' + user + '_mpi_funcs.dump'
+    mpi_funcs_dump = '/tmp/pira-' + getpass.getuser() + '/mpi_funcs.dump'
     U.shell('wrap.py -d > ' + mpi_funcs_dump)
     all_MPI_functions_decls = U.read_file(mpi_funcs_dump).split('\n')
     all_MPI_functions = []
