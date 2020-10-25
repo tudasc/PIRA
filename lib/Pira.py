@@ -21,7 +21,7 @@ from lib.Checker import Checker as checker
 
 import typing
 import sys
-
+import getpass
 
 def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_config: TargetConfiguration) -> None:
   try:
@@ -134,6 +134,9 @@ def main(arguments) -> None:
 
   home_dir = U.get_cwd()
   U.set_home_dir(home_dir)
+
+  # FIXME the user should set this in config
+  U.make_dir('/tmp/pira-' + getpass.getuser())
 
   try:
     if arguments.config_version is 1:

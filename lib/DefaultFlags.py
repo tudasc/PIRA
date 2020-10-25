@@ -4,7 +4,7 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: Module holds a selection of default flags.
 """
 import typing
-
+import getpass
 
 class BackendDefaults:
   """
@@ -49,13 +49,13 @@ class BackendDefaults:
       return kwargs
 
     def get_wrap_w_file(self) -> str:
-      return '/tmp/pira-mpi-filter.w'
+      return '/tmp/pira-' + getpass.getuser() + '/pira-mpi-filter.w'
 
     def get_wrap_c_file(self) -> str:
-      return '/tmp/pira-mpi-filter.c'
+      return '/tmp/pira-' + getpass.getuser() + '/pira-mpi-filter.c'
 
     def get_wrap_so_file(self) -> str:
-      return '/tmp/PIRA_MPI_Filter.so'
+      return '/tmp/pira-' + getpass.getuser() + '/PIRA_MPI_Filter.so'
 
     def get_MPI_wrap_LD_PRELOAD(self) -> str:
       return 'LD_PRELOAD=' + self.get_wrap_so_file()
