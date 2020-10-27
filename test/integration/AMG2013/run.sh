@@ -35,9 +35,9 @@ mkdir $PWD/../../../extern/install/pgis/bin/out
 # Download the target application
 stat amg20130624.tgz
 if [ $? -ne 0 ]; then
-  wget https://asc.llnl.gov/CORAL-benchmarks/Throughput/amg20130624.tgz
+  wget https://computing.llnl.gov/projects/co-design/download/amg2013.tgz
 fi
-tar xzf amg20130624.tgz
+tar xzf amg2013.tgz
 cd AMG2013
 
 # XXX The clang version we use is built w/o OMP support, therefore, remove OMP flags
