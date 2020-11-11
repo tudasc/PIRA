@@ -10,6 +10,7 @@ import lib.BatchSystemHelper as B
 import lib.FunctorManagement as F
 import lib.TimeTracking as T
 import lib.Database as D
+from lib.DefaultFlags import BackendDefaults
 from lib.RunnerFactory import PiraRunnerFactory
 from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader
 from lib.ConfigurationLoader import ConfigurationLoader as CLoader
@@ -114,13 +115,14 @@ def show_pira_invoc_info(cmdline_args) -> None:
 
 def process_args_for_invoc(cmdline_args) -> None:
   path_to_config = cmdline_args.config
+  pira_dir = cmdline_args.pira_dir
   compile_time_filter = not cmdline_args.runtime_filter
   hybrid_filter_iters = cmdline_args.hybrid_filter_iters
   pira_iters = cmdline_args.iterations
   num_reps = cmdline_args.repetitions
 
 
-  invoc_cfg = InvocationConfiguration(path_to_config, compile_time_filter, pira_iters, num_reps, hybrid_filter_iters)
+  invoc_cfg = InvocationConfiguration(path_to_config, pira_dir, compile_time_filter, pira_iters, num_reps, hybrid_filter_iters)
 
   return invoc_cfg
 
@@ -135,8 +137,8 @@ def main(arguments) -> None:
   home_dir = U.get_cwd()
   U.set_home_dir(home_dir)
 
-  # FIXME the user should set this in config
-  U.make_dir('/tmp/pira-' + getpass.getuser())
+  U.make_dir(invoc_cfg.get_pira_dir())
+  BackendDefaults(invoc_cfg)
 
   try:
     if arguments.config_version is 1:

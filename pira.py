@@ -7,6 +7,7 @@ Description: This is PIRA.
 __version__ = '0.2.0'
 
 import argparse
+import os
 import lib.Logging as log
 import lib.Pira as pira
 
@@ -21,6 +22,9 @@ parser = argparse.ArgumentParser(prog='PIRA')
 
 # --- Required arguments section
 parser.add_argument('config', help='The configuration json file.')
+
+# -- Pira folder option
+parser.add_argument('--pira-dir', help='The directory which stores PIRA runtime files', type=str, default=os.path.join(os.path.expanduser('~'), '.pira'))
 
 # --- Pira "mode" options
 parser.add_argument('--config-version', help='Which config file version to use', choices=[1, 2], default=2, type=int)
