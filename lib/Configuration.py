@@ -515,3 +515,18 @@ class InvocationConfiguration:
 
   def get_num_repetitions(self) -> int:
     return self._num_repetitions
+
+class CSVConfiguration:
+
+  def __init__(self, csv_dir: str, csv_dialect: str):
+    self._csv_dir = csv_dir
+    self._csv_dialect = csv_dialect
+
+  def should_export(self) -> bool:
+    return self._csv_dir != ''
+
+  def get_csv_dir(self) -> str:
+    return self._csv_dir
+
+  def get_csv_dialect(self) -> str:
+    return self._csv_dialect

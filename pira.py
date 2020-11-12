@@ -41,6 +41,11 @@ group.add_argument(
     '--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
 group.add_argument('--extrap-prefix', help='The prefix in extra-p naming scheme', type=str)
 
+# CSV Export options
+csv_group = parser.add_argument_group('CSV Export Options')
+csv_group.add_argument('--csv-dir', help='Export runtime measurements as CSV files to the specified directory', type=str, default='')
+csv_group.add_argument('--csv-dialect', help='The dialect the CSV file is written in. Possible values: excel, excel_tab, unix; defaults to unix', type=str, default='unix')
+
 # Experimental options - even for research software they are experimental
 experimental_group = parser.add_argument_group('Experimental Options - experimental even for research software')
 experimental_group.add_argument('--hybrid-filter-iters', help='Do compiletime-filtering after x iterations', default=0, type=int)
