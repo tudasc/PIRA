@@ -85,6 +85,11 @@ class RunResult:
 
     return ovhds
 
+  def get_accumulated_runtime(self):
+    return self._accumulated_runtime
+
+  def get_nr_of_iterations(self):
+    return self._nr_of_iterations
 
 class ScorepSystemHelper:
   """  Takes care of setting necessary environment variables appropriately.  """
