@@ -89,9 +89,13 @@ def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_con
       L.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
     if(csv_config.should_export()):
-      file_name = target_config.get_place() + "_" +  target_config.get_build() + "_" + target_config.get_target() + "_" + target_config.get_flavor() + ".csv"
+      file_name = target_config.get_flavor() + ".csv"
       csv_file = os.path.join(csv_config.get_csv_dir(), file_name)
-      rr_exporter.export(csv_file, csv_config.get_csv_dialect())
+      try:
+        rr_exporter.export(csv_file, csv_config.get_csv_dialect())
+      except Exception as e:
+        L.get_logger().log(
+          'Pira::execute_with_config: Problem writing CSV file\nMessage:\n' + str(e), level='error')
 
   except Exception as e:
     L.get_logger().log(
