@@ -4,7 +4,10 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: Module holds a selection of default flags.
 """
 import typing
-import getpass
+import os
+
+from lib.Configuration import InvocationConfiguration
+
 
 class BackendDefaults:
   """
@@ -13,13 +16,17 @@ class BackendDefaults:
 
   class _BackendDefaultsImpl:
 
-    def __init__(self):
+    def __init__(self, invoc_config: InvocationConfiguration):
       self._c_compiler = 'clang'
       self._cpp_compiler = 'clang++'
       self._compiler_instr_flag = '-finstrument-functions'
       self._compiler_instr_wl_flag = '-finstrument-functions-whitelist-inputfile'
       self._num_compile_procs = 8
       self._pira_exe_name = 'pira.built.exe'
+      if invoc_config is None: # this check is redundant if we always instantiate BackendDefaults with an InvocationConfiguration
+        self.pira = os.path.join(os.path.expanduser('~'), '.pira')
+      else:
+        self.pira_dir = invoc_config.get_pira_dir()
 
     def get_default_c_compiler_name(self) -> str:
       return self._c_compiler
@@ -48,14 +55,17 @@ class BackendDefaults:
       }
       return kwargs
 
+    def get_pira_dir(self) -> str:
+      return self.pira_dir
+
     def get_wrap_w_file(self) -> str:
-      return '/tmp/pira-' + getpass.getuser() + '/pira-mpi-filter.w'
+      return os.path.join(self.pira_dir, 'pira-mpi-filter.w')
 
     def get_wrap_c_file(self) -> str:
-      return '/tmp/pira-' + getpass.getuser() + '/pira-mpi-filter.c'
+      return os.path.join(self.pira_dir, 'pira-mpi-filter.c')
 
     def get_wrap_so_file(self) -> str:
-      return '/tmp/pira-' + getpass.getuser() + '/PIRA_MPI_Filter.so'
+      return os.path.join(self.pira_dir, 'PIRA_MPI_Filter.so')
 
     def get_MPI_wrap_LD_PRELOAD(self) -> str:
       return 'LD_PRELOAD=' + self.get_wrap_so_file()
@@ -63,9 +73,9 @@ class BackendDefaults:
 
   instance = None
 
-  def __init__(self):
+  def __init__(self, invoc_config: InvocationConfiguration = None):
     if not BackendDefaults.instance:
-      BackendDefaults.instance = BackendDefaults._BackendDefaultsImpl()
+      BackendDefaults.instance = BackendDefaults._BackendDefaultsImpl(invoc_config)
 
   def __getattr__(self, name):
     return getattr(self.instance, name)

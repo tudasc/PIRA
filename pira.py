@@ -7,6 +7,7 @@ Description: This is PIRA.
 __version__ = '0.2.0'
 
 import argparse
+import os
 import lib.Logging as log
 import lib.Pira as pira
 
@@ -22,6 +23,9 @@ parser = argparse.ArgumentParser(prog='PIRA')
 # --- Required arguments section
 parser.add_argument('config', help='The configuration json file.')
 
+# -- Pira folder option
+parser.add_argument('--pira-dir', help='The directory which stores PIRA runtime files', type=str, default=os.path.join(os.path.expanduser('~'), '.pira'))
+
 # --- Pira "mode" options
 parser.add_argument('--config-version', help='Which config file version to use', choices=[1, 2], default=2, type=int)
 parser.add_argument('--runtime-filter', help='Use run-time filtering', default=False, action='store_true')
@@ -36,6 +40,11 @@ group = parser.add_argument_group('Extra-P Options')
 group.add_argument(
     '--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
 group.add_argument('--extrap-prefix', help='The prefix in extra-p naming scheme', type=str)
+
+# CSV Export options
+csv_group = parser.add_argument_group('CSV Export Options')
+csv_group.add_argument('--csv-dir', help='Export runtime measurements as CSV files to the specified directory', type=str, default='')
+csv_group.add_argument('--csv-dialect', help='The dialect the CSV file is written in. Possible values: excel, excel_tab, unix; defaults to unix', type=str, default='unix')
 
 # Experimental options - even for research software they are experimental
 experimental_group = parser.add_argument_group('Experimental Options - experimental even for research software')

@@ -7,6 +7,8 @@ Description: Unit test for Exporter module.
 import unittest
 
 import lib.Exporter as E
+import lib.Measurement as M
+import os
 
 class TestCSVExporter(unittest.TestCase):
   
@@ -65,3 +67,34 @@ class TestCSVExporter(unittest.TestCase):
     exporter.add_new_export('a', [1])
     exporter.add_export('a', [2])
     self.assertEqual(exporter._exports['a'], [1, 2])
+
+class TestRunResultExporter(unittest.TestCase):
+  def test_init(self):
+    rre = E.RunResultExporter()
+    self.assertIsNotNone(rre)
+
+  def test_add_row(self):
+    rre = E.RunResultExporter()
+    rr = M.RunResult(1,1)
+    rr.add_values(2,2)
+    rre.add_row("test", rr)
+    self.assertEqual(len(rre.rows), 1)
+    self.assertEqual(len(rre.rows[0]), 5)
+    self.assertEqual(rre.rows[0][0], "test")
+    self.assertEqual(rre.rows[0][1], 1)
+    self.assertEqual(rre.rows[0][2], 1)
+    self.assertEqual(rre.rows[0][3], 2)
+    self.assertEqual(rre.rows[0][4], 2)
+    self.assertEqual(rre.width, 5)
+
+  def test_export(self):
+    rre = E.RunResultExporter()
+    rr = M.RunResult(1, 1)
+    rr.add_values(2, 2)
+    rre.add_row("test", rr)
+    rre.export("test_file")
+    with open("test_file", "r") as tf:
+      data = tf.read()
+      expected_data = '"Type of Run","Accumulated Runtime","Number of Runs","Accumulated Runtime","Number of Runs"\n"test","1","1","2","2"\n'
+      self.assertEqual(data, expected_data)
+    os.remove("test_file")
