@@ -11,7 +11,7 @@ from lib.Configuration import PiraConfiguration, TargetConfiguration, Instrument
 from lib.Exception import PiraException
 
 import typing
-import getpass
+import os
 
 class MeasurementSystemException(PiraException):
   """  This exception is thrown if problems in the runtime occur.  """
@@ -85,6 +85,11 @@ class RunResult:
 
     return ovhds
 
+  def get_accumulated_runtime(self):
+    return self._accumulated_runtime
+
+  def get_nr_of_iterations(self):
+    return self._nr_of_iterations
 
 class ScorepSystemHelper:
   """  Takes care of setting necessary environment variables appropriately.  """
@@ -277,7 +282,8 @@ class ScorepSystemHelper:
   def prepare_MPI_filtering(cls, filter_file: str) -> None:
     # Find which MPI functions to filter
     # Get all MPI functions (our filter_file is a WHITELIST)
-    mpi_funcs_dump = '/tmp/pira-' + getpass.getuser() + '/mpi_funcs.dump'
+    default_provider = D.BackendDefaults()
+    mpi_funcs_dump = os.path.join(default_provider.instance.get_pira_dir(), 'mpi_funcs.dump')
     U.shell('wrap.py -d > ' + mpi_funcs_dump)
     all_MPI_functions_decls = U.read_file(mpi_funcs_dump).split('\n')
     all_MPI_functions = []

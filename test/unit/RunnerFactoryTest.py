@@ -11,11 +11,12 @@ from lib.ProfileSink import NopSink, ExtrapProfileSink, PiraOneProfileSink
 from lib.ArgumentMapping import CmdlineLinearArgumentMapper
 
 import unittest
-
+import os
 
 class TestRunnerFactory(unittest.TestCase):
   def setUp(self):
     self._path_to_config = '/tmp'
+    self._pira_dir = os.path.join(os.path.expanduser('~'), '.pira')
     self._compile_t_filter = True
     self._pira_iters = 3
     self._num_reps = 4
