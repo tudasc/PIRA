@@ -487,7 +487,7 @@ class ExtrapConfiguration:
 
 class InvocationConfiguration:
 
-  def __init__(self, path_to_config: str, pira_dir: str,compile_time_filter: bool, pira_iters: int, num_reps: int, hybrid_filter_iters: int = 0):
+  def __init__(self, path_to_config: str, pira_dir: str, compile_time_filter: bool, pira_iters: int, num_reps: int, hybrid_filter_iters: int = 0):
     self._path_to_cfg = path_to_config
     self._pira_dir = pira_dir
     self._compile_time_filtering = compile_time_filter

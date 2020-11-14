@@ -20,7 +20,7 @@ class TestRunnerFactory(unittest.TestCase):
     self._compile_t_filter = True
     self._pira_iters = 3
     self._num_reps = 4
-    self._ic = InvocationConfiguration(self._path_to_config, self._compile_t_filter, self._pira_iters, self._num_reps)
+    self._ic = InvocationConfiguration(self._path_to_config, self._pira_dir, self._compile_t_filter, self._pira_iters, self._num_reps)
     self._pira_one_cfg = PiraConfiguration()
 
     self._pira_two_cfg = PiraConfigurationII()
