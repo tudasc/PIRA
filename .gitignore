@@ -153,3 +153,8 @@ tags
 tapes/*.tp
 # experiment database
 *.sqlite
+# externally installed dependencies
+extern/install/*
+extern/src/cxxopts
+extern/src/extrap
+extern/src/json
