@@ -179,6 +179,11 @@ class SimplifiedConfigurationLoader:
 
     run_options = ArgumentMapperFactory.get_mapper(run_opts)
 
+    # expand environment variables in directory attributes
+    analyzer_dir = os.path.expandvars(analyzer_dir)
+    cubes_dir = os.path.expandvars(cubes_dir)
+    functors_base_path = os.path.expandvars(functors_base_path)
+
     pira_item.set_analyzer_dir(analyzer_dir)
     pira_item.set_cubes_dir(cubes_dir)
     pira_item.set_flavors(flavors)
@@ -202,6 +207,9 @@ class SimplifiedConfigurationLoader:
       directory_for_item = U.json_to_canonic(tld_build)
       if self.is_escaped(directory_for_item):
         directory_for_item = directories[directory_for_item[1:]]
+
+      # expand environment variables in directory value
+      directory_for_item = os.path.expandvars(directory_for_item)
 
       item_tree = U.json_to_canonic(json_tree[_BUILDS][tld_build][_ITEMS])
       for item_key in item_tree:

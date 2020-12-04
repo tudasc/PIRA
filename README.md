@@ -144,7 +144,7 @@ cp my-app.ipcg $PIRA/extern/install/pgis/bin/item_flavor.ipcg
 #### Configuration
 
 The PIRA configuration contains all the required information for PIRA to run the automatic process.
-The various directories that need to be specified in the configuration can either be *absolute* paths, or *paths, relative to the execution path of pira*.
+The various directories that need to be specified in the configuration can either be *absolute* paths, or *paths, relative to the execution path of pira*. Paths may contain environment variables, e.g., `$HOME`.
 The examples are taken from the GameOfLife example in `./test/integration/GameOfLife`.
 
 ##### Directory and items
