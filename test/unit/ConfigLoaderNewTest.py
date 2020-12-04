@@ -7,7 +7,9 @@ Description: Tests for the ConfigurationLoader module.
 import lib.Logging as L
 from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader
 from lib.Configuration import PiraConfigurationAdapter, PiraConfigurationII
+import lib.Utility as U
 
+import os
 import unittest
 import typing
 
@@ -280,6 +282,36 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     self.assertTrue(isinstance(cfg, PiraConfigurationAdapter))
     self.assertTrue(isinstance(cfg.get_adapted(), PiraConfigurationII))
 
+  def test_env_var_expansion(self):
+    expected_base = '/base'
+    expected_analyzer = '/analyzer_dir'
+    expected_cubes = '/cubes_dir'
+    expected_functors = '/functors_dir'
+
+    os.environ['PIRA_TEST_ENV_VAR_BASE'] = expected_base
+    os.environ['PIRA_TEST_ENV_VAR_ANALYZER'] = expected_analyzer
+    os.environ['PIRA_TEST_ENV_VAR_CUBES'] = expected_cubes
+    os.environ['PIRA_TEST_ENV_VAR_FUNCTORS'] = expected_functors
+
+
+    b = expected_base
+    i = 'test_item'
+
+    cfg = self.loader.load_conf('../inputs/configs/basic_config_006.json')
+    self.assertIsNotNone(cfg)
+    self.assertFalse(cfg.is_empty())
+
+    base_dir = cfg.get_place(b)
+    self.assertEqual(base_dir, expected_base)
+
+    analyzer_dir = cfg.get_analyzer_dir(b, i)
+    self.assertEqual(analyzer_dir, expected_analyzer)
+
+    cubes_dir = cfg.get_analyzer_exp_dir(b, i)
+    self.assertEqual(cubes_dir, expected_cubes)
+
+    functor_dir = cfg.get_cleaner_path(b, i)
+    self.assertEqual(functor_dir, expected_functors)
 
 if __name__ == '__main__':
   unittest.main()
