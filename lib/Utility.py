@@ -171,6 +171,12 @@ def remove_file(path: str) -> bool:
     return True
   return False
 
+def get_default_pira_dir() -> str:
+  pira_dir = os.path.join(os.path.expanduser('~'), '.local/share/pira')
+  if 'XDG_DATA_HOME' in os.environ:
+    if os.environ['XDG_DATA_HOME'] != '':
+      pira_dir = os.path.join(os.environ['XDG_DATA_HOME'], 'pira')
+  return pira_dir
 
 # --- File-related utils --- #
 
@@ -246,7 +252,7 @@ def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool
     L.get_logger().log('Utility::shell: DRY RUN SHELL CALL: ' + command, level='debug')
     return '', 1.0
 
-  stderr_fn = '/tmp/stderr-bp-' + generate_random_string()
+  stderr_fn = os.path.join(get_default_pira_dir(),'stderr-bp-' + generate_random_string())
   stderr_fd = open(stderr_fn, 'w+')
   try:
     L.get_logger().log('Utility::shell: util executing: ' + str(command), level='debug')

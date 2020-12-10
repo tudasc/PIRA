@@ -6,6 +6,7 @@ Description: Module holds a selection of default flags.
 import typing
 import os
 
+import lib.Utility as U
 from lib.Configuration import InvocationConfiguration
 
 
@@ -23,8 +24,8 @@ class BackendDefaults:
       self._compiler_instr_wl_flag = '-finstrument-functions-whitelist-inputfile'
       self._num_compile_procs = 8
       self._pira_exe_name = 'pira.built.exe'
-      if invoc_config is None: # this check is redundant if we always instantiate BackendDefaults with an InvocationConfiguration
-        self.pira = os.path.join(os.path.expanduser('~'), '.pira')
+      if invoc_config is None:
+        self.pira_dir = U.get_default_pira_dir()
       else:
         self.pira_dir = invoc_config.get_pira_dir()
 

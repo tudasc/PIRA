@@ -3,15 +3,16 @@ File: MeasurementTest.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Tests for the argument mapping
 """
-
+import shutil
 import unittest
 import typing
+import os
 
 import lib.Measurement as M
 import lib.ConfigurationLoader as C
 import lib.DefaultFlags as D
 from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
-
+import lib.Utility as U
 
 class TestRunResult(unittest.TestCase):
   """
@@ -57,10 +58,31 @@ class TestScorepHelper(unittest.TestCase):
   TODO Separate the building portion of Score-P and the measurement system part.
   """
   def setUp(self):
+    # get runtime folder
+    pira_dir = U.get_default_pira_dir()
+    self.cubes_dir = os.path.join(pira_dir, 'test_cubes')
+    # insert user runtime folder into test config
+    data = None
+    with open('input/unit_input_004.json', 'r') as file:
+      data = file.read()
+    data = data.replace('/tmp/where/cube/files/are', self.cubes_dir)
+    with open('input/unit_input_004.json', 'w') as file:
+      file.write(data)
+
     self.cfg_loader = C.ConfigurationLoader()
     self.cfg = self.cfg_loader.load_conf('input/unit_input_004.json')
     self.target_cfg = TargetConfiguration('/this/is/top_dir', '/this/is/top_dir', 'item01', 'item01-flavor01', '')
     self.instr_cfg = InstrumentConfig(True, 0)
+
+  def tearDown(self):
+    # reset test config
+    data = None
+    with open('input/unit_input_004.json', 'r') as file:
+      data = file.read()
+    data = data.replace(self.cubes_dir, '/tmp/where/cube/files/are')
+    with open('input/unit_input_004.json', 'w') as file:
+      file.write(data)
+    shutil.rmtree(self.cubes_dir, ignore_errors=True)
 
   def test_scorep_mh_init(self):
     s_mh = M.ScorepSystemHelper(PiraConfiguration())
@@ -80,7 +102,7 @@ class TestScorepHelper(unittest.TestCase):
     self.assertEqual('500M', s_mh.cur_mem_size)
     self.assertEqual('True', s_mh.cur_overwrite_exp_dir)
     self.assertEqual('item01-flavor01-item01', s_mh.cur_base_name)
-    self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
+    self.assertEqual(self.cubes_dir + '/item01-item01-flavor01-0', s_mh.cur_exp_directory)
 
   def test_scorep_mh_set_up_no_instr(self):
     s_mh = M.ScorepSystemHelper(self.cfg)
@@ -97,7 +119,7 @@ class TestScorepHelper(unittest.TestCase):
     s_mh = M.ScorepSystemHelper(self.cfg)
     s_mh.set_up(self.target_cfg, self.instr_cfg, True)
 
-    self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
+    self.assertEqual(self.cubes_dir + '/item01-item01-flavor01-0', s_mh.cur_exp_directory)
     self.assertRaises(M.MeasurementSystemException, s_mh.set_exp_dir, '+/invalid/path/haha', 'item01-flavor01', 0)
     self.assertRaises(M.MeasurementSystemException, s_mh.set_exp_dir, '/inv?alid/path/haha', 'item01-flavor01', 0)
 

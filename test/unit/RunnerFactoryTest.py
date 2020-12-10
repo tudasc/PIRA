@@ -9,23 +9,25 @@ from lib.Configuration import PiraConfiguration, ExtrapConfiguration, Invocation
 from lib.Runner import LocalRunner, LocalScalingRunner
 from lib.ProfileSink import NopSink, ExtrapProfileSink, PiraOneProfileSink
 from lib.ArgumentMapping import CmdlineLinearArgumentMapper
+import lib.Utility as U
 
 import unittest
 import os
 
 class TestRunnerFactory(unittest.TestCase):
   def setUp(self):
-    self._path_to_config = '/tmp'
-    self._pira_dir = os.path.join(os.path.expanduser('~'), '.pira')
+    self._pira_dir = U.get_default_pira_dir()
+    self._path_to_config = os.path.join(self._pira_dir, 'config')
     self._compile_t_filter = True
     self._pira_iters = 3
     self._num_reps = 4
     self._ic = InvocationConfiguration(self._path_to_config, self._pira_dir, self._compile_t_filter, self._pira_iters, self._num_reps)
     self._pira_one_cfg = PiraConfiguration()
-
+    self._hybrid_filter_iters = 0
     self._pira_two_cfg = PiraConfigurationII()
-    self._it_dir = '/tmp/test_item'
-    item = PiraItem('/tmp/test_item')
+    self._item_name = 'test_item'
+    self._it_dir = os.path.join(self._pira_dir, self._item_name)
+    item = PiraItem(self._item_name)
     item.set_analyzer_dir('/analyzer')
     item.set_cubes_dir('/cubes')
     item.set_flavors(['dflt'])

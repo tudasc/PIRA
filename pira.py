@@ -10,6 +10,7 @@ import argparse
 import os
 import lib.Logging as log
 import lib.Pira as pira
+import lib.Utility as U
 
 """
   Pira Main
@@ -24,7 +25,8 @@ parser = argparse.ArgumentParser(prog='PIRA')
 parser.add_argument('config', help='The configuration json file.')
 
 # -- Pira folder option
-parser.add_argument('--pira-dir', help='The directory which stores PIRA runtime files', type=str, default=os.path.join(os.path.expanduser('~'), '.pira'))
+pira_dir = U.get_default_pira_dir()
+parser.add_argument('--pira-dir', help='The directory which stores PIRA runtime files', type=str, default=pira_dir)
 
 # --- Pira "mode" options
 parser.add_argument('--config-version', help='Which config file version to use', choices=[1, 2], default=2, type=int)
