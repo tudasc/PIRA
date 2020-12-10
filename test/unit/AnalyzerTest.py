@@ -7,11 +7,13 @@ Description: Tests for the Analyzer module.
 import lib.Analyzer as A
 import lib.FunctorManagement as F
 import lib.ConfigurationLoader as C
+import lib.Utility as U
 
 from lib.Configuration import PiraConfiguration, PiraConfigurationII, PiraConfigurationAdapter, PiraItem, TargetConfiguration
 from lib.ArgumentMapping import CmdlineLinearArgumentMapper
 from lib.ProfileSink import ProfileSinkBase
 import unittest
+import os
 
 class TestProfileSink(ProfileSinkBase):
   def __init__(self):
@@ -36,8 +38,20 @@ class TestAnalyzer(unittest.TestCase):
 
     # Pira II configuration and adapter
     self._pira_two_cfg = PiraConfigurationII()
-    self._it_dir = '/tmp/test_item'
-    item = PiraItem('/tmp/test_item')
+
+    # get runtime folder
+    self.pira_dir = U.get_default_pira_dir()
+    # insert user runtime folder into test config
+    self.test_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../inputs/configs/basic_config_005.json')
+    data = None
+    with open(self.test_config, 'r') as file:
+      data = file.read()
+    data = data.replace('/tmp', self.pira_dir)
+    with open(self.test_config, 'w') as file:
+      file.write(data)
+
+    self._it_dir = self.pira_dir
+    item = PiraItem(os.path.join(self.pira_dir, 'test_item'))
     item.set_analyzer_dir('/analyzer')
     item.set_cubes_dir('/cubes')
     item.set_flavors(['dflt'])
@@ -52,6 +66,15 @@ class TestAnalyzer(unittest.TestCase):
     self._pira_two_cfg.add_item(self._it_dir, item)
     self._pira_two_cfg._empty = False # This is usually done in ConfigurationLoader
     self._pira_two_adapter = PiraConfigurationAdapter(self._pira_two_cfg)
+
+  def tearDown(self):
+    # reset test config
+    data = None
+    with open(self.test_config, 'r') as file:
+      data = file.read()
+    data = data.replace(self.pira_dir, '/tmp')
+    with open(self.test_config, 'w') as file:
+      file.write(data)
 
   def test_empty_pira_config(self):
     with self.assertRaises(A.PiraAnalyzerException):
@@ -86,18 +109,18 @@ class TestAnalyzer(unittest.TestCase):
 
   def test_analyze_local(self):
     ld = C.SimplifiedConfigurationLoader()
-    cfg = ld.load_conf('../inputs/configs/basic_config_005.json')
+    cfg = ld.load_conf(self.test_config)
 
     analyzer = A.Analyzer(cfg)
     fm = F.FunctorManager(cfg)
 
-    a_f = fm.get_or_load_functor('/tmp', 'test_item', 'ct', 'analyze')
+    a_f = fm.get_or_load_functor(self.pira_dir, 'test_item', 'ct', 'analyze')
     self.assertIsNotNone(a_f)
     self.assertTrue(a_f.get_method()['passive'])
     self.assertEqual(a_f.get_it(), 0)
 
 
-    tc = TargetConfiguration(cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
+    tc = TargetConfiguration(cfg.get_place(self.pira_dir), self.pira_dir, 'test_item', 'ct', 'asdf')
     with self.assertRaises(RuntimeError) as assert_cm:
       analyzer.analyze(tc, 0)
     rt_err = assert_cm.exception

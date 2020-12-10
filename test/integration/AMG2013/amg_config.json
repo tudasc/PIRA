@@ -14,7 +14,7 @@
 								40
 							]
 					},
-					"cubes": "/tmp/pira_amg",
+					"cubes": "CUBES_FOLDER",
 					"flavors": [
 						"ct_mpi"
 					],
