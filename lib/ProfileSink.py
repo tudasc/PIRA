@@ -9,7 +9,7 @@ sys.path.append('../')
 
 import lib.Logging as L
 import lib.Utility as U
-from lib.Configuration import TargetConfiguration, InstrumentConfig
+from lib.Configuration import TargetConfig, InstrumentConfig, InvocationConfig
 from lib.Exception import PiraException
 
 import json
@@ -45,7 +45,7 @@ class ProfileSinkBase:
   def __init__(self):
     self._sink_target = ''
 
-  def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig):
+  def process(self, exp_dir: str, target_config: TargetConfig, instr_config: InstrumentConfig):
     L.get_logger().log('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
     raise RuntimeError('ProfileSinkBase::process. ABSTRACT not implemented. Aborting')
 
@@ -89,7 +89,7 @@ class PiraOneProfileSink(ProfileSinkBase):
 
 class ExtrapProfileSink(ProfileSinkBase):
 
-  def __init__(self, dir: str, params, prefix: str, postfix: str, filename: str, reps: int):
+  def __init__(self, dir: str, params, prefix: str, postfix: str, filename: str):
     super().__init__()
     self._base_dir = dir
     self._params = params
@@ -98,7 +98,7 @@ class ExtrapProfileSink(ProfileSinkBase):
     self._filename = filename
     self._iteration = -1
     self._repetition = 0
-    self._total_reps = reps
+    self._total_reps = InvocationConfig.get_instance().get_num_repetitions()
     self._VALUE = ()
 
   def has_config_output(self):
@@ -129,7 +129,7 @@ class ExtrapProfileSink(ProfileSinkBase):
   def get_target(self):
     return self._sink_target
 
-  def get_param_mapping(self, target_config: TargetConfiguration) -> str:
+  def get_param_mapping(self, target_config: TargetConfig) -> str:
     if not target_config.has_args_for_invocation():
       return '.'
 
@@ -151,13 +151,13 @@ class ExtrapProfileSink(ProfileSinkBase):
     L.get_logger().log('ExtrapProfileSink::get_param_mapping: ' + param_str)
     return param_str
 
-  def get_extrap_dir_name(self, target_config: TargetConfiguration, instr_iteration: int) -> str:
+  def get_extrap_dir_name(self, target_config: TargetConfig, instr_iteration: int) -> str:
     dir_name = self._base_dir + '/' + 'i' + str(instr_iteration) + '/' + self._prefix + '.'
     dir_name += self.get_param_mapping(target_config)
     dir_name += '.' + self._postfix + '.r' + str(self._repetition + 1)
     return dir_name
 
-  def check_and_prepare(self, experiment_dir: str, target_config: TargetConfiguration,
+  def check_and_prepare(self, experiment_dir: str, target_config: TargetConfig,
                         instr_config: InstrumentConfig) -> str:
     cur_ep_dir = self.get_extrap_dir_name(target_config, instr_config.get_instrumentation_iteration())
     if not U.is_valid_file_name(cur_ep_dir):
@@ -188,7 +188,7 @@ class ExtrapProfileSink(ProfileSinkBase):
     # return  # TODO make this actually work
     U.copy_file(src_cube_name, dest_dir + '/' + self._filename)
 
-  def process(self, exp_dir: str, target_config: TargetConfiguration, instr_config: InstrumentConfig) -> None:
+  def process(self, exp_dir: str, target_config: TargetConfig, instr_config: InstrumentConfig) -> None:
     L.get_logger().log('ExtrapProfileSink::process: ' + str(instr_config.get_instrumentation_iteration()))
     if instr_config.get_instrumentation_iteration() > self._iteration or target_config.get_args_for_invocation(
     ) is not self._VALUE:

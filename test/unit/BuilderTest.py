@@ -13,12 +13,13 @@ import lib.ConfigurationLoader as CO
 class BuilderTest(unittest.TestCase):
 
   def setUp(self):
+    C.InvocationConfig.create_from_kwargs({'config' : '../inputs/configs/basic_config_005.json'})
     ld = CO.SimplifiedConfigurationLoader()
-    self.cfg = ld.load_conf('../inputs/configs/basic_config_005.json')
+    self.cfg = ld.load_conf()
     pass
 
   def test_init(self):
-    tc = C.TargetConfiguration(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
+    tc = C.TargetConfig(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
     builder = B.Builder(tc, True)
     self.assertIsNotNone(builder)
     self.assertIsNone(builder.error)
@@ -31,14 +32,13 @@ class BuilderTest(unittest.TestCase):
       builder = B.Builder(None, True)
     b_exc = cm_b.exception
     self.assertEqual(str(b_exc), 'Builder::ctor: Target Configuration was None')
-  
+
   @unittest.skip('Builder::set_up mainly changes directories. How to test?')
   def test_set_up(self):
     self.assertFalse(True)
 
-  
   def test_construct_pira_kwargs_fail_instr(self):
-    tc = C.TargetConfiguration(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
+    tc = C.TargetConfig(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
     builder = B.Builder(tc, True, '/tmp/instr_file')
     self.assertIsNotNone(builder)
     self.assertIsNotNone(builder.instrumentation_file)
@@ -50,7 +50,7 @@ class BuilderTest(unittest.TestCase):
     self.assertEqual(str(exc), 'Should not construct non-instrument kwargs in instrumentation mode.')
 
   def test_construct_pira_kwargs(self):
-    tc = C.TargetConfiguration(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
+    tc = C.TargetConfig(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
     builder = B.Builder(tc, False, '/tmp/instr_file')
     self.assertIsNotNone(builder)
     self.assertIsNotNone(builder.instrumentation_file)
@@ -63,22 +63,22 @@ class BuilderTest(unittest.TestCase):
 
   @unittest.skip('Implement this test, when fully switched to internal Score-P')
   def test_construct_pira_instr_kwargs(self):
-    tc = C.TargetConfiguration(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
+    tc = C.TargetConfig(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
     builder = B.Builder(tc, True, '/tmp/instr_file')
     self.assertIsNotNone(builder)
     self.assertIsNotNone(builder.instrumentation_file)
 
     p_kwargs = builder.construct_pira_instr_kwargs()
-    self.assertEqual(p_kwargs['CC'], '\"clang -finstrument-functions -finstrument-functions-whitelist-inputfile=/tmp/instr_file\"')
-    self.assertEqual(p_kwargs['CXX'], '\"clang++ -finstrument-functions -finstrument-functions-whitelist-inputfile=/tmp/instr_file\"')
+    self.assertEqual(p_kwargs['CC'],'\"clang -finstrument-functions -finstrument-functions-whitelist-inputfile=/tmp/instr_file\"')
+    self.assertEqual(p_kwargs['CXX'],'\"clang++ -finstrument-functions -finstrument-functions-whitelist-inputfile=/tmp/instr_file\"')
     # self.assertEqual(p_kwargs['CLFLAGS'], '\" scorep.init.o ')
     # self.assertEqual(p_kwargs['CXXLFLAGS'], )
     self.assertEqual(p_kwargs['PIRANAME'], 'pira.built.exe')
     self.assertEqual(p_kwargs['NUMPROCS'], 8)
     self.assertEqual(p_kwargs['filter-file'], '/tmp/instr_file')
-  
+
   def test_construct_pira_instr_kwargs(self):
-    tc = C.TargetConfiguration(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
+    tc = C.TargetConfig(self.cfg.get_place('/tmp'), '/tmp', 'test_item', 'ct', 'asdf')
     builder = B.Builder(tc, False)
     self.assertIsNotNone(builder)
 

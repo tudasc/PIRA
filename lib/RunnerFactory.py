@@ -4,42 +4,39 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: Module to create different Runner objects, depending on the configuration.
 """
 
-import sys
-sys.path.append('..')
-
 import lib.Logging as L
-from lib.Configuration import PiraConfiguration, ExtrapConfiguration, InvocationConfiguration
-from lib.Configuration import PiraConfigurationII, PiraConfigurationAdapter, PiraConfigurationErrorException
+from lib.Configuration import PiraConfig, ExtrapConfig
+from lib.Configuration import PiraConfigII, PiraConfigAdapter, PiraConfigErrorException
 from lib.Runner import LocalRunner, LocalScalingRunner
 from lib.ProfileSink import NopSink, ExtrapProfileSink, PiraOneProfileSink
 
 
 class PiraRunnerFactory:
 
-  def __init__(self, invocation_cfg: InvocationConfiguration, configuration: PiraConfiguration):
+  def __init__(self, configuration: PiraConfig):
     self._config = configuration
-    self._invoc_cfg = invocation_cfg
+
 
   def get_simple_local_runner(self):
-    return LocalRunner(self._config, PiraOneProfileSink(), self._invoc_cfg.get_num_repetitions())
+    return LocalRunner(self._config, PiraOneProfileSink())
 
-  def get_scalability_runner(self, extrap_config: ExtrapConfiguration):
+  def get_scalability_runner(self, extrap_config: ExtrapConfig):
     if self._config.is_empty():
-      raise PiraConfigurationErrorException('Configuration is None in RunnerFactory')
+      raise PiraConfigErrorException('Configuration is None in RunnerFactory')
 
     pc_ii = None
     params = None
     ro = None
-    if isinstance(self._config, PiraConfigurationAdapter):
+    if isinstance(self._config, PiraConfigAdapter):
       L.get_logger().log('PiraRunnerFactory::get_scalability_runner: Configuration is PiraConfigurationAdapter')
       pc_ii = self._config.get_adapted()
-    elif isinstance(self._config, PiraConfigurationII):
+    elif isinstance(self._config, PiraConfigII):
       pc_ii = self._config
 
     if pc_ii is not None:
       L.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is not none.')
 
-    if pc_ii is not None and isinstance(pc_ii, PiraConfigurationII):
+    if pc_ii is not None and isinstance(pc_ii, PiraConfigII):
       L.get_logger().log('PiraRunnerFactory::get_scalability_runner: pc_ii is PiraConfigurationII')
       params = {}
       L.get_logger().log('PiraRunnerFactory::get_scalability_runner: Preparing params')
@@ -57,5 +54,5 @@ class PiraRunnerFactory:
       raise RuntimeError('PiraRunnerFactory::get_scalability_runner: Cannot use extra-p with old configuration')
 
     attached_sink = ExtrapProfileSink(extrap_config.get_dir(), ro.get_argmap(), extrap_config.get_prefix(), 'pofi',
-                                      'profile.cubex', self._invoc_cfg.get_num_repetitions())
-    return LocalScalingRunner(self._config, attached_sink, self._invoc_cfg.get_num_repetitions())
+                                      'profile.cubex')
+    return LocalScalingRunner(self._config, attached_sink)

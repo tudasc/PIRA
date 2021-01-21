@@ -7,7 +7,7 @@ Description: Module to load and manage the user-supplied functors.
 import typing
 import lib.Utility as U
 import lib.Logging as L
-from lib.Configuration import PiraConfiguration, PiraConfigurationErrorException
+from lib.Configuration import PiraConfig, PiraConfigErrorException
 from lib.Exception import PiraException
 
 
@@ -23,7 +23,7 @@ class FunctorManager:
 
   class __FunctorManagerImpl:
 
-    def __init__(self, cfg: PiraConfiguration) -> None:
+    def __init__(self, cfg: PiraConfig) -> None:
       if cfg.is_empty():
         raise FunctorManagementException('Cannot construct from empty Configuration')
 
@@ -151,12 +151,12 @@ class FunctorManager:
     else:
       if cfg is not None:
         if not cfg.is_valid():
-          raise PiraConfigurationErrorException('Invalid configuration passed to FunctorManager')
+          raise PiraConfigErrorException('Invalid configuration passed to FunctorManager')
         FunctorManager.instance.cfg = cfg
         FunctorManager.instance.functor_cache.clear()
 
   @classmethod
-  def from_config(cls, p_config: PiraConfiguration):
+  def from_config(cls, p_config: PiraConfig):
     """  Needs to be called once per configuration.  """
     return cls(p_config)
 

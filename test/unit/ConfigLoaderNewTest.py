@@ -6,12 +6,10 @@ Description: Tests for the ConfigurationLoader module.
 
 import lib.Logging as L
 from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader
-from lib.Configuration import PiraConfigurationAdapter, PiraConfigurationII
-import lib.Utility as U
-
+from lib.Configuration import PiraConfigAdapter, PiraConfigII, InvocationConfig
 import os
 import unittest
-import typing
+
 
 logger = L.get_logger()
 logger.set_state('debug')
@@ -53,20 +51,21 @@ class TestConfigLoader(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls.loader = ConfigurationLoader()
+    InvocationConfig.create_from_kwargs({'config' : './input/unit_input_001.json'})
 
   def test_load_conf_not_none(self):
-    cfg = self.loader.load_conf('./input/unit_input_001.json')
+    cfg = self.loader.load_conf()
     self.assertIsNotNone(cfg)
 
   def test_conf_builds(self):
-    cfg = self.loader.load_conf('./input/unit_input_001.json')
+    cfg = self.loader.load_conf()
     bs = cfg.get_builds()
     self.assertIsNotNone(bs)
     for b in bs:
       self.assertIn(b, dep_aw_builds)
 
   def test_conf_items(self):
-    cfg = self.loader.load_conf('./input/unit_input_001.json')
+    cfg = self.loader.load_conf()
     for b in cfg.get_builds():
       itms = cfg.get_items(b)
       self.assertIsNotNone(itms)
@@ -74,7 +73,7 @@ class TestConfigLoader(unittest.TestCase):
         self.assertIn(i, dep_aw_items)
 
   def test_config_item01(self):
-    cfg = self.loader.load_conf('./input/unit_input_001.json')
+    cfg = self.loader.load_conf()
     # As the dicts are unordered, we set the keys manually!
     b = '/home/something/top_dir'
     i_01 = 'item01'
@@ -105,7 +104,7 @@ class TestConfigLoader(unittest.TestCase):
     self.assertListEqual(args[0], dep_aw_run[expected_item]['args'])
 
   def test_config_item02(self):
-    cfg = self.loader.load_conf('./input/unit_input_001.json')
+    cfg = self.loader.load_conf()
     # As the dicts are unordered, we set the keys manually!
     b = '/home/something/top_dir'
     i_02 = 'item02'
@@ -158,20 +157,21 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
   #@classmethod
   def setUp(self):
     self.loader = SimplifiedConfigurationLoader()
+    InvocationConfig.create_from_kwargs({'config' : './input/unit_input_002.json'})
 
   def test_load_conf_not_none(self):
-    cfg = self.loader.load_conf('./input/unit_input_002.json')
+    cfg = self.loader.load_conf()
     self.assertIsNotNone(cfg)
 
   def test_conf_builds(self):
-    cfg = self.loader.load_conf('./input/unit_input_002.json')
+    cfg = self.loader.load_conf()
     bs = cfg.get_builds()
     self.assertIsNotNone(bs)
     for b in bs:
       self.assertIn(b, ['/this/is/my/home'])
 
   def test_conf_items(self):
-    cfg = self.loader.load_conf('./input/unit_input_002.json')
+    cfg = self.loader.load_conf()
     for b in cfg.get_builds():
       itms = cfg.get_items(b)
       self.assertIsNotNone(itms)
@@ -179,7 +179,7 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
         self.assertIn(i, dep_aw_items)
 
   def test_config_item01(self):
-    cfg = self.loader.load_conf('./input/unit_input_002.json')
+    cfg = self.loader.load_conf()
     # As the dicts are unordered, we set the keys manually!
     b = '/this/is/my/home'
     i_01 = 'item01'
@@ -206,7 +206,7 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
                                 ('param2', 'val4', 'param1', 'val1'), ('param2', 'val4', 'param1', 'val2')])
 
   def test_config_item02(self):
-    cfg = self.loader.load_conf('./input/unit_input_002.json')
+    cfg = self.loader.load_conf()
     # As the dicts are unordered, we set the keys manually!
     b = '/this/is/my/home'
     i_02 = 'item02'
@@ -234,7 +234,8 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
     self.assertListEqual([tuple(x) for x in args], [('param1', 'val1'), ('param1', 'val2'), ('param1', 'val3')])
 
   def test_config_linear_mapper(self):
-    cfg = self.loader.load_conf('./input/unit_input_003.json')
+    InvocationConfig.create_from_kwargs({'config' : './input/unit_input_003.json'})
+    cfg = self.loader.load_conf()
     # As the dicts are unordered, we set the keys manually!
     b = '/this/is/my/home'
     i_01 = 'item01'
@@ -271,16 +272,17 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
       self.assertEqual(exp, tuple(arg))
 
   def test_basic_config_001(self):
-    cfg = self.loader.load_conf('../inputs/configs/basic_config_001.json')
-
+    InvocationConfig.create_from_kwargs({'config' : '../inputs/configs/basic_config_001.json'})
+    cfg = self.loader.load_conf()
     self.assertIsNotNone(cfg)
     self.assertFalse(cfg.is_empty())
 
   def test_relative_paths(self):
-    cfg = self.loader.load_conf('../inputs/configs/basic_config_005.json')
+    InvocationConfig.create_from_kwargs({'config' : '../inputs/configs/basic_config_005.json'})
+    cfg = self.loader.load_conf()
     self.assertFalse(cfg.is_empty())
-    self.assertTrue(isinstance(cfg, PiraConfigurationAdapter))
-    self.assertTrue(isinstance(cfg.get_adapted(), PiraConfigurationII))
+    self.assertTrue(isinstance(cfg, PiraConfigAdapter))
+    self.assertTrue(isinstance(cfg.get_adapted(), PiraConfigII))
 
   def test_env_var_expansion(self):
     expected_base = '/base'
@@ -296,8 +298,8 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
 
     b = expected_base
     i = 'test_item'
-
-    cfg = self.loader.load_conf('../inputs/configs/basic_config_006.json')
+    InvocationConfig.create_from_kwargs({'config' : '../inputs/configs/basic_config_006.json'})
+    cfg = self.loader.load_conf()
     self.assertIsNotNone(cfg)
     self.assertFalse(cfg.is_empty())
 

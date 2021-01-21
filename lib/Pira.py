@@ -15,8 +15,9 @@ from lib.DefaultFlags import BackendDefaults
 from lib.RunnerFactory import PiraRunnerFactory
 from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader
 from lib.ConfigurationLoader import ConfigurationLoader as CLoader
-from lib.Configuration import TargetConfiguration, PiraConfiguration, ExtrapConfiguration, InvocationConfiguration, \
-  PiraConfigurationErrorException, CSVConfiguration
+from lib.Configuration import TargetConfig, PiraConfig, ExtrapConfig, InvocationConfig, \
+  PiraConfigErrorException, CSVConfig
+
 from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as BU
 from lib.Analyzer import Analyzer as A
@@ -26,13 +27,10 @@ import typing
 import sys
 import os
 
-def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_config: TargetConfiguration, csv_config: CSVConfiguration) -> None:
+def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig, csv_config: CSVConfig) -> None:
   try:
     instrument = False
-    pira_iterations = pira_iters
-    hybrid_filtering = target_config.is_hybrid_filtering()
-    compile_time_filtering = target_config.is_compile_time_filtering()
-    hybrid_filter_iters = target_config.get_hybrid_filter_iters()
+    was_rebuilt = True
 
     rr_exporter = E.RunResultExporter()
 
@@ -53,40 +51,41 @@ def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_con
     if (csv_config.should_export()):
       rr_exporter.add_row('Vanilla', vanilla_rr)
 
-    for x in range(0, pira_iterations):
-      L.get_logger().log('Running instrumentation iteration ' + str(x), level='info')
+    for iteration in range(0,InvocationConfig.get_instance().get_pira_iters()):
+      L.get_logger().log('Running instrumentation iteration ' + str(iteration), level='info')
 
       # Only run the pgoe to get the functions name
       iteration_tracker = T.TimeTracker()
 
       # Analysis Phase
-      instr_file = analyzer.analyze(target_config, x)
-      L.get_logger().log('[WHITELIST] $' + str(x) + '$ ' + str(U.lines_in_file(instr_file)), level='perf')
+      instr_file = analyzer.analyze(target_config, iteration, was_rebuilt)
+      was_rebuilt = False
+      L.get_logger().log('[WHITELIST] $' + str(iteration) + '$ ' + str(U.lines_in_file(instr_file)), level='perf')
       U.shell('stat ' + instr_file)
 
       # After baseline measurement is complete, do the instrumented build/run
       # This is only necessary in every iteration when run in compile-time mode.
       # For hybrid-filtering this is done after the specified amount of iterations
-      if (hybrid_filtering and (x % hybrid_filter_iters is 0)) or x is 0 or compile_time_filtering:
+      if needs_rebuild(iteration):
+          was_rebuilt = True
           instrument = True
           instr_builder = BU(target_config, instrument, instr_file)
           tracker.m_track('Instrument Build', instr_builder, 'build')
 
       #Run Phase
       L.get_logger().log('Running profiling measurements', level='info')
-      instr_rr = runner.do_profile_run(target_config, x)
-
+      instr_rr = runner.do_profile_run(target_config, iteration)
       if(csv_config.should_export()):
-        rr_exporter.add_row('Instrumented ' + str(x), instr_rr)
+        rr_exporter.add_row('Instrumented ' + str(iteration), instr_rr)
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rr.compute_overhead(vanilla_rr)
-      L.get_logger().log('[RUNTIME] $' + str(x) + '$ ' + str(instr_rr.get_average()), level='perf')
-      L.get_logger().log('[OVERHEAD] $' + str(x) + '$ ' + str(ovh_percentage), level='perf')
+      L.get_logger().log('[RUNTIME] $' + str(iteration) + '$ ' + str(instr_rr.get_average()), level='perf')
+      L.get_logger().log('[OVERHEAD] $' + str(iteration) + '$ ' + str(ovh_percentage), level='perf')
 
       iteration_tracker.stop()
       user_time, system_time = iteration_tracker.get_time()
-      L.get_logger().log('[ITERTIME] $' + str(x) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+      L.get_logger().log('[ITERTIME] $' + str(iteration) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
     if(csv_config.should_export()):
       file_name = target_config.get_target() + '_' +  target_config.get_flavor() + '.csv'
@@ -103,13 +102,30 @@ def execute_with_config(runner: Runner, analyzer: A, pira_iters: int, target_con
         'Pira::execute_with_config: Problem during preparation of run.\nMessage:\n' + str(e), level='error')
     raise RuntimeError(str(e))
 
+def do_rebuild(build_name: str, target_config: TargetConfig, instrument: bool, instr_file: str=None) -> None:
+  if instrument and instr_file == None:
+    L.get_logger().log('Should instrument but no instrumentation file.', level='error')
+    raise Exception('instrument and no instrumentation file')
+
+  builder = BU(target_config, instrument, instr_file)
+  tracker = T.TimeTracker()
+  tracker.m_track(build_name, builder, 'build')
+
+
+def needs_rebuild(iteration: int) -> bool:
+  hybrid_filtering = InvocationConfig.get_instance().is_hybrid_filtering()
+  hybrid_filter_iters = InvocationConfig.get_instance().get_hybrid_filter_iters()
+  compile_time_filtering = InvocationConfig.get_instance().is_compile_time_filtering()
+  return compile_time_filtering or (iteration == 0) or (hybrid_filtering and (iteration % hybrid_filter_iters == 0))
+
+
 
 def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
   use_extra_p = False
-  extrap_config = ExtrapConfiguration('', '', '')
+  extrap_config = ExtrapConfig('', '', '')
   if cmdline_args.extrap_dir is not '':
     use_extra_p = True
-    extrap_config = ExtrapConfiguration(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
+    extrap_config = ExtrapConfig(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
 
     num_reps = cmdline_args.repetitions
     if num_reps < 5:
@@ -122,61 +138,32 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
   return use_extra_p, extrap_config
 
 
-def show_pira_invoc_info(cmdline_args) -> None:
-  invoc_cfg = process_args_for_invoc(cmdline_args)
-  cf_str = 'compile-time filtering'
-  if invoc_cfg.is_hybrid_filtering():
-    cf_str = 'hybrid filtering: rebuilding every ' + str(invoc_cfg.get_hybrid_filter_iters()) + ' iterations'
-  if not invoc_cfg.is_compile_time_filtering():
-    cf_str = 'runtime filtering'
-  L.get_logger().log(
-      'Pira::main: Running PIRA in ' + cf_str + ' with configuration\n ' + str(invoc_cfg.get_path_to_cfg()),
-      level='info')
-
-
-def process_args_for_invoc(cmdline_args) -> None:
-  path_to_config = cmdline_args.config
-  pira_dir = cmdline_args.pira_dir
-  compile_time_filter = not cmdline_args.runtime_filter
-  hybrid_filter_iters = cmdline_args.hybrid_filter_iters
-  pira_iters = cmdline_args.iterations
-  num_reps = cmdline_args.repetitions
-
-
-  invoc_cfg = InvocationConfiguration(path_to_config, pira_dir, compile_time_filter, pira_iters, num_reps, hybrid_filter_iters)
-
-  return invoc_cfg
-
 def process_args_for_csv(cmdline_args):
   csv_dir = cmdline_args.csv_dir
   csv_dialect = cmdline_args.csv_dialect
-  csv_cfg = CSVConfiguration(csv_dir, csv_dialect)
+  csv_cfg = CSVConfig(csv_dir, csv_dialect)
   return csv_cfg
 
-def main(arguments) -> None:
+
+def main(cmdline_args) -> None:
   """ Main function for pira framework. Used to invoke the various components. """
-  show_pira_invoc_info(arguments)
-
-  invoc_cfg = process_args_for_invoc(arguments)
-  use_extra_p, extrap_config = process_args_for_extrap(arguments)
-
+  invoc_cfg = InvocationConfig(cmdline_args)
+  L.get_logger().log(str(invoc_cfg),level='info')
+  use_extra_p, extrap_config = process_args_for_extrap(cmdline_args)
   home_dir = U.get_cwd()
   U.set_home_dir(home_dir)
-
   U.make_dir(invoc_cfg.get_pira_dir())
-  BackendDefaults(invoc_cfg)
 
-  csv_config = process_args_for_csv(arguments)
+  csv_config = process_args_for_csv(cmdline_args)
 
   try:
-    if arguments.config_version is 1:
+    if invoc_cfg.get_config_version() is 1:
       config_loader = CLoader()
     else:
       config_loader = SCLoader()
 
-    configuration = config_loader.load_conf(invoc_cfg.get_path_to_cfg())
-    checker.check_configfile(configuration,arguments.config_version)
-
+    configuration = config_loader.load_conf()
+    checker.check_configfile(configuration)
 
     if B.check_queued_job():
       # FIXME: Implement
@@ -196,7 +183,7 @@ def main(arguments) -> None:
       dbm.create_cursor()
       analyzer = A(configuration)
 
-      runner_factory = PiraRunnerFactory(invoc_cfg, configuration)
+      runner_factory = PiraRunnerFactory(configuration)
       runner = runner_factory.get_simple_local_runner()
       if use_extra_p:
         L.get_logger().log('Running with Extra-P runner')
@@ -224,10 +211,9 @@ def main(arguments) -> None:
               db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
               # Create configuration object for the item currently processed.
               place = configuration.get_place(build)
-              t_config = TargetConfiguration(place, build, item, flavor, db_item_id, invoc_cfg.is_compile_time_filtering(), invoc_cfg.get_hybrid_filter_iters())
-
+              t_config = TargetConfig(place, build, item, flavor, db_item_id)
               # Execute using a local runner, given the generated target description
-              execute_with_config(runner, analyzer, invoc_cfg.get_pira_iters(), t_config, csv_config)
+              execute_with_config(runner, analyzer, t_config, csv_config)
 
           # If global flavor
           else:

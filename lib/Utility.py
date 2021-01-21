@@ -23,9 +23,6 @@ from timeit import timeit
 queued_job_filename = './queued_job.tmp'
 home_directory = ''
 
-export_performance_models = False
-export_runtime_only = False
-
 def exit(code="1"):
   sys.exit(code)
 
@@ -178,6 +175,9 @@ def get_default_pira_dir() -> str:
       pira_dir = os.path.join(os.environ['XDG_DATA_HOME'], 'pira')
   return pira_dir
 
+def get_default_config_file() -> str:
+  return get_cwd() + '/config.json'
+
 # --- File-related utils --- #
 
 def json_to_canonic(json_elem):
@@ -215,6 +215,17 @@ def lines_in_file(file_name: str) -> int:
   L.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
   return 0
 
+def remove_arrow_lines(file_name: str) -> None:
+  if check_file(file_name):
+    with open(file_name, "r") as f:
+      lines = f.readlines()
+    with open(file_name, "w") as f:
+      for line in lines:
+        if '->'  not in line:
+          f.write(line)
+  else:
+    L.get_logger().log('Utility.remove_arrow_lines: Scorep-filter-file does not exist!', level='error')
+    raise Exception('Utility.remove_arrow_lines: Scorep-filter-file does not exist!')
 
 def diff_inst_files(file1: str, file2: str) -> bool:
   if (filecmp.cmp(file1, file2)):
@@ -371,46 +382,6 @@ def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
 
 def get_cubex_file(cubex_dir: str, b_name: str, flavor: str) -> str:
   return cubex_dir + '/' + flavor + '-' + b_name + '.cubex'
-
-
-def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
-                         iterationNumber: int, pgis_cfg_file: str) -> None:
-
-  global export_performance_models
-  global export_runtime_only
-  export_str = ' '
-  if export_performance_models:
-    export_str += ' --export'
-    if export_runtime_only:
-      export_str += ' --runtime-only'
-
-  ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
-  cubex_dir = get_cube_file_path(exp_dir, flavor, iterationNumber - 1)
-  cubex_file = get_cubex_file(cubex_dir, benchmark_name, flavor)
-
-  # PIRA version 1 runner, i.e., only consider raw runtime of single rum
-  if pgis_cfg_file is None:
-    L.get_logger().log('Utility::run_analyzer_command: using PIRA 1 Analyzer', level='info')
-    sh_cmd = command + ' --scorep-out ' + ipcg_file + ' -c ' + cubex_file
-    L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
-    out, _ = shell(sh_cmd)
-    L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
-    return
-
-  extrap_cfg_file = pgis_cfg_file
-  # extrap_file_path = analyzer_dir + '/' + extrap_cfg_file
-  # sh_cmd = command + ' --model-filter -e ' + extrap_file_path + ' ' + ipcg_file
-  sh_cmd = command + export_str + ' --scorep-out --extrap ' + pgis_cfg_file + ' ' + ipcg_file
-  L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
-  out, _ = shell(sh_cmd)
-  L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
-
-def run_analyzer_command_noInstr(command: str, analyzer_dir: str, flavor: str, benchmark_name: str) -> None:
-  ipcg_file = get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
-  sh_cmd = command + ' --scorep-out --static ' + ipcg_file
-  L.get_logger().log('Utility::run_analyzer_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
-  out, _ = shell(sh_cmd)
-  L.get_logger().log('Utility::run_analyzer_command_noInstr: Output of analyzer:\n' + out, level='debug')
 
 
 def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:

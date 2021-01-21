@@ -7,7 +7,7 @@ Description: Module hosts measurement support infrastructure.
 import lib.Utility as U
 import lib.Logging as L
 import lib.DefaultFlags as D
-from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
+from lib.Configuration import PiraConfig, TargetConfig, InstrumentConfig, InvocationConfig
 from lib.Exception import PiraException
 
 import typing
@@ -43,6 +43,7 @@ class RunResult:
       self._rt_trace = [rt_trace]
     else:
       self._rt_trace = []
+
 
   def is_multi_value(self):
     return len(self._accumulated_runtime) > 1
@@ -94,7 +95,7 @@ class RunResult:
 class ScorepSystemHelper:
   """  Takes care of setting necessary environment variables appropriately.  """
 
-  def __init__(self, config: PiraConfiguration) -> None:
+  def __init__(self, config: PiraConfig) -> None:
     self.known_files = ['.cubex']
     self.config = config
     self.data = {}
@@ -105,6 +106,7 @@ class ScorepSystemHelper:
     self.cur_filter_file = ''
     self._enable_unwinding = 'False'
     self._MPI_filter_so_path = ''
+
 
   def get_data_elem(self, key: str):
     try:
@@ -117,11 +119,12 @@ class ScorepSystemHelper:
     L.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
     return ''
 
-  def set_up(self, target_config: TargetConfiguration, instrumentation_config: InstrumentConfig,
-             compile_time_filter: bool) -> None:
-    if not target_config.is_compile_time_filtering():
+  def set_up(self, target_config: TargetConfig, instrumentation_config: InstrumentConfig) -> None:
+    compile_time_filter = InvocationConfig.get_instance().is_compile_time_filtering()
+    if not compile_time_filter:
       scorep_filter_file = self.prepare_scorep_filter_file(target_config.get_instr_file())
       self.set_filter_file(scorep_filter_file)
+
 
     self._set_up(target_config.get_build(), target_config.get_target(), target_config.get_flavor(),
                  instrumentation_config.get_instrumentation_iteration(),
@@ -133,9 +136,17 @@ class ScorepSystemHelper:
         NOTE: The filter_file is a positive list! We want to include these functions!
     '''
     file_dir = U.get_base_dir(filter_file)
-    file_content = U.read_file(filter_file)
-    scorep_filter_file_content = self.append_scorep_footer(self.prepend_scorep_header(file_content))
-    scorep_filter_file_name = file_dir + '/scorep_filter_file.txt'
+    if InvocationConfig.get_instance().is_hybrid_filtering():
+      U.remove_arrow_lines(filter_file)
+      file_content = U.read_file(filter_file)
+      scorep_filter_file_content = file_content
+      scorep_filter_file_name = file_dir + '/scorep_filter_file.txt'
+
+    else:
+      file_content = U.read_file(filter_file)
+      scorep_filter_file_content = self.append_scorep_footer(self.prepend_scorep_header(file_content))
+      scorep_filter_file_name = file_dir + '/scorep_filter_file.txt'
+
     U.write_file(scorep_filter_file_name, scorep_filter_file_content)
     return scorep_filter_file_name
 
@@ -221,15 +232,16 @@ class ScorepSystemHelper:
     return '-lscorep_adapter_memory_mgmt -lscorep_alloc_metric'
 
   @classmethod
-  def get_instrumentation_flags(cls, instr_file: str, compile_time_filter: bool) -> str:
+  def get_instrumentation_flags(cls, instr_file: str) -> str:
     default_provider = D.BackendDefaults()
     flags = default_provider.get_default_instrumentation_flag() + ' '
+    compile_time_filter = InvocationConfig.get_instance().is_compile_time_filtering()
     if compile_time_filter:
       flags += default_provider.get_default_instrumentation_selection_flag() + '=' + instr_file
     return flags
 
   @classmethod
-  def get_scorep_compliant_CC_command(cls, instr_file: str, compile_time_filter: bool = True) -> str:
+  def get_scorep_compliant_CC_command(cls, instr_file: str) -> str:
     """ Returns instrumentation flags for the C compiler.
 
     :instr_file: str: The file name to use for filtering
@@ -238,11 +250,11 @@ class ScorepSystemHelper:
     default_provider = D.BackendDefaults()
     L.get_logger().log('ScorepSystemHelper::get_scorep_compliant_CC_command: ', level='debug')
     cc_str = default_provider.get_default_c_compiler_name() + ' ' + cls.get_instrumentation_flags(
-        instr_file, compile_time_filter)
+        instr_file)
     return '\"' + cc_str + '\"'
 
   @classmethod
-  def get_scorep_compliant_CXX_command(cls, instr_file: str, compile_time_filter: bool = True) -> str:
+  def get_scorep_compliant_CXX_command(cls, instr_file: str) -> str:
     """ Returns instrumentation flags for the C++ compiler.
 
     :instr_file: str: The file name to use for filtering
@@ -250,7 +262,7 @@ class ScorepSystemHelper:
     """
     default_provider = D.BackendDefaults()
     cxx_str = default_provider.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(
-        instr_file, compile_time_filter)
+        instr_file)
     return '\"' + cxx_str + '\"'
 
   @classmethod

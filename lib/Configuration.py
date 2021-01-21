@@ -9,12 +9,10 @@ sys.path.append('..')
 import lib.Logging as L
 import lib.Exception as E
 import lib.Utility as U
-
-
 import typing
+from argparse import Namespace
 
-
-class PiraConfigurationErrorException(E.PiraException):
+class PiraConfigErrorException(E.PiraException):
   def __init__(self, m):
     super().__init__(m)
 
@@ -85,7 +83,7 @@ class PiraItem:
     self._run_options = run_opts
 
 
-class PiraConfigurationII:
+class PiraConfigII:
 
   def __init__(self):
     self._directories = {}
@@ -126,7 +124,7 @@ class PiraConfigurationII:
     return self._empty
 
 
-class PiraConfigurationAdapter:
+class PiraConfigAdapter:
 
   def __init__(self, pc2):
     self._pcii = pc2
@@ -197,7 +195,7 @@ class PiraConfigurationAdapter:
     return self._pcii.is_empty()
 
 
-class PiraConfiguration:
+class PiraConfig:
   """
     A configuration for PIRA
 
@@ -360,11 +358,11 @@ class PiraConfiguration:
           self.is_first_iteration[build + item + flavor] = False
 
 
-class TargetConfiguration:
+class TargetConfig:
   """  The TargetConfiguration encapsulates the relevant information for a specific target, i.e., its place and a given flavor. 
   Using TargetConfiguration all steps of building and executing are possible.  """
 
-  def __init__(self, place: str, build: str, target: str, flavor: str, db_item_id: str, compile_time_filter: bool = True, hybrid_filter_iters: int = 0):
+  def __init__(self, place: str, build: str, target: str, flavor: str, db_item_id: str):
     """  Initializes the TargetConfiguration with its necessary parameters.
 
     :place: str: TODO
@@ -378,8 +376,6 @@ class TargetConfiguration:
     self._target: str = target
     self._flavor: str = flavor
     self._db_item_id: str = db_item_id
-    self._compile_time_filtering = compile_time_filter
-    self._hybrid_filter_iters = hybrid_filter_iters
     self._instr_file = ''
     self._args_for_invocation = None
 
@@ -436,16 +432,6 @@ class TargetConfiguration:
   def set_args_for_invocation(self, args) -> None:
     self._args_for_invocation = args
 
-  def is_compile_time_filtering(self) -> bool:
-    """ Returns whether this PIRA instance uses compile-time filtering"""
-    return self._compile_time_filtering
-
-  def get_hybrid_filter_iters(self) -> str:
-    return self._hybrid_filter_iters
-
-  def is_hybrid_filtering(self) -> bool:
-    return not self.get_hybrid_filter_iters() == 0
-
   def set_instr_file(self, instr_file: str) -> None:
     self._instr_file = instr_file
 
@@ -471,7 +457,7 @@ class InstrumentConfig:
     return self._is_instrumentation_run
 
 
-class ExtrapConfiguration:
+class ExtrapConfig:
 
   def __init__(self, dir: str, prefix: str, postfix: str):
     self._dir = dir
@@ -485,24 +471,117 @@ class ExtrapConfiguration:
     return self._prefix
 
 
-class InvocationConfiguration:
+class InvocationConfig:
 
-  def __init__(self, path_to_config: str, pira_dir: str, compile_time_filter: bool, pira_iters: int, num_reps: int, hybrid_filter_iters: int = 0):
-    self._path_to_cfg = path_to_config
-    self._pira_dir = pira_dir
-    self._compile_time_filtering = compile_time_filter
-    self._pira_iters = pira_iters
-    self._num_repetitions = num_reps
-    self._hybrid_filter_iters = hybrid_filter_iters
+  __instance = None
 
-  def get_path_to_cfg(self) -> str:
-    return self._path_to_cfg
+  @staticmethod
+  def get_instance():
+    if InvocationConfig.__instance == None:
+      L.get_logger().log('InvocationConfig::get_instance: InvocationConfig not initialized.', level='error')
+      raise Exception('InvocationConfiguration not initialized!')
+    return InvocationConfig.__instance
+
+  def __init__(self, cmdline_args: Namespace):
+
+    if InvocationConfig.__instance != None:
+      L.get_logger().log('InvocationConfig::__init__: InvocationConfig already initialized!', level='error')
+      raise Exception('re-initializing Singleton')
+
+    else:
+      InvocationConfig.__instance = self
+      self._pira_dir = cmdline_args.pira_dir
+      self._config_version = cmdline_args.config_version
+      self._config_path = cmdline_args.config
+      self._compile_time_filtering = not (cmdline_args.runtime_filter or (cmdline_args.hybrid_filter_iters != 0))
+      self._pira_iters = cmdline_args.iterations
+      self._repetitions = cmdline_args.repetitions
+      self._hybrid_filter_iters = cmdline_args.hybrid_filter_iters
+      self._export = cmdline_args.export
+      self._export_runtime_only = cmdline_args.export_runtime_only
+
+  def __str__(self) -> str:
+    cf_str = 'runtime filtering'
+    if self.is_hybrid_filtering():
+      cf_str = 'hybrid filtering: rebuilding every ' + str(self.get_hybrid_filter_iters()) + ' iterations'
+    if self.is_compile_time_filtering():
+      cf_str = 'compiletime filtering'
+    return 'Running PIRA in ' + cf_str + ' with configuration\n ' + str(self.get_path_to_cfg())
+
+  @staticmethod
+  def reset_to_default() -> None:
+    if InvocationConfig.__instance == None:
+      L.get_logger().log('InvocationConfig::reset_to_default: InvocationConfig not initialized, creating a new instance', level='warn')
+      cmdline_args = Namespace(pira_dir=U.get_default_pira_dir(), config_version=2,
+                               config=U.get_default_config_file(), runtime_filter=False,
+                               hybrid_filter_iters=0, iterations=4, repetitions=5, export=False,
+                               export_runtime_only=False)
+      InvocationConfig(cmdline_args)
+
+    else:
+      instance = InvocationConfig.__instance
+
+      instance._pira_dir = U.get_default_pira_dir()
+      instance._config_version = 2
+      instance._config_path = U.get_default_config_file()
+      instance._compile_time_filtering = True
+      instance._pira_iters = 4
+      instance._repetitions = 3
+      instance._hybrid_filter_iters = 0
+      instance._export = False
+      instance._export_runtime_only = False
+
+  @staticmethod
+  def create_from_kwargs(args: dict) -> None:
+
+    required_args = ['runtime_filter','iterations','repetitions','hybrid_filter_iters','export','export_runtime_only','config_version']
+    for arg in required_args:
+      if args.get(arg) == None or InvocationConfig.__instance == None:
+        InvocationConfig.reset_to_default()
+        L.get_logger().log("Invocation-Config not fully initialized. Assuming one or more default values", level='warn')
+        break
+
+    instance = InvocationConfig.__instance
+
+    if args.get('config') != None:
+      instance._config_path = args['config']
+
+    if args.get('pira_dir') != None:
+      instance._pira_dir = args['pira_dir']
+
+    if args.get('config_version') != None:
+      instance._config_version = args['config_version']
+
+    if args.get('hybrid_filter_iters') != None and args.get('runtime_filter') != None:
+        instance._compile_time_filtering = not (args['runtime_filter'] or (args['hybrid_filter_iters'] != 0))
+
+    if args.get('iterations') != None:
+      instance._pira_iters = args['iterations']
+
+    if args.get('repetitions') != None:
+      instance._repetitions = args['repetitions']
+
+    if args.get('hybrid_filter_iters') != None:
+      instance._hybrid_filter_iters = args['hybrid_filter_iters']
+
+    if args.get('export') != None:
+      instance._export = args['export']
+
+    if args.get('export_runtime_only') != None:
+      instance._export_runtime_only = args['export_runtime_only']
+
 
   def get_pira_dir(self) -> str:
     return self._pira_dir
 
+  def get_config_version(self) -> str:
+    return self._config_version
+
   def is_compile_time_filtering(self) -> bool:
     return self._compile_time_filtering
+
+  def get_path_to_cfg(self) -> str:
+    return self._config_path
 
   def get_hybrid_filter_iters(self) -> int:
     return self._hybrid_filter_iters
@@ -514,9 +593,16 @@ class InvocationConfiguration:
     return self._pira_iters
 
   def get_num_repetitions(self) -> int:
-    return self._num_repetitions
+    return self._repetitions
 
-class CSVConfiguration:
+  def is_export(self) -> bool:
+    return self._export
+
+  def is_export_runtime_only(self) -> bool:
+    return  self._export_runtime_only
+
+
+class CSVConfig:
 
   def __init__(self, csv_dir: str, csv_dialect: str):
     self._csv_dir = csv_dir
@@ -530,3 +616,4 @@ class CSVConfiguration:
 
   def get_csv_dialect(self) -> str:
     return self._csv_dialect
+

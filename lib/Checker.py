@@ -50,14 +50,17 @@ class Checker:
             exception_occured = True
 
       if exception_occured:
-        raise C.PiraConfigurationErrorException(error_message)
+        raise C.PiraConfigErrorException(error_message)
 
   def check_configfile_v2(configuration):
-    if isinstance(configuration, C.PiraConfigurationAdapter):
+    if isinstance(configuration, C.PiraConfigAdapter):
       configuration = configuration.get_adapted()
 
     error_message = "Error in configuration-file:\n\n"
     exception_occured = False
+
+    if(not bool(configuration.get_directories())):
+      raise C.PiraConfigErrorException('Error at Parsing of Pira-config-file, check the syntax!')
 
     # check if directories exist
     for dir in configuration.get_directories():
@@ -100,10 +103,10 @@ class Checker:
               exception_occured = True
 
     if exception_occured:
-      raise C.PiraConfigurationErrorException(error_message)
+      raise C.PiraConfigErrorException(error_message)
 
-  def check_configfile(configuration, version):
-    if version is 1:
+  def check_configfile(configuration):
+    if C.InvocationConfig.get_instance().get_config_version() is 1:
       Checker.check_configfile_v1(configuration)
     else:
       Checker.check_configfile_v2(configuration)
