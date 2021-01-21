@@ -7,7 +7,6 @@ Description: This is PIRA.
 __version__ = '0.2.0'
 
 import argparse
-import os
 import lib.Logging as log
 import lib.Pira as pira
 import lib.Utility as U
@@ -39,8 +38,7 @@ parser.add_argument('--tape', help='Path to tape file to dump.')
 
 # --- Pira modeling options
 group = parser.add_argument_group('Extra-P Options')
-group.add_argument(
-    '--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
+group.add_argument('--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
 group.add_argument('--extrap-prefix', help='The prefix in extra-p naming scheme', type=str)
 
 # CSV Export options

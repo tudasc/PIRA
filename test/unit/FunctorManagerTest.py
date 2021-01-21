@@ -5,17 +5,17 @@ Description: Tests for the argument mapping
 """
 
 import lib.ConfigurationLoader as C
+from lib.Configuration import InvocationConfig
 import lib.FunctorManagement as F
 import lib.Configuration as CO
-
 import unittest
-import typing
-
 
 class TestFunctorManagerConstruction(unittest.TestCase):
   """
   These tests consider the construction and correct return of singleton functor managers
   """
+  def setUp(self):
+    InvocationConfig.create_from_kwargs({'config' : './input/unit_input_001.json'})
 
   def test_construction_from_None(self):
     F.FunctorManager.instance = None
@@ -24,30 +24,30 @@ class TestFunctorManagerConstruction(unittest.TestCase):
 
   def test_construction_from_empty_config(self):
     with self.assertRaises(F.FunctorManagementException):
-      fm = F.FunctorManager(CO.PiraConfiguration())
+      fm = F.FunctorManager(CO.PiraConfig())
 
     with self.assertRaises(F.FunctorManagementException):
-      fm = F.FunctorManager(CO.PiraConfigurationII())
+      fm = F.FunctorManager(CO.PiraConfigII())
 
     with self.assertRaises(F.FunctorManagementException):
-      fm = F.FunctorManager(CO.PiraConfigurationAdapter(CO.PiraConfigurationII()))
+      fm = F.FunctorManager(CO.PiraConfigAdapter(CO.PiraConfigII()))
 
 
   def test_construction_from_config(self):
     cfg_loader = C.ConfigurationLoader()
-    fm = F.FunctorManager(cfg_loader.load_conf('./input/unit_input_001.json'))
+    fm = F.FunctorManager(cfg_loader.load_conf())
     fm.reset()
 
   def test_construction_from_classmethod(self):
     cfg_loader = C.ConfigurationLoader()
-    fm = F.FunctorManager.from_config(cfg_loader.load_conf('./input/unit_input_001.json'))
+    fm = F.FunctorManager.from_config(cfg_loader.load_conf())
     fm.reset()
 
   def test_construction_is_singleton(self):
     F.FunctorManager.instance = None
     self.assertIsNone(F.FunctorManager.instance)
     cfg_loader = C.ConfigurationLoader()
-    fm = F.FunctorManager.from_config(cfg_loader.load_conf('./input/unit_input_001.json'))
+    fm = F.FunctorManager.from_config(cfg_loader.load_conf())
     fm2 = F.FunctorManager()
     self.assertEqual(fm.instance, fm2.instance)
     fm.reset()
@@ -59,6 +59,7 @@ class TestFunctorManager(unittest.TestCase):
   awaited filesystem paths are returned for the different flavors
   """
   def setUp(self):
+    InvocationConfig.create_from_kwargs({'config' : './input/unit_input_001.json'})
     self.build = '/home/something/top_dir'
     self.b_i_01 = '/builder/item01/directory'
     self.ia_i_01 = '/ins_anal/directory/for/functors'
@@ -66,7 +67,7 @@ class TestFunctorManager(unittest.TestCase):
     self.i_01 = 'item01'
     self.flavor = 'vanilla'
     self.cl = C.ConfigurationLoader()
-    self.cfg = self.cl.load_conf('./input/unit_input_001.json')
+    self.cfg = self.cl.load_conf()
     self.fm = F.FunctorManager(self.cfg)
 
   def tearDown(self):
@@ -168,28 +169,36 @@ class FunctorManagerFromConfig(unittest.TestCase):
 
   @unittest.skip('This requires the correct implementation of PiraConfiguration.is_valid()')
   def test_get_invalid_path(self):
-    self.assertRaises(CO.PiraConfigurationErrorException, F.FunctorManager, self.scl.load_conf(self.get_filename(self.cfg003)))
+    InvocationConfig.create_from_kwargs({'config' : self.get_filename(self.cfg003)})
+    self.assertRaises(CO.PiraConfigErrorException, F.FunctorManager, self.scl.load_conf())
 
   def test_get_valid_path(self):
-    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    InvocationConfig.create_from_kwargs({'config': self.get_filename(self.cfg004)})
+    self.fm = F.FunctorManager(self.scl.load_conf())
 
   def test_get_runner_functor(self):
-    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    InvocationConfig.create_from_kwargs({'config': self.get_filename(self.cfg004)})
+    self.fm = F.FunctorManager(self.scl.load_conf())
 
   def test_get_builder_functor(self):
-    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    InvocationConfig.create_from_kwargs({'config': self.get_filename(self.cfg004)})
+    self.fm = F.FunctorManager(self.scl.load_conf())
 
   def test_get_analyzer_functor(self):
-    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    InvocationConfig.create_from_kwargs({'config': self.get_filename(self.cfg004)})
+    self.fm = F.FunctorManager(self.scl.load_conf())
 
   def test_get_builder_command(self):
-    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    InvocationConfig.create_from_kwargs({'config': self.get_filename(self.cfg004)})
+    self.fm = F.FunctorManager(self.scl.load_conf())
 
   def test_get_runner_command(self):
-    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    InvocationConfig.create_from_kwargs({'config': self.get_filename(self.cfg004)})
+    self.fm = F.FunctorManager(self.scl.load_conf())
 
   def test_get_analyzer_command(self):
-    self.fm = F.FunctorManager(self.scl.load_conf(self.get_filename(self.cfg004)))
+    InvocationConfig.create_from_kwargs({'config': self.get_filename(self.cfg004)})
+    self.fm = F.FunctorManager(self.scl.load_conf())
 
 
 if __name__ == "__main__":

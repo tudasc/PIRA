@@ -6,7 +6,7 @@ Description: Module to read the PIRA configuration from file.
 
 import lib.Utility as U
 import lib.Logging as L
-from lib.Configuration import PiraConfiguration, PiraConfigurationII, PiraItem, PiraConfigurationAdapter, PiraConfigurationErrorException
+from lib.Configuration import PiraConfig, PiraConfigII, PiraItem, PiraConfigAdapter, PiraConfigErrorException, InvocationConfig
 from lib.ArgumentMapping import CmdlineCartesianProductArgumentMapper, CmdlineLinearArgumentMapper, ArgumentMapperFactory
 
 import os
@@ -42,7 +42,8 @@ class ConfigurationLoader:
   def __init__(self):
     self.config_cache = {}
 
-  def load_conf(self, config_file: str) -> PiraConfiguration:
+  def load_conf(self) -> PiraConfig:
+    config_file = InvocationConfig.get_instance().get_path_to_cfg()
     if config_file in self.config_cache:
       return self.config_cache[config_file]
 
@@ -53,15 +54,15 @@ class ConfigurationLoader:
       self.config_cache[config_file] = configuration
       return configuration
 
-    except PiraConfigurationErrorException as e:
+    except PiraConfigErrorException as e:
       L.get_logger().log(str(e), level='error')
       sys.exit()
 
     except Exception as e:
       print('Exception occured ' + str(e))
 
-  def construct_from_json(self, json_tree) -> PiraConfiguration:
-    conf = PiraConfiguration()
+  def construct_from_json(self, json_tree) -> PiraConfig:
+    conf = PiraConfig()
     # json_to_canonic can construct lists
     conf.set_build_directories(U.json_to_canonic(json_tree[_DESC][_DIRS]))
     conf.populate_build_dict(conf.directories)
@@ -104,10 +105,11 @@ class ConfigurationLoader:
 class SimplifiedConfigurationLoader:
 
   def __init__(self):
-    self._config = PiraConfigurationII()
+    self._config = PiraConfigII()
     self.base_mapper = None
 
-  def load_conf(self, config_file: str) -> PiraConfiguration:
+  def load_conf(self) -> PiraConfig:
+    config_file = InvocationConfig.get_instance().get_path_to_cfg()
     if not U.is_file(config_file):
       raise RuntimeError('SimplifiedConfigurationLoader::load_conf: Invalid config file location "' + config_file + '" [no such file].')
 
@@ -123,7 +125,7 @@ class SimplifiedConfigurationLoader:
     except Exception as e:
      L.get_logger().log('SimplifiedConfigurationLoader::load_conf: Caught exception "' + str(e))
 
-    return PiraConfigurationAdapter(self._config)
+    return PiraConfigAdapter(self._config)
 
   def is_escaped(self, string: str) -> bool:
     return string.startswith('%')
