@@ -143,8 +143,17 @@ class Analyzer:
 
     # PIRA version 1 runner, i.e., only consider raw runtime of single run
     if pgis_cfg_file is None:
-      L.get_logger().log('Utility::run_analyzer_command: using PIRA 1 Analyzer', level='info')
-      sh_cmd = command + export_str + ' --scorep-out ' + ipcg_file + ' -c ' + cubex_file
+      if InvocCfg.get_instance().is_load_imbalance_detection_enabled():
+        # load imbalance detection mode
+        load_imbalance_detection_cfg_path = InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
+        L.get_logger().log('Utility::run_analyzer_command: using Load Imbalance Detection Analyzer', level='info')
+        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --load-imbalance ' + load_imbalance_detection_cfg_path + ' --export ' + ipcg_file 
+
+      else:
+        # vanilla PIRA version 1 runner
+        L.get_logger().log('Utility::run_analyzer_command: using PIRA 1 Analyzer', level='info')
+        sh_cmd = command + export_str + ' --scorep-out ' + ipcg_file + ' -c ' + cubex_file
+
       L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
       out, _ = U.shell(sh_cmd)
       L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
@@ -161,7 +170,14 @@ class Analyzer:
   @staticmethod
   def run_analyzer_command_no_instr(command: str, analyzer_dir: str, flavor: str, benchmark_name: str) -> None:
     ipcg_file = U.get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
-    sh_cmd = command + ' --scorep-out --static ' + ipcg_file
+    sh_cmd = command + ' --scorep-out --static '
+
+    # load imbalancee detection mode
+    if InvocCfg.get_instance().is_load_imbalance_detection_enabled():
+      sh_cmd = sh_cmd + ' --load-imbalance ' + InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
+
+    sh_cmd = sh_cmd + ' ' + ipcg_file
+
     L.get_logger().log('Utility::run_analyzer_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
     out, _ = U.shell(sh_cmd)
     L.get_logger().log('Utility::run_analyzer_command_noInstr: Output of analyzer:\n' + out, level='debug')
