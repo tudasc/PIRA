@@ -51,6 +51,7 @@ experimental_group = parser.add_argument_group('Experimental Options - experimen
 experimental_group.add_argument('--hybrid-filter-iters', help='Do compiletime-filtering after x iterations', default=0, type=int)
 experimental_group.add_argument('--export', help='Export performance models to IPCG file.', default=False, action='store_true')
 experimental_group.add_argument('--export-runtime-only', help='Export only runtime data used for extra-p modeling', default=False, action='store_true')
+experimental_group.add_argument('--load-imbalance-detection', help='Provide a path to an load imbalance detection configuration file (JSON) to enable load imbalance detection', type=str, default='')
 
 # -- General Info
 parser.add_argument('--version', help='Shows the version of this PIRA installation', action='version', version='%(prog)s ' + __version__)

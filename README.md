@@ -105,6 +105,7 @@ In contrast, with runtime filtering, the compiler inserts instrumentation hooks 
 * ```--hybrid-filter-iters [number]``` Re-compile after [number] iterations, in between use runtime filtering.
 * ```--export``` Attaches the generated Extra-P models and data set sizes into the target's IPCG file.
 * ```--export-runtime-only``` Requires `--export`; Attaches only the median runtime value of all repetitions to the functions. Single data set.
+* ```--load-imbalance [path to cfg file]``` Enables and configures load imbalance detection mode. Please read [this section](#load-imbalance-detection) for more information.
 
 
 #### Whole Program Call Graph
@@ -265,3 +266,19 @@ Currently, no information is passed to all functors
 * ***util***: Reference to a PIRA *Utility* object.
 * ***args***: The arguments passed to the target application as a list, i.e., `[0]` accesses the first argument, `[1]` the second, and so on.
 * ***LD_PRELOAD***: The path to the `.so` file implementing the MPI wrapper functions (crucial for MPI filtering).
+
+### Load imbalance detection
+To enable PIRA's load imbalance detection feature, provide the PIRA invocation with a path to a configuration file using the `--load-imbalance`-parameter. This JSON-file is required to have the following structure:
+
+```{.json}
+{
+    "metricType": "ImbalancePercentage",
+    "imbalanceThreshold": 0.05,
+    "relevanceThreshold": 0.05,
+    "contextStrategy": "None",
+    "contextStepCount": 5,
+    "childRelevanceStrategy": "RelativeToMain",
+    "childConstantThreshold": 1,
+    "childFraction": 0.001
+}
+```

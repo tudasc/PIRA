@@ -500,6 +500,12 @@ class InvocationConfig:
       self._export = cmdline_args.export
       self._export_runtime_only = cmdline_args.export_runtime_only
 
+      # check whether load imbalance detection is enabled
+      if cmdline_args.load_imbalance_detection == '':
+        self._load_imbalance_detection_cfg_path = None
+      else:
+        self._load_imbalance_detection_cfg_path = cmdline_args.load_imbalance_detection
+
   def __str__(self) -> str:
     cf_str = 'runtime filtering'
     if self.is_hybrid_filtering():
@@ -515,7 +521,7 @@ class InvocationConfig:
       cmdline_args = Namespace(pira_dir=U.get_default_pira_dir(), config_version=2,
                                config=U.get_default_config_file(), runtime_filter=False,
                                hybrid_filter_iters=0, iterations=4, repetitions=5, export=False,
-                               export_runtime_only=False)
+                               export_runtime_only=False, load_imbalance_detection='')
       InvocationConfig(cmdline_args)
 
     else:
@@ -530,6 +536,7 @@ class InvocationConfig:
       instance._hybrid_filter_iters = 0
       instance._export = False
       instance._export_runtime_only = False
+      instance._load_imbalance_detection_cfg_path = None
 
   @staticmethod
   def create_from_kwargs(args: dict) -> None:
@@ -600,6 +607,12 @@ class InvocationConfig:
 
   def is_export_runtime_only(self) -> bool:
     return  self._export_runtime_only
+
+  def is_load_imbalance_detection_enabled(self) -> bool:
+    return self._load_imbalance_detection_cfg_path is not None
+
+  def get_load_imbalance_detection_cfg_path(self) -> str:
+    return self._load_imbalance_detection_cfg_path
 
 
 class CSVConfig:
