@@ -12,6 +12,7 @@ from lib.Exception import PiraException
 
 import typing
 import os
+import re
 
 class MeasurementSystemException(PiraException):
   """  This exception is thrown if problems in the runtime occur.  """
@@ -309,10 +310,21 @@ class ScorepSystemHelper:
     file_content.append('MPI_Init')
     file_content.append('MPI_Finalize')
     for l in file_content:
-      if l.find('MPI_') > -1:
-        L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: Remove ' + l)
+      # Match MPI functions which have been marked for instrumentation
+      # Example: (MPI_Barrier is representative for all MPI functions here)
+      #   MPI_Barrier                             => match to 'MPI_Barrier'
+      #   SomeFunction                            => no match
+      #   INCLUDE MPI_Barrier                     => match to 'MPI_Barrier'
+      #   INCLUDE SomeFunction                    => no match
+      #   INCLUDE SomeFunction -> MPI_Barrier     => match to 'MPI_Barrier'
+      #   INCLUDE MPI_Barrier -> SomeFunction     => no match
+      match_object = re.match(r'^.*(MPI_\S+)\s*?$', l)
+      if match_object:
+        mpi_func_name = match_object.group(1)
+        L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: Remove ' + mpi_func_name)
         # prevent double removal
-        if l in all_MPI_functions: all_MPI_functions.remove(l)
+        if mpi_func_name in all_MPI_functions:
+          all_MPI_functions.remove(mpi_func_name)
 
     # Generate the .c file using the mpi wrap.py script
     L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: About to filter ' + str(len(all_MPI_functions)) + ' MPI functions')
