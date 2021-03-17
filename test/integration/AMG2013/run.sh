@@ -33,11 +33,11 @@ which wrap.py
 mkdir $PWD/../../../extern/install/pgis/bin/out
 
 # Download the target application
-stat amg20130624.tgz
+stat amg2013_0.tgz
 if [ $? -ne 0 ]; then
-  wget https://computing.llnl.gov/projects/co-design/download/amg2013.tgz
+  wget https://asc.llnl.gov/sites/asc/files/2021-01/amg2013_0.tgz
 fi
-tar xzf amg2013.tgz
+tar xzf amg2013_0.tgz
 cd AMG2013
 
 # XXX The clang version we use is built w/o OMP support, therefore, remove OMP flags
