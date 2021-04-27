@@ -193,7 +193,7 @@ fi
 echo "[PIRA] Getting json library"
 cd $extsourcedir
 if [ ! -d "$extsourcedir/json" ]; then
-    git clone -b v3.7.3 --single-branch https://github.com/nlohmann/json json >${allOutputTo} 2>&1 
+    git clone -b v3.9.1 --depth 1 --single-branch https://github.com/nlohmann/json json >${allOutputTo} 2>&1 
 fi
 
 echo "[PIRA] Building PGIS analysis engine"
@@ -202,8 +202,8 @@ cd $extsourcedir/metacg
 # TODO Remove when merged
 stat .git >${allOutputTo} 2>&1 
 if [ $? -eq 0 ]; then
-	git checkout master
-	git pull
+	git fetch
+	git checkout v0.2.0
 fi
 
 cd $extsourcedir/metacg/pgis
