@@ -3,15 +3,14 @@ File: MeasurementTest.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Tests for the argument mapping
 """
-
+import shutil
+import os
 import unittest
-import typing
-
 import lib.Measurement as M
 import lib.ConfigurationLoader as C
 import lib.DefaultFlags as D
-from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
-
+from lib.Configuration import PiraConfig, TargetConfig, InstrumentConfig, InvocationConfig
+import lib.Utility as U
 
 class TestRunResult(unittest.TestCase):
   """
@@ -57,13 +56,38 @@ class TestScorepHelper(unittest.TestCase):
   TODO Separate the building portion of Score-P and the measurement system part.
   """
   def setUp(self):
+    # get runtime folder
+    pira_dir = U.get_default_pira_dir()
+    self.cubes_dir = os.path.join(pira_dir, 'test_cubes')
+    # insert user runtime folder into test config
+    data = None
+    with open('input/unit_input_004.json', 'r') as file:
+      data = file.read()
+    data = data.replace('/tmp/where/cube/files/are', self.cubes_dir)
+    with open('input/unit_input_004.json', 'w') as file:
+      file.write(data)
+
+    InvocationConfig.create_from_kwargs({'config' : 'input/unit_input_004.json'})
     self.cfg_loader = C.ConfigurationLoader()
-    self.cfg = self.cfg_loader.load_conf('input/unit_input_004.json')
-    self.target_cfg = TargetConfiguration('/this/is/top_dir', '/this/is/top_dir', 'item01', 'item01-flavor01', '')
+    self.cfg = self.cfg_loader.load_conf()
+    self.target_cfg = TargetConfig('/this/is/top_dir', '/this/is/top_dir', 'item01', 'item01-flavor01', '')
     self.instr_cfg = InstrumentConfig(True, 0)
 
+
+
+  def tearDown(self):
+    # reset test config
+    data = None
+    with open('input/unit_input_004.json', 'r') as file:
+      data = file.read()
+    data = data.replace(self.cubes_dir, '/tmp/where/cube/files/are')
+    with open('input/unit_input_004.json', 'w') as file:
+      file.write(data)
+    shutil.rmtree(self.cubes_dir, ignore_errors=True)
+
+
   def test_scorep_mh_init(self):
-    s_mh = M.ScorepSystemHelper(PiraConfiguration())
+    s_mh = M.ScorepSystemHelper(PiraConfig())
     self.assertIn('.cubex', s_mh.known_files)
     self.assertDictEqual(s_mh.data, {})
     self.assertEqual('False', s_mh.cur_overwrite_exp_dir)
@@ -74,18 +98,18 @@ class TestScorepHelper(unittest.TestCase):
 
   def test_scorep_mh_set_up_instr(self):
     s_mh = M.ScorepSystemHelper(self.cfg)
-    s_mh.set_up(self.target_cfg, self.instr_cfg, True)
+    s_mh.set_up(self.target_cfg, self.instr_cfg)
 
     self.assertIn('cube_dir', s_mh.data)
     self.assertEqual('500M', s_mh.cur_mem_size)
     self.assertEqual('True', s_mh.cur_overwrite_exp_dir)
     self.assertEqual('item01-flavor01-item01', s_mh.cur_base_name)
-    self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
+    self.assertEqual(self.cubes_dir + '/item01-item01-flavor01-0', s_mh.cur_exp_directory)
 
   def test_scorep_mh_set_up_no_instr(self):
     s_mh = M.ScorepSystemHelper(self.cfg)
     self.instr_cfg._is_instrumentation_run = False
-    s_mh.set_up(self.target_cfg, self.instr_cfg, True)
+    s_mh.set_up(self.target_cfg, self.instr_cfg)
 
     self.assertDictEqual({}, s_mh.data)
     self.assertEqual('', s_mh.cur_mem_size)
@@ -95,26 +119,26 @@ class TestScorepHelper(unittest.TestCase):
 
   def test_scorep_mh_dir_invalid(self):
     s_mh = M.ScorepSystemHelper(self.cfg)
-    s_mh.set_up(self.target_cfg, self.instr_cfg, True)
+    s_mh.set_up(self.target_cfg, self.instr_cfg)
 
-    self.assertEqual('/tmp/where/cube/files/are/item01-item01-flavor01-0', s_mh.cur_exp_directory)
+    self.assertEqual(self.cubes_dir + '/item01-item01-flavor01-0', s_mh.cur_exp_directory)
     self.assertRaises(M.MeasurementSystemException, s_mh.set_exp_dir, '+/invalid/path/haha', 'item01-flavor01', 0)
     self.assertRaises(M.MeasurementSystemException, s_mh.set_exp_dir, '/inv?alid/path/haha', 'item01-flavor01', 0)
 
   def test_get_instr_file_flags(self):
     s_mh = M.ScorepSystemHelper(self.cfg)
-    s_mh.set_up(self.target_cfg, self.instr_cfg, True)
+    s_mh.set_up(self.target_cfg, self.instr_cfg)
     instr_file = 'myFile.filt'
     ct_filter = True
 
-    cc = M.ScorepSystemHelper.get_scorep_compliant_CC_command(instr_file, ct_filter)
+    cc = M.ScorepSystemHelper.get_scorep_compliant_CC_command(instr_file)
     self.assertEqual('\"clang -finstrument-functions -finstrument-functions-whitelist-inputfile='+instr_file+'\"', cc)
-    cpp = M.ScorepSystemHelper.get_scorep_compliant_CXX_command(instr_file, ct_filter)
+    cpp = M.ScorepSystemHelper.get_scorep_compliant_CXX_command(instr_file)
     self.assertEqual('\"clang++ -finstrument-functions -finstrument-functions-whitelist-inputfile='+instr_file+'\"', cpp)
 
   def test_get_no_instr_file_flags(self):
     s_mh = M.ScorepSystemHelper(self.cfg)
-    s_mh.set_up(self.target_cfg, self.instr_cfg, False)
+    s_mh.set_up(self.target_cfg, self.instr_cfg)
     instr_file = 'myFile.filt'
     ct_filter = False
 

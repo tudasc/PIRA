@@ -8,7 +8,7 @@
                         "mapper": "Linear",
 												"size": [150]
                     },
-                    "cubes": "/tmp/pira",
+                    "cubes": "CUBES_FOLDER",
                     "flavors": [
                         "ct"
                     ],

@@ -8,7 +8,7 @@ import lib.Utility as U
 import lib.Logging as L
 import lib.FunctorManagement as F
 import lib.DefaultFlags as D
-from lib.Configuration import TargetConfiguration
+from lib.Configuration import TargetConfig, InvocationConfig
 from lib.Measurement import ScorepSystemHelper
 from lib.Exception import PiraException
 
@@ -26,7 +26,7 @@ class Builder:
   Class which builds the benchmark executable, given a TargetConfiguration
   """
 
-  def __init__(self, target_config: TargetConfiguration, instrument: bool, instr_file: str = None) -> None:
+  def __init__(self, target_config: TargetConfig, instrument: bool, instr_file: str = None) -> None:
     if target_config is None:
       raise BuilderException('Builder::ctor: Target Configuration was None')
 
@@ -35,7 +35,6 @@ class Builder:
     self.old_cwd = ''
     self.build_instr = instrument
     self.instrumentation_file = instr_file
-    self._compile_time_filtering = target_config.is_compile_time_filtering()
     self.error = None
 
   def build(self) -> None:
@@ -71,10 +70,8 @@ class Builder:
     if not self.build_instr:
       raise BuilderException('Should not construct instrument kwargs in non-instrumentation mode.')
 
-    pira_cc = ScorepSystemHelper.get_scorep_compliant_CC_command(self.instrumentation_file,
-                                                                 self._compile_time_filtering)
-    pira_cxx = ScorepSystemHelper.get_scorep_compliant_CXX_command(self.instrumentation_file,
-                                                                   self._compile_time_filtering)
+    pira_cc = ScorepSystemHelper.get_scorep_compliant_CC_command(self.instrumentation_file)
+    pira_cxx = ScorepSystemHelper.get_scorep_compliant_CXX_command(self.instrumentation_file)
     pira_clflags = ScorepSystemHelper.get_scorep_needed_libs_c()
     pira_cxxlflags = ScorepSystemHelper.get_scorep_needed_libs_cxx()
     default_provider = D.BackendDefaults()
@@ -130,7 +127,7 @@ class Builder:
       except Exception as e:
         raise BuilderException('Precheck failed.\n' + str(e))
 
-      if not self.target_config.is_compile_time_filtering():
+      if not InvocationConfig.get_instance().is_compile_time_filtering():
         L.get_logger().log('Builder::build_flavors: Runtime filtering enabled.')
         self.target_config.set_instr_file(self.instrumentation_file)
 

@@ -10,6 +10,7 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && apt-g
 
 RUN ln -s /usr/bin/clang-10 /usr/bin/clang && ln -s /usr/bin/clang++-10 /usr/bin/clang++
 
-RUN git clone https://github.com/tudasc/pira
+RUN mkdir pira
+COPY . /usr/src/pira
 RUN cd pira && git submodule update --init && cd resources && ./build_submodules.sh 2 --with-mpi=openmpi
 RUN cd pira && sed -i "1s/.*/#!\/usr\/bin\/env python3/" ./extern/install/mpiwrap/wrap.py

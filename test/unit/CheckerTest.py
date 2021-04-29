@@ -3,14 +3,13 @@ File: CheckerTest.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Tests for the Checker-module
 """
-import sys
-sys.path.insert(1,'../../')
+
 import unittest
 import lib.Utility as U
 import lib.Logging as L
 import lib.Checker as C
 import lib.ConfigurationLoader as CL
-from lib.Configuration import PiraConfiguration, PiraConfigurationErrorException, PiraConfigurationII, PiraItem, PiraConfigurationAdapter
+from lib.Configuration import PiraConfig, PiraConfigErrorException, PiraConfigII, PiraItem, PiraConfigAdapter, InvocationConfig
 
 
 functor_files = [
@@ -53,7 +52,7 @@ class CheckerTestCase(unittest.TestCase):
 
   @classmethod
   def setUp(self):
-    self.config_v1= PiraConfiguration()
+    self.config_v1= PiraConfig()
     self.config_v1.set_build_directories([tempdir + '/home/pira/build_dir'])
     self.config_v1.populate_build_dict(self.config_v1.directories)
     self.config_v1.set_items(['item1', 'item2'], self.config_v1.directories[0])
@@ -66,7 +65,7 @@ class CheckerTestCase(unittest.TestCase):
         self.config_v1.set_item_args([], build_dir, item)
         self.config_v1.set_item_runner("/" + item + "/runner/functors.dir", build_dir, item)
 
-    self.config_v2 = PiraConfigurationII()
+    self.config_v2 = PiraConfigII()
 
     pira_item1 = PiraItem("item1")
     pira_item1.set_analyzer_dir(tempdir + "/home/pira/build_dir/item1/analyzer")
@@ -84,8 +83,10 @@ class CheckerTestCase(unittest.TestCase):
     pira_item2.set_mode("CT")
     self.config_v2.add_item(tempdir + "/home/pira/build_dir/item2/",pira_item2)
 
-    self.config_adapter = PiraConfigurationAdapter(self.config_v2)
+    self.config_adapter = PiraConfigAdapter(self.config_v2)
     self.create_tempfiles(self)
+
+    InvocationConfig.create_from_kwargs({'config' : '../inputs/configs/basic_config_005.json'})
 
 
 
@@ -104,22 +105,25 @@ class CheckerTestCase(unittest.TestCase):
     U.remove_dir(tempdir + "/home/pira/")
 
   def test_checker_v1_valid_config(self):
+    InvocationConfig.create_from_kwargs({'config' : 'test/gol_config.json', 'config_version' : 1})
     C.Checker.check_configfile_v1(self.config_v1)
 
   def test_checker_v1_general_valid_config(self):
-    C.Checker.check_configfile(self.config_v1,1)
+    InvocationConfig.create_from_kwargs({'config' : 'test/gol_config.json', 'config_version' : 1})
+    C.Checker.check_configfile(self.config_v1)
 
   def test_checker_v1_dirs_missing(self):
+    InvocationConfig.create_from_kwargs({'config' : 'test/gol_config.json', 'config_version' : 1})
     for directory in directories_to_create:
       U.remove_dir(tempdir + directory)
-      with self.assertRaises(PiraConfigurationErrorException): C.Checker.check_configfile_v1(self.config_v1)
+      with self.assertRaises(PiraConfigErrorException): C.Checker.check_configfile_v1(self.config_v1)
       self.create_tempfiles()
 
   def test_checker_v2_valid_config(self):
     C.Checker.check_configfile_v2(self.config_v2)
 
   def test_checker_v2_general_valid_config(self):
-    C.Checker.check_configfile(self.config_v2,2)
+    C.Checker.check_configfile(self.config_v2)
 
   def test_checker_v2_adapter_valid_config(self):
     C.Checker.check_configfile_v2(self.config_adapter)
@@ -127,18 +131,18 @@ class CheckerTestCase(unittest.TestCase):
   def test_checker_v2_functors_missing(self):
     for file in functor_files:
       U.remove_file(tempdir + file)
-      with self.assertRaises(PiraConfigurationErrorException): C.Checker.check_configfile_v2(self.config_v2)
+      with self.assertRaises(PiraConfigErrorException): C.Checker.check_configfile_v2(self.config_v2)
       self.create_tempfiles()
 
   def test_checker_v2_dirs_missing(self):
     for directory in directories_to_create:
       U.remove_dir(tempdir + directory)
-      with self.assertRaises(PiraConfigurationErrorException): C.Checker.check_configfile_v2(self.config_v2)
+      with self.assertRaises(PiraConfigErrorException): C.Checker.check_configfile_v2(self.config_v2)
       self.create_tempfiles()
 
   def test_check_basic_config_005(self):
     cl = CL.SimplifiedConfigurationLoader()
-    cfg = cl.load_conf('../inputs/configs/basic_config_005.json')
+    cfg = cl.load_conf()
     C.Checker.check_configfile_v2(cfg)
 
 

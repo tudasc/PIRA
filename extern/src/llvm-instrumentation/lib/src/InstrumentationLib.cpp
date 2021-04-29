@@ -190,9 +190,6 @@ struct FilteringEntryExitInstrumenter : public FunctionPass {
   static char ID;
   FilteringEntryExitInstrumenter() : FunctionPass(ID) {
     // initializeEntryExitInstrumenterPass(*PassRegistry::getPassRegistry());
-    if (WhitelistFile.empty() && ConfigFileScoreP.empty()) {
-      report_fatal_error(Twine("No instrumentation configuration in plugin"));
-    }
     if (!WhitelistFile.empty()) {
       if (!sys::fs::exists(WhitelistFile.c_str())) {
         std::cerr << "[LLVMInstrumentor] [Error]: Filter file (" << WhitelistFile.c_str() << ") does not exist."
@@ -336,8 +333,6 @@ struct FilteringEntryExitInstrumenter : public FunctionPass {
           exit(-1);
         }
       }
-    } else {
-      std::cerr << "[LLVMInstrumentor] [Warning]: Scorep-P file empty" << std::endl;
     }
   }
   void getAnalysisUsage(AnalysisUsage &AU) const override { AU.addPreserved<GlobalsAAWrapperPass>(); }

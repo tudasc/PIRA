@@ -1,14 +1,14 @@
 {
     "builds": {
-        "%gol": {
+        "%imbalance": {
             "items": {
-                "gol": {
+                "imbalance": {
                     "analyzer": "../../../extern/install/pgis/bin/",
                     "argmap": {
                         "mapper": "Linear",
-												"size": [50, 80, 110, 150, 300, 500]
+			"size": [100]
                     },
-                    "cubes": "/home/j_lehr/.local/share/pira/gol_cubes",
+                    "cubes": "/tmp/pira_imbalance",
                     "flavors": [
                         "ct"
                     ],
@@ -19,7 +19,7 @@
         }
     },
     "directories": {
-        "gol": "./gol/serial_non_template"
+        "imbalance": "./imbalance"
     },
     "glob-flavors": [],
     "glob-submitter": {}

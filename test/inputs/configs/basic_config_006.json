@@ -1,0 +1,22 @@
+{
+  "builds":{
+		"%base": {
+			"items": {
+				"test_item": {
+					"analyzer": "$PIRA_TEST_ENV_VAR_ANALYZER",
+					"cubes": "$PIRA_TEST_ENV_VAR_CUBES",
+					"flavors": [ "ct" ],
+					"functors": "$PIRA_TEST_ENV_VAR_FUNCTORS",
+					"mode": "ct",
+					"argmap": {
+						"mapper": "Linear",
+						"p1": [ "1" ]
+					}
+				}
+			}
+		}
+	},
+	"directories": {
+		"base": "$PIRA_TEST_ENV_VAR_BASE"
+	}
+}

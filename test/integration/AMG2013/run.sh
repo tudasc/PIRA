@@ -33,11 +33,11 @@ which wrap.py
 mkdir $PWD/../../../extern/install/pgis/bin/out
 
 # Download the target application
-stat amg20130624.tgz
+stat amg2013_0.tgz
 if [ $? -ne 0 ]; then
-  wget https://computing.llnl.gov/projects/co-design/download/amg2013.tgz
+  wget https://asc.llnl.gov/sites/asc/files/2021-01/amg2013_0.tgz
 fi
-tar xzf amg2013.tgz
+tar xzf amg2013_0.tgz
 cd AMG2013
 
 # XXX The clang version we use is built w/o OMP support, therefore, remove OMP flags
@@ -64,12 +64,22 @@ cd ..
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg_config.json
+# use runtime folder for extrap files
+if [[ -z "${XDG_DATA_HOME}" ]]; then
+  pira_dir=$HOME/.local/share/pira
+else
+  pira_dir=$XDG_DATA_HOME/pira
+fi
+echo -e "Using ${pira_dir} for runtime files\n"
+
+sed -i "s|CUBES_FOLDER|${pira_dir}/amg_cubes|g" $testDir/amg_config.json
+
+python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg_config.json
 
 pirafailed=$?
 
-rm -rf /tmp/piraII
-rm -r /tmp/pira-*
+rm -rf ${pira_dir}/piraII
+rm -rf ${pira_dir}/amg_cubes-*
 cd $testDir
 rm -rf AMG2013
 
