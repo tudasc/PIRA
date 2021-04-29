@@ -68,10 +68,10 @@ cd resources
 ./build_submodules.sh <ncores>
 ```
 
-### PIRA Docker
+#### PIRA Docker
 
-We provide a (early work) `Dockerfile` to build PIRA to try it out.
-When running inside the container, e.g., the integration tests, please invoke the scripts as follows
+We also provide a (early work) `Dockerfile` to build PIRA and try it.
+When running inside the container, e.g., the integration tests, please invoke the scripts as follows.
 
 ```{.sh}
 cd resources
