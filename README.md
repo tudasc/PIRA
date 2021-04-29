@@ -71,6 +71,16 @@ cd resources
 ### PIRA Docker
 
 We provide a (early work) `Dockerfile` to build PIRA to try it out.
+When running inside the container, e.g., the integration tests, please invoke the scripts as follows
+
+```{.sh}
+cd resources
+. setup_paths.sh
+cd ../test/integration/GameOfLife # Example test case
+# By default PIRA will look into $HOME/.local, which is not currently existent in the docker
+# XDG_DATA_HOME signals where to put the profiling data PIRA generates
+XDG_DATA_HOME=/tmp ./run.sh 
+```
 
 ### Using PIRA
 
