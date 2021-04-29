@@ -200,11 +200,11 @@ echo "[PIRA] Building PGIS analysis engine"
 cd $extsourcedir/metacg
 
 # TODO Remove when merged
-stat .git >${allOutputTo} 2>&1 
-if [ $? -eq 0 ]; then
-	git fetch
-	git checkout v0.2.0
-fi
+#stat .git >${allOutputTo} 2>&1 
+#if [ $? -eq 0 ]; then
+#	git fetch
+#	git checkout v0.2.0
+#fi
 
 cd $extsourcedir/metacg/pgis
 
@@ -226,7 +226,9 @@ if [ $? -ne 0 ]; then
     exit 1
   fi
   make install >${allOutputTo} 2>&1 
-	mkdir $extinstalldir/pgis/bin/out >${allOutputTo} 2>&1
+  if [ ! -d ${extinstalldir}/pgis/bin/out ]; then
+    mkdir ${extinstalldir}/pgis/bin/out >${allOutputTo} 2>&1
+  fi
 else
   echo "[PIRA] PGIS already built"
 fi
@@ -262,6 +264,7 @@ cd $extsourcedir
 
 check_directory_or_file_exists $extsourcedir/mpiwrap
 if [ $? -ne 0 ]; then
+  echo "[PIRA] installing mpiwrap"
   rm -r mpiwrap >${allOutputTo} 2>&1
   mkdir mpiwrap && cd mpiwrap
   wget https://github.com/LLNL/wrap/archive/master.zip >${allOutputTo} 2>&1
@@ -272,5 +275,31 @@ if [ $? -ne 0 ]; then
 else
   echo "[PIRA] mpiwrap already installed"
 fi
+
+
+cd $extsourcedir
+check_directory_or_file_exists $extsourcedir/bear
+if [ $? -ne 0 ]; then
+	echo "[PIRA] Installing bear"
+	rm -rf bear >${allOutputTo} 2>&1
+	mkdir bear && cd bear
+  if [ ! -f 2.4.2.tar.gz ]; then
+	  echo "[PIRA] Downloading bear release 2.4.2"
+    wget https://github.com/rizsotto/Bear/archive/2.4.2.tar.gz >${allOutputTo} 2>&1
+    tar xzf 2.4.2.tar.gz >${allOutputTo} 2>&1
+    mv Bear-2.4.2 bear >${allOutputTo} 2>&1
+    cd bear >${allOutputTo} 2>&1
+    mkdir build && cd build >${allOutputTo} 2>&1
+    cmake -DCMAKE_INSTALL_PREFIX=${extinstalldir}/bear .. >${allOutputTo} 2>&1
+    make all >${allOutputTo} 2>&1
+    make install >${allOutputTo} 2>&1
+    cd ..
+  else
+    cd bear
+  fi
+else
+	echo "[PIRA] Bear already installed"
+fi
+
 
 cd $scriptdir

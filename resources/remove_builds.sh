@@ -57,3 +57,12 @@ if [ -z "$1" ] || [ "pgis" == "$1" ]; then
   remove_if_exists $extsourcedir/metacg/pgis/build
 fi
 
+if [ -z "$1" ] || [ "bear" == "$1" ]; then
+	echo "Testing bear"
+	remove_if_exists $extsourcedir/bear
+fi
+
+if [ -z "$1" ] || [ "mpiwrap" == "$1" ]; then
+	echo "Testing mpiwrap"
+	remove_if_exists $extsourcedir/mpiwrap
+fi

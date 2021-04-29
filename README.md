@@ -35,6 +35,18 @@ In contrast, in runtime filtering, the compiler inserts instrumentation hooks in
 ### Requirements
 
 PIRA requires CMake (>=3.5), Clang/LLVM 10, Python 3, Qt5 and OpenMPI 4.
+It will further download (and build)
+
+- [MetaCG](https://github.com/tudasc/MetaCG)
+- [Modified Score-P 6.0](https://github.com/jplehr/score-p-v6)
+- [Extra-P (version 3.0)](https://www.scalasca.org/software/extra-p/download.html)
+- [LLNL's wrap](https://github.com/LLNL/wrap)
+- [bear (version 2.4.2)](https://github.com/rizsotto/Bear)
+- [cxxopts (version 2.1)](https://github.com/jarro2783/cxxopts)
+- [nlohmann json (version 3.9.1)](https://github.com/nlohmann/json)
+
+If you want to build PIRA in an environment without internet access, please see the `resources/build_submodules.sh` script, and adjust it to your needs.
+Making this process easier and more configurable is work-in-progress.
 
 ### Obtaining PIRA
 
@@ -175,8 +187,8 @@ An item in PIRA is a target application, built in a specific way, which is the r
 ##### Analyzer
 
 Every item specifies which *analyzer* should be used.
-The default is the analyzer that ships with PIRA, and which can be found in `./extern/src/metacg/pgis`.
-The particular analyzer is responsible for steering the instrumentation refinement, and is, therefore, an essential part of the PIRA framework.
+The **default** analyzer ships with PIRA, and the sources can be found in `./extern/src/metacg/pgis` or the installation in `./extern/install/pgis/bin`, respectively.
+The analyzer is responsible for steering the instrumentation refinement, and is, therefore, an essential part of the PIRA framework.
 
 ##### Argmap
 

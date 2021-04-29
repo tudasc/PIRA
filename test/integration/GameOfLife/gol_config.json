@@ -8,7 +8,7 @@
                         "mapper": "Linear",
 												"size": [50, 80, 110, 150, 300, 500]
                     },
-                    "cubes": "CUBES_FOLDER",
+                    "cubes": "/home/j_lehr/.local/share/pira/gol_cubes",
                     "flavors": [
                         "ct"
                     ],
