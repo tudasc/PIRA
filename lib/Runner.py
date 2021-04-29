@@ -13,7 +13,7 @@ import lib.FunctorManagement as F
 import lib.Measurement as M
 import lib.DefaultFlags as D
 import lib.ProfileSink as S
-from lib.Configuration import PiraConfiguration, TargetConfiguration, InstrumentConfig
+from lib.Configuration import PiraConfig, TargetConfig, InstrumentConfig, InvocationConfig
 
 import typing
 
@@ -27,7 +27,7 @@ class LocalBaseRunner(Runner):
   The base class for execution on the same machine. It implements the basic *run* method, which invokes the target.
   """
 
-  def __init__(self, configuration: PiraConfiguration, sink):
+  def __init__(self, configuration: PiraConfig, sink):
     """ Runner are initialized once with a PiraConfiguration """
     self._config = configuration
     self._sink = sink
@@ -43,8 +43,7 @@ class LocalBaseRunner(Runner):
   def get_sink(self):
     return self._sink
 
-  def run(self, target_config: TargetConfiguration, instrument_config: InstrumentConfig,
-          compile_time_filtering: bool) -> float:
+  def run(self, target_config: TargetConfig, instrument_config: InstrumentConfig, ) -> float:
     """ Implements the actual invocation """
     functor_manager = F.FunctorManager()
     run_functor = functor_manager.get_or_load_functor(target_config.get_build(), target_config.get_target(),
@@ -87,12 +86,12 @@ class LocalRunner(LocalBaseRunner):
   For scalability studies, i.e., iterate over all given input sizes, use the LocalScalingRunner.
   """
 
-  def __init__(self, configuration: PiraConfiguration, sink, num_repetitions: int = 2):
+  def __init__(self, configuration: PiraConfig, sink):
     """ Runner are initialized once with a PiraConfiguration """
     super().__init__(configuration, sink)
-    self._num_repetitions = num_repetitions
+    self._num_repetitions = InvocationConfig.get_instance().get_num_repetitions()
 
-  def do_baseline_run(self, target_config: TargetConfiguration) -> M.RunResult:
+  def do_baseline_run(self, target_config: TargetConfig) -> M.RunResult:
     L.get_logger().log('LocalRunner::do_baseline_run')
     accu_runtime = .0
 
@@ -100,14 +99,14 @@ class LocalRunner(LocalBaseRunner):
       L.get_logger().log('LocalRunner::do_baseline_run: BEGIN not target_config.has_args_for_invocation()')
       # This runner only takes into account the first argument string (if not already set)
       args = self._config.get_args(target_config.get_build(), target_config.get_target())
-      L.get_logger().log('LocalRunner::do_baseline_run: args: ' + str(args) )
+      L.get_logger().log('LocalRunner::do_baseline_run: args: ' + str(args))
       target_config.set_args_for_invocation(args[0])
       L.get_logger().log('LocalRunner::do_baseline_run: END not target_config.has_args_for_invocation()')
 
     # TODO Better evaluation of the obtained timings.
     for y in range(0, self._num_repetitions):
       L.get_logger().log('LocalRunner::do_baseline_run: Running iteration ' + str(y), level='debug')
-      accu_runtime += self.run(target_config, InstrumentConfig(), True)
+      accu_runtime += self.run(target_config, InstrumentConfig())
 
     run_result = M.RunResult(accu_runtime, self._num_repetitions)
     L.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n', level='perf')
@@ -115,14 +114,13 @@ class LocalRunner(LocalBaseRunner):
     return run_result
 
   def do_profile_run(self,
-                     target_config: TargetConfiguration,
-                     instr_iteration: int,
-                     compile_time_filtering: bool = True) -> M.RunResult:
+                     target_config: TargetConfig,
+                     instr_iteration: int) -> M.RunResult:
     L.get_logger().log(
         'LocalRunner::do_profile_run: Received instrumentation file: ' + target_config.get_instr_file(), level='debug')
     scorep_helper = M.ScorepSystemHelper(self._config)
     instrument_config = InstrumentConfig(True, instr_iteration)
-    scorep_helper.set_up(target_config, instrument_config, compile_time_filtering)
+    scorep_helper.set_up(target_config, instrument_config)
     runtime = .0
 
     if not target_config.has_args_for_invocation():
@@ -132,7 +130,7 @@ class LocalRunner(LocalBaseRunner):
 
     for y in range(0, self._num_repetitions):
       L.get_logger().log('LocalRunner::do_profile_run: Running instrumentation iteration ' + str(y), level='debug')
-      runtime = runtime + self.run(target_config, instrument_config, compile_time_filtering)
+      runtime = runtime + self.run(target_config, instrument_config)
       # Enable further processing of the resulting profile
       self._sink.process(scorep_helper.get_exp_dir(), target_config, instrument_config)
 
@@ -149,16 +147,12 @@ class LocalScalingRunner(LocalRunner):
   the first string is the smallest input configuration, the second is the next larger configuration, etc.
   """
 
-  def __init__(self, configuration: PiraConfiguration, sink, num_repetitions: int = 5):
-    if num_repetitions < 0:
-      L.get_logger().log('REMEMBER TO REMOVE IN LocalScalingRunner::__init__', level='warn')
-      raise RuntimeError('At least 3 repetitions are required for Extra-P modelling.')
-    super().__init__(configuration, sink, num_repetitions)
+  def __init__(self, configuration: PiraConfig, sink):
+    super().__init__(configuration, sink)
 
   def do_profile_run(self,
-                     target_config: TargetConfiguration,
-                     instr_iteration: int,
-                     compile_time_filtering: bool = True) -> M.RunResult:
+                     target_config: TargetConfig,
+                     instr_iteration: int) -> M.RunResult:
     L.get_logger().log('LocalScalingRunner::do_profile_run')
     # We run as many experiments as we have input data configs
     # TODO: How to handle the model parameter <-> input parameter relation, do we care?
@@ -168,14 +162,14 @@ class LocalScalingRunner(LocalRunner):
     for arg_cfg in args:
       # Call the runner method with the correct arguments.
       target_config.set_args_for_invocation(arg_cfg)
-      rr = super().do_profile_run(target_config, instr_iteration, compile_time_filtering)
+      rr = super().do_profile_run(target_config, instr_iteration)
       run_result.add_from(rr)
 
     # At this point we have all the data we need to construct an Extra-P model
 
     return run_result
 
-  def do_baseline_run(self, target_config: TargetConfiguration) -> M.RunResult:
+  def do_baseline_run(self, target_config: TargetConfig) -> M.RunResult:
     L.get_logger().log('LocalScalingRunner::do_baseline_run')
     args = self._config.get_args(target_config.get_build(), target_config.get_target())
     run_result = M.RunResult()

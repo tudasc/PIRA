@@ -27,7 +27,7 @@ PIRA runs the following four phases (2-4 are iterated):
 4) Analyze the generated profile to find a new and improved instrumentation.
 
 PIRA supports both *compile-time* and *run-time* filtering of functions, including runtime filtering of MPI functions through automatically generated wrappers.
-In compile-time filtering, only the desired functions are instrumented at compile-time, reducing the overall measurement influence significantly
+In compile-time filtering, only the desired functions are instrumented at compile-time, reducing the overall measurement influence significantly.
 In contrast, in runtime filtering, the compiler inserts instrumentation hooks into  *every* function of the target application, and the filtering happens at runtime.
 
 ## Requirements, obtain PIRA, build it, use it
@@ -35,6 +35,18 @@ In contrast, in runtime filtering, the compiler inserts instrumentation hooks in
 ### Requirements
 
 PIRA requires CMake (>=3.5), Clang/LLVM 10, Python 3, Qt5 and OpenMPI 4.
+It will further download (and build)
+
+- [MetaCG](https://github.com/tudasc/MetaCG)
+- [Modified Score-P 6.0](https://github.com/jplehr/score-p-v6)
+- [Extra-P (version 3.0)](https://www.scalasca.org/software/extra-p/download.html)
+- [LLNL's wrap](https://github.com/LLNL/wrap)
+- [bear (version 2.4.2)](https://github.com/rizsotto/Bear)
+- [cxxopts (version 2.1)](https://github.com/jarro2783/cxxopts)
+- [nlohmann json (version 3.9.1)](https://github.com/nlohmann/json)
+
+If you want to build PIRA in an environment without internet access, please see the `resources/build_submodules.sh` script, and adjust it to your needs.
+Making this process easier and more configurable is work-in-progress.
 
 ### Obtaining PIRA
 
@@ -56,13 +68,23 @@ cd resources
 ./build_submodules.sh <ncores>
 ```
 
-### PIRA Docker
+#### PIRA Docker
 
-We provide a (early work) `Dockerfile` to build PIRA to try it out.
+We also provide a (early work) `Dockerfile` to build PIRA and try it.
+When running inside the container, e.g., the integration tests, please invoke the scripts as follows.
+
+```{.sh}
+cd resources
+. setup_paths.sh
+cd ../test/integration/GameOfLife # Example test case
+# By default PIRA will look into $HOME/.local, which is not currently existent in the docker
+# XDG_DATA_HOME signals where to put the profiling data PIRA generates
+XDG_DATA_HOME=/tmp ./run.sh 
+```
 
 ### Using PIRA
 
-For a full example how to use PIRA, checkout the `run.sh` scripts the `/test/integration` folder.
+For a full example how to use PIRA, checkout the `run.sh` scripts in the `/test/integration` folder.
 
 First, set up the required paths by sourcing the script in the `resources` folder.
 
@@ -95,21 +117,22 @@ The steps are:
 In contrast, with runtime filtering, the compiler inserts instrumentation hooks in every function of the target application.
 * ```--iterations [number] ``` Number of Pira iterations, the default value is 3.
 * ```--repetitions [number]``` Number of measurement repetitions, the default value is 3.
-* ```--tape``` Location where an (somewhat extensive) logging tape should be written to.
-* ```--extrap-dir``` The base directory where the extra-p folder structure is placed.
+* ```--tape``` Location where a (somewhat extensive) logging tape should be written to.
+* ```--extrap-dir``` The base directory where the Extra-p folder structure is placed.
 * ```--extrap-prefix``` Extra-P prefix, should be a sequence of characters.
 * ```--version``` Prints the version number of the PIRA installation
 
 #### Highly Experimental Arguments to PIRA
 
-* ```--hybrid-filter-iters [number]``` Re-compile after [number] iterations, in between use runtime filtering.
+* ```--hybrid-filter-iters [number]``` Re-compile after [number] iterations, use runtime filtering in between.
 * ```--export``` Attaches the generated Extra-P models and data set sizes into the target's IPCG file.
-* ```--export-runtime-only``` Requires `--export`; Attaches only the median runtime value of all repetitions to the functions. Single data set.
+* ```--export-runtime-only``` Requires `--export`; Attaches only the median runtime value of all repetitions to the functions. Only available when not using Extra-P.
+* ```--load-imbalance-detection [path to cfg file]``` Enables and configures the load imbalance detection mode. Please read [this section](#load-imbalance-detection) for more information.
 
 
 #### Whole Program Call Graph
 
-PIRA uses source-code information to construct initial instrumentations and decide which functions to add to an instrumentation during the iterative refinement.
+PIRA uses source-code information for constructing an initial instrumentation and deciding which functions to add to an instrumentation during the iterative refinement.
 It provides a Clang-based call-graph tool that collects all required information and outputs the information in a `.json` file.
 You can find the `cgcollector` tool in the subdirectory `./extern/src/metacg/cgcollector`.
 
@@ -126,14 +149,14 @@ Applying the CGCollector usually happens in two steps.
     ~~~
 2. The `.ipcg`-files created in step 1 are then merged to a general file using `cgmerge`.
     1. Create an output file, solely containing the string `"null"`
-		2. If your project contains more than one `mein` function, please only merge the file with the correct `main` function.
+		2. If your project contains more than one `main` function, please only merge the file with the correct `main` function.
    
     ~~~{.sh}
     echo "null" > $IPCG_FILENAME
     find ./src -name "*.ipcg" -exec cgmerge $IPCG_FILENAME $IPCG_FILENAME {} +
     ~~~
 
-The final graph (currently) needs to be placed into the directory of the **PGIS** that is used for the CG analysis, i.e., copy the generated whole program file into the PGIS directory.
+The final graph needs to be placed into the directory of the callgraph-analyzer. Since **PGIS** is currently used for the CG analysis, the generated whole program file is copied into the PGIS directory.
 Currently, it is important that the file in the PGIS directory is named following the pattern `item_flavor.ipcg`. An item stands for a target application. More on the terms flavor and item in the next section.
 
 ~~~{.sh}
@@ -144,7 +167,7 @@ cp my-app.ipcg $PIRA/extern/install/pgis/bin/item_flavor.ipcg
 #### Configuration
 
 The PIRA configuration contains all the required information for PIRA to run the automatic process.
-The various directories that need to be specified in the configuration can either be *absolute* paths, or *paths, relative to the execution path of pira*.
+The various directories that need to be specified in the configuration-file can either be *absolute* paths, or *paths, relative to the execution path of pira*. Paths may contain environment variables, e.g., `$HOME`.
 The examples are taken from the GameOfLife example in `./test/integration/GameOfLife`.
 
 ##### Directory and items
@@ -174,8 +197,8 @@ An item in PIRA is a target application, built in a specific way, which is the r
 ##### Analyzer
 
 Every item specifies which *analyzer* should be used.
-The default is the analyzer that ships with PIRA, and which can be found in `./extern/src/metacg/pgis`.
-The particular analyzer is responsible for steering the instrumentation refinement, and is, therefore, an essential part of the PIRA framework.
+The **default** analyzer ships with PIRA, and the sources can be found in `./extern/src/metacg/pgis` or the installation in `./extern/install/pgis/bin`, respectively.
+The analyzer is responsible for steering the instrumentation refinement, and is, therefore, an essential part of the PIRA framework.
 
 ##### Argmap
 
@@ -204,7 +227,7 @@ An example would be to specify different math libraries that the target applicat
 
 ##### Functors
 
-Finally, the *functors* directory points PIRA to the location where it looks for the user-provided Python functions that ultimately tell PIRA how to build, run, and analyze the target application.
+Finally, the *functors* directory points PIRA to the location where it looks for the user-provided Python functions that ultimately tells PIRA how to build, run, and analyze the target application.
 In the example, PIRA is pointed to a directory called *functors* relative to the location of the configuration.
 
 ```{.json}
@@ -229,12 +252,12 @@ As of now, the user needs to implement five different functors:
 * `runner_<ITEM>_<FLAVOR>.py`: runs the target application.
 
 Functors, generally, support two modes of invocation: *active* and *passive*.
-The functor tells PIRA which mode it uses by setting the respective value to `True` in the dictionary returned by `get_method()`.
+The functor tells PIRA which mode it uses by setting the respective value to `True` in the dictionary returned by the function `get_method()`.
 
 In active mode, the functor itself invokes the required commands, for example, to build the software.
-When invoked, the functor is passed a `**kwargs` parameter holding, for example, the current directory, and an instance of a subprocess shell.
+When invoked, the functor is passed a `**kwargs` parameter holding, for example, the current directory and an instance of a subprocess shell.
 
-The passive mode solely returns the commands to execute, e.g., the string `make` to invoke a simple Makefile at the item's top-level directory.
+The passive mode solely returns the commands to execute, e.g. the string `make` to invoke a simple Makefile at the item's top-level directory.
 It is also passed a `kwargs` parameter that holds specific information, like pre-defined values needed to add to CXXFLAGS or additional linker flags.
 An example of a passive functor may be found in the `examples` and `test` directories.
 Currently, all implemented functors use the passive mode.
@@ -244,8 +267,8 @@ Currently, all implemented functors use the passive mode.
 PIRA passes the following keyword arguments to all functors.
 In addition, different PIRA components may pass additional arguments.
 
-*Important*: We now ship our own Score-P version, thus, it is no longer required to adjust compile commands in PIRA.
-As a result, some of the additionally passed functor arguments might go away, or are deprecated.
+*Important*: We now ship our own Score-P version. Thus, it is no longer required to adjust compile commands in PIRA.
+As a result, some of the additionally passed functor arguments might go away or are deprecated.
 Check out the functors in `test/integration/AMG2013` for example usages of the different information.
 
 ##### All Functors
@@ -254,14 +277,30 @@ Currently, no information is passed to all functors
 
 ##### Analysis Functor
 
-* ***ANALYZER_DIR***: The directory in which the analysis, i.e., PGIS, is searched for.
+* ***ANALYZER_DIR***: The directory in which the analyzer i.e. PGIS, is searched for.
 
 ##### Build Functor
 
-* ***filter-file***: The path to the generated white list filter file (to be passed to scorep).
+* ***filter-file***: The path to the generated white list filter file (to be passed to Score-p).
 
 ##### Run Functor
 
 * ***util***: Reference to a PIRA *Utility* object.
 * ***args***: The arguments passed to the target application as a list, i.e., `[0]` accesses the first argument, `[1]` the second, and so on.
 * ***LD_PRELOAD***: The path to the `.so` file implementing the MPI wrapper functions (crucial for MPI filtering).
+
+### Load imbalance detection
+To enable PIRA's load imbalance detection feature, provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:
+
+```{.json}
+{
+    "metricType": "ImbalancePercentage",
+    "imbalanceThreshold": 0.05,
+    "relevanceThreshold": 0.05,
+    "contextStrategy": "None",
+    "contextStepCount": 5,
+    "childRelevanceStrategy": "RelativeToMain",
+    "childConstantThreshold": 1,
+    "childFraction": 0.001
+}
+```

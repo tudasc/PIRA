@@ -5,8 +5,6 @@ Description: Tests for the utility module
 """
 
 import unittest
-import typing
-
 import lib.Utility as U
 import lib.Logging as L
 
@@ -122,6 +120,9 @@ class TestUtility(unittest.TestCase):
   def test_remove_dir(self):
     U.make_dirs(U.get_tempdir() + "/rm_dir_test")
     U.remove_dir(U.get_tempdir() + "/rm_dir_test")
+
+  def test_default_config(self):
+      U.get_default_config_file()
 
 if __name__ == '__main__':
   unittest.main()

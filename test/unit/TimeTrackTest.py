@@ -5,7 +5,6 @@ Description: Tests for the argument mapping
 """
 
 import unittest
-
 import lib.TimeTracking as T
 
 

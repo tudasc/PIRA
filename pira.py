@@ -4,12 +4,12 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: This is PIRA.
 """
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 import argparse
-import os
 import lib.Logging as log
 import lib.Pira as pira
+import lib.Utility as U
 
 """
   Pira Main
@@ -24,7 +24,8 @@ parser = argparse.ArgumentParser(prog='PIRA')
 parser.add_argument('config', help='The configuration json file.')
 
 # -- Pira folder option
-parser.add_argument('--pira-dir', help='The directory which stores PIRA runtime files', type=str, default=os.path.join(os.path.expanduser('~'), '.pira'))
+pira_dir = U.get_default_pira_dir()
+parser.add_argument('--pira-dir', help='The directory which stores PIRA runtime files', type=str, default=pira_dir)
 
 # --- Pira "mode" options
 parser.add_argument('--config-version', help='Which config file version to use', choices=[1, 2], default=2, type=int)
@@ -37,8 +38,7 @@ parser.add_argument('--tape', help='Path to tape file to dump.')
 
 # --- Pira modeling options
 group = parser.add_argument_group('Extra-P Options')
-group.add_argument(
-    '--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
+group.add_argument('--extrap-dir', help='The base directory where extra-p folder structure is placed', type=str, default='')
 group.add_argument('--extrap-prefix', help='The prefix in extra-p naming scheme', type=str)
 
 # CSV Export options
@@ -51,6 +51,7 @@ experimental_group = parser.add_argument_group('Experimental Options - experimen
 experimental_group.add_argument('--hybrid-filter-iters', help='Do compiletime-filtering after x iterations', default=0, type=int)
 experimental_group.add_argument('--export', help='Export performance models to IPCG file.', default=False, action='store_true')
 experimental_group.add_argument('--export-runtime-only', help='Export only runtime data used for extra-p modeling', default=False, action='store_true')
+experimental_group.add_argument('--load-imbalance-detection', help='Provide a path to an load imbalance detection configuration file (JSON) to enable load imbalance detection', type=str, default='')
 
 # -- General Info
 parser.add_argument('--version', help='Shows the version of this PIRA installation', action='version', version='%(prog)s ' + __version__)
