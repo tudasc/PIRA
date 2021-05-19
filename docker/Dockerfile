@@ -12,5 +12,5 @@ RUN ln -s /usr/bin/clang-10 /usr/bin/clang && ln -s /usr/bin/clang++-10 /usr/bin
 
 RUN mkdir pira
 COPY . /usr/src/pira
-RUN cd pira && git submodule update --init && cd resources && ./build_submodules.sh 2 --with-mpi=openmpi
+RUN cd pira && git submodule update --init && cd resources && ./build_submodules.sh $(nproc) --with-mpi=openmpi
 RUN cd pira && sed -i "1s/.*/#!\/usr\/bin\/env python3/" ./extern/install/mpiwrap/wrap.py
