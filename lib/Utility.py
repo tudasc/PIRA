@@ -67,6 +67,14 @@ def read_file(file_name: str) -> str:
 
 def copy_file(source_file: str, target_file: str) -> None:
   L.get_logger().log('Utility::copy_file: ' + source_file + ' -to- ' + target_file)
+
+  # Workaround to '[Errno 11] Resource temporarily unavailable' problem on IBM's GPFS
+  # see also:
+  # - https://bugs.python.org/issue43743
+  # - https://www.ibm.com/support/pages/apar/IJ28891
+  # This may slow down the copy process and should be removed as soon as the underlying problem has been fixed.
+  shutil._USE_CP_SENDFILE = False
+
   shutil.copyfile(source_file, target_file)
 
 
