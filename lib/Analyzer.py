@@ -147,7 +147,7 @@ class Analyzer:
         # load imbalance detection mode
         load_imbalance_detection_cfg_path = InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
         L.get_logger().log('Utility::run_analyzer_command: using Load Imbalance Detection Analyzer', level='info')
-        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --load-imbalance ' + load_imbalance_detection_cfg_path + ' --export ' + ipcg_file 
+        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --load-imbalance ' + load_imbalance_detection_cfg_path + ' --debug 1 --export ' + ipcg_file 
 
       else:
         # vanilla PIRA version 1 runner
@@ -174,7 +174,7 @@ class Analyzer:
 
     # load imbalancee detection mode
     if InvocCfg.get_instance().is_load_imbalance_detection_enabled():
-      sh_cmd = sh_cmd + ' --load-imbalance ' + InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
+      sh_cmd = sh_cmd + ' --debug 1 --load-imbalance ' + InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
 
     sh_cmd = sh_cmd + ' ' + ipcg_file
 

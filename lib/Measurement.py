@@ -306,9 +306,18 @@ class ScorepSystemHelper:
 
     MPI_functions_to_filter = []
     file_content = U.read_file(filter_file).split('\n')
-    # We always want to measure MPI_Init and MPI_Finalize
-    file_content.append('MPI_Init')
-    file_content.append('MPI_Finalize')
+    # We always want to measure some functions to ensure Score-P works correctly
+    always_measure = [
+      'MPI_Init',
+      'MPI_Finalize',
+      'MPI_Comm_group',
+      'MPI_Comm_dup',
+      'MPI_Comm_create_group',
+      'MPI_Comm_split',
+      'MPI_Comm_free',
+      'MPI_Group_free'
+    ]
+    file_content.extend(always_measure)
     for l in file_content:
       # Match MPI functions which have been marked for instrumentation
       # Example: (MPI_Barrier is representative for all MPI functions here)
