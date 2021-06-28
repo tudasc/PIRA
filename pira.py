@@ -4,7 +4,7 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: This is PIRA.
 """
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 import argparse
 import lib.Logging as log
