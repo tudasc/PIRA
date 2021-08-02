@@ -16,9 +16,10 @@ stages:
 
 # Setting up the environment on the Lichtenberg system
 .lb-setup: &lb-setup
+  - export LMOD_IGNORE_CACHE=1
   - eval $(ssh-agent -s)
   - ssh-add ~/.ssh/gitlab_ed25519
-  - module load gcc/8 git llvm/10.0.0 cmake python/3 openmpi
+  - module load gcc/8 git python/3.7.4 cmake llvm/10 openmpi
 
 .lb-tear-down: &lb-tear-down
   - rm -rf $(dirname $(echo $SSH_AUTH_SOCK))

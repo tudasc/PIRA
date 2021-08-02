@@ -84,7 +84,7 @@ class Analyzer:
                                    benchmark_name)
           instr_files = U.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
           L.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
-          prev_instr_file = U.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
+          prev_instr_file = U.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name, iterationNumber)
 
         tracker = T.TimeTracker()
         
@@ -131,6 +131,7 @@ class Analyzer:
 
     export_performance_models = InvocCfg.get_instance().is_export()
     export_runtime_only = InvocCfg.get_instance().is_export_runtime_only()
+    use_cs_instrumentation = InvocCfg.get_instance().use_cs_instrumentation()
     export_str = ' '
     if export_performance_models:
       export_str += ' --export'
@@ -147,7 +148,7 @@ class Analyzer:
         # load imbalance detection mode
         load_imbalance_detection_cfg_path = InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
         L.get_logger().log('Utility::run_analyzer_command: using Load Imbalance Detection Analyzer', level='info')
-        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --load-imbalance ' + load_imbalance_detection_cfg_path + ' --export ' + ipcg_file 
+        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --load-imbalance ' + load_imbalance_detection_cfg_path + ' --debug 1 --export ' + ipcg_file 
 
       else:
         # vanilla PIRA version 1 runner
@@ -162,6 +163,9 @@ class Analyzer:
     if hybrid_filter and not was_rebuilt:
       command += ' --model-filter'
 
+    if use_cs_instrumentation:
+      command += ' --use-cs-instrumentation'
+
     sh_cmd = command + export_str + ' --scorep-out --extrap ' + pgis_cfg_file + ' ' + ipcg_file
     L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
     out, _ = U.shell(sh_cmd)
@@ -174,7 +178,7 @@ class Analyzer:
 
     # load imbalancee detection mode
     if InvocCfg.get_instance().is_load_imbalance_detection_enabled():
-      sh_cmd = sh_cmd + ' --load-imbalance ' + InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
+      sh_cmd = sh_cmd + ' --debug 1 --load-imbalance ' + InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
 
     sh_cmd = sh_cmd + ' ' + ipcg_file
 

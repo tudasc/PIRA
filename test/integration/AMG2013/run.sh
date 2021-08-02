@@ -58,7 +58,7 @@ echo "null" > amg.ipcg # create empty json file
 find . -name "*.ipcg" -exec cgmerge amg.ipcg amg.ipcg {} + 2>&1 > ../cgcollector.log # merge all ipcg files into amg.ipcg
 # Move the CG to where PIRA expects it
 echo $PWD
-cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/amg_ct_mpi.ipcg
+cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/amg_ct_mpi.mcg
 cd ..
 
 

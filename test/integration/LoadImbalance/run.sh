@@ -43,7 +43,7 @@ cgc lib.c 2>&1 > /dev/null || exit 1
 cgc util.h 2>&1 > /dev/null || exit 1
 echo "null" > imbalance.ipcg
 cgmerge imbalance.ipcg main.ipcg lib.ipcg util.ipcg || exit 1
-cp imbalance.ipcg $PWD/../../../../extern/install/pgis/bin/imbalance_ct.ipcg
+cp imbalance.ipcg $PWD/../../../../extern/install/pgis/bin/imbalance_ct.mcg
 
 echo -e "\n----- Running Pira -----\n"
 
