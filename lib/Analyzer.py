@@ -84,7 +84,7 @@ class Analyzer:
                                    benchmark_name)
           instr_files = U.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
           L.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
-          prev_instr_file = U.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name)
+          prev_instr_file = U.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name, iterationNumber)
 
         tracker = T.TimeTracker()
         
@@ -131,6 +131,7 @@ class Analyzer:
 
     export_performance_models = InvocCfg.get_instance().is_export()
     export_runtime_only = InvocCfg.get_instance().is_export_runtime_only()
+    use_cs_instrumentation = InvocCfg.get_instance().use_cs_instrumentation()
     export_str = ' '
     if export_performance_models:
       export_str += ' --export'
@@ -161,6 +162,9 @@ class Analyzer:
 
     if hybrid_filter and not was_rebuilt:
       command += ' --model-filter'
+
+    if use_cs_instrumentation:
+      command += ' --use-cs-instrumentation'
 
     sh_cmd = command + export_str + ' --scorep-out --extrap ' + pgis_cfg_file + ' ' + ipcg_file
     L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)

@@ -4,7 +4,7 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: This is PIRA.
 """
 
-__version__ = '0.3.3'
+__version__ = '0.3.4'
 
 import argparse
 import lib.Logging as log
@@ -48,6 +48,7 @@ csv_group.add_argument('--csv-dialect', help='The dialect the CSV file is writte
 
 # Experimental options - even for research software they are experimental
 experimental_group = parser.add_argument_group('Experimental Options - experimental even for research software')
+experimental_group.add_argument('--call-site-instrumentation', help='Enable call-site instrumentation. (May not work with current Score-P version', default=False, type=bool)
 experimental_group.add_argument('--hybrid-filter-iters', help='Do compiletime-filtering after x iterations', default=0, type=int)
 experimental_group.add_argument('--export', help='Export performance models to IPCG file.', default=False, action='store_true')
 experimental_group.add_argument('--export-runtime-only', help='Export only runtime data used for extra-p modeling', default=False, action='store_true')

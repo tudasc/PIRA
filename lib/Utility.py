@@ -381,12 +381,12 @@ def build_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -
   return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '.txt'
 
 
-def build_previous_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -> str:
-  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + 'previous.txt'
+def build_previous_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str, iteration_number: int) -> str:
+  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '_it-' + str(iteration_number) + '.txt'
 
 
 def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
-  return base_dir + "/" + b_name + '_' + flavor + '.ipcg'
+  return base_dir + "/" + b_name + '_' + flavor + '.mcg'
 
 def get_cubex_file(cubex_dir: str, b_name: str, flavor: str) -> str:
   return cubex_dir + '/' + flavor + '-' + b_name + '.cubex'
