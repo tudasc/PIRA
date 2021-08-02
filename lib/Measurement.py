@@ -13,12 +13,93 @@ from lib.Exception import PiraException
 import typing
 import os
 import re
+import statistics as stat
 
 class MeasurementSystemException(PiraException):
   """  This exception is thrown if problems in the runtime occur.  """
 
   def __init__(self, message):
     super().__init__(message)
+
+
+class RunResultSeries:
+
+  # rt is runtime, reps is the number of repetitions for one input data set, and num_data_sets is the number of different input data sets.
+  # One RunResultSeries object per iteration / phase
+  def __init__(self, rt: float = None, reps: int = None, num_data_sets: int = 1):
+      self.rt_values = []
+      self.reps = reps
+      self.num_data_sets = num_data_sets
+
+  def is_multi_value(self):
+    return False
+
+  def add_values(self, rt: float, reps: int) ->None:
+    assert(reps == self.reps)
+    self.rt_values.append(rt)
+
+  def add_from(self, other) -> None:
+    assert(other.reps == self.reps)
+    for rt in other.rt_values:
+      self.rt_values.append(rt)
+
+  def get_num_data_sets(self) -> int:
+    return self.num_data_sets
+
+  def get_average(self, pos: int = 0, data_set: int = 0) ->float:
+    # 1 data set and three repetitions
+    # [ 1 1 1 ]
+    # 2 data sets and three repetitions
+    # [ 1 1 1, 2 2 2 ]
+    if data_set > self.num_data_sets:
+      raise RuntimeError('Trying to access out-of-bounds data set')
+    start_idx = pos + data_set * self.reps
+    end_idx = start_idx + self.reps
+    L.get_logger().log('Computing mean for values: ' + str(self.rt_values[start_idx:end_idx]) + ' [pos: ' + str(pos) + ' | data_set: ' + str(data_set) + ' => start_idx: ' + str(start_idx) + ' <> ' + str(end_idx))
+    return stat.mean(self.rt_values[start_idx:end_idx])
+
+  def get_median(self, pos: int = 0, data_set: int = 0) -> float:
+    start_idx = pos + data_set * self.reps
+    end_idx = start_idx + self.reps
+    L.get_logger().log('Computing median for values: ' + str(self.rt_values[start_idx:end_idx]))
+    return stat.median(self.rt_values[start_idx:end_idx])
+
+  def get_stdev(self, pos: int = 0, data_set: int = 0) -> float:
+    start_idx = pos + data_set * self.reps
+    end_idx = start_idx + self.reps
+    L.get_logger().log('Computing stdev for values: ' + str(self.rt_values[start_idx:end_idx]))
+    return stat.stdev(self.rt_values[start_idx:end_idx])
+
+  def compute_overhead(self, base_line, pos: int = 0, data_set: int = 0) -> float:
+    L.get_logger().log('Computing overhead in RunResultSeries')
+    base_median = base_line.get_median()
+    if base_median == .0:
+      L.get_logger().log('Detected 0 seconds baseline. Setting baseline median to 1.0', level='warn')
+      base_median = 1.0
+    return (self.get_median(pos) / base_median) - 1
+
+  def get_all_averages(self) -> typing.List[float]:
+    if len(self.rt_values) % reps != 0:
+      raise RuntimeError('number of runtime values must be cleanly divisable by num reps.')
+    num_averages = len(self.rt_values) / reps
+
+    intermediate_averages = []
+    for i in range(0, len(self.rt_values), self.reps):
+      intermediate_averages.append(self.get_average(i))
+
+    return intermediate_averages
+
+  def compute_all_overheads(self) -> typing.List[float]:
+    assert(False)
+
+  def get_accumulated_runtime(self):
+    accu_rt = .0
+    for rt in self.rt_values:
+      accu_rt += rt
+    return accu_rt
+
+  def get_nr_of_repetitions(self):
+    return self.reps
 
 
 class RunResult:

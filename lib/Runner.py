@@ -91,6 +91,9 @@ class LocalRunner(LocalBaseRunner):
     super().__init__(configuration, sink)
     self._num_repetitions = InvocationConfig.get_instance().get_num_repetitions()
 
+  def get_num_repetitions(self) -> int:
+    return self._num_repetitions
+
   def do_baseline_run(self, target_config: TargetConfig) -> M.RunResult:
     L.get_logger().log('LocalRunner::do_baseline_run')
     accu_runtime = .0
@@ -104,14 +107,21 @@ class LocalRunner(LocalBaseRunner):
       L.get_logger().log('LocalRunner::do_baseline_run: END not target_config.has_args_for_invocation()')
 
     # TODO Better evaluation of the obtained timings.
-    for y in range(0, self._num_repetitions):
+    time_series = M.RunResultSeries(reps=self.get_num_repetitions())
+    for y in range(0, self.get_num_repetitions()):
       L.get_logger().log('LocalRunner::do_baseline_run: Running iteration ' + str(y), level='debug')
-      accu_runtime += self.run(target_config, InstrumentConfig())
+      l_runtime = self.run(target_config, InstrumentConfig())
+      accu_runtime += l_runtime
+      time_series.add_values(l_runtime, self.get_num_repetitions())
 
-    run_result = M.RunResult(accu_runtime, self._num_repetitions)
+    run_result = M.RunResult(accu_runtime, self.get_num_repetitions())
     L.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n', level='perf')
+    L.get_logger().log('[Vanilla][RTSeries] Average: ' + str(time_series.get_average()), level='perf')
+    L.get_logger().log('[Vanilla][RTSeries] Median: ' + str(time_series.get_median()), level='perf')
+    L.get_logger().log('[Vanilla][RTSeries] Stdev: ' + str(time_series.get_stdev()), level='perf')
+    L.get_logger().log('[Vanilla][REPETITION SUM] Vanilla sum: ' + str(time_series.get_accumulated_runtime()), level='perf')
 
-    return run_result
+    return time_series
 
   def do_profile_run(self,
                      target_config: TargetConfig,
@@ -128,16 +138,23 @@ class LocalRunner(LocalBaseRunner):
       args = self._config.get_args(target_config.get_build(), target_config.get_target())
       target_config.set_args_for_invocation(args[0])
 
+    time_series = M.RunResultSeries(reps=self.get_num_repetitions())
     for y in range(0, self._num_repetitions):
       L.get_logger().log('LocalRunner::do_profile_run: Running instrumentation iteration ' + str(y), level='debug')
-      runtime = runtime + self.run(target_config, instrument_config)
+      l_runtime = self.run(target_config, instrument_config)
+      runtime += l_runtime
+      time_series.add_values(l_runtime, self.get_num_repetitions())
       # Enable further processing of the resulting profile
       self._sink.process(scorep_helper.get_exp_dir(), target_config, instrument_config)
 
-    run_result = M.RunResult(runtime, self._num_repetitions)
+    run_result = M.RunResult(runtime, self.get_num_repetitions())
     L.get_logger().log(
         '[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' + str(run_result.get_average()), level='perf')
-    return run_result
+    L.get_logger().log('[Instrument][RTSeries] Average: ' + str(time_series.get_average()), level='perf')
+    L.get_logger().log('[Instrument][RTSeries] Median: ' + str(time_series.get_median()), level='perf')
+    L.get_logger().log('[Instrument][RTSeries] Stdev: ' + str(time_series.get_stdev()), level='perf')
+
+    return time_series
 
 
 class LocalScalingRunner(LocalRunner):
@@ -158,7 +175,8 @@ class LocalScalingRunner(LocalRunner):
     # TODO: How to handle the model parameter <-> input parameter relation, do we care?
     args = self._config.get_args(target_config.get_build(), target_config.get_target())
     # TODO: How to handle multiple MeasurementResult items? We get a vector of these after this function.
-    run_result = M.RunResult()
+    #run_result = M.RunResult()
+    run_result = M.RunResultSeries(reps=self.get_num_repetitions(), num_data_sets=5)
     for arg_cfg in args:
       # Call the runner method with the correct arguments.
       target_config.set_args_for_invocation(arg_cfg)
@@ -172,7 +190,8 @@ class LocalScalingRunner(LocalRunner):
   def do_baseline_run(self, target_config: TargetConfig) -> M.RunResult:
     L.get_logger().log('LocalScalingRunner::do_baseline_run')
     args = self._config.get_args(target_config.get_build(), target_config.get_target())
-    run_result = M.RunResult()
+    #run_result = M.RunResult()
+    run_result = M.RunResultSeries(reps=self.get_num_repetitions(), num_data_sets=5)
     for arg_cfg in args:
       target_config.set_args_for_invocation(arg_cfg)
       rr = super().do_baseline_run(target_config)

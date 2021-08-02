@@ -32,7 +32,8 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     instrument = False
     was_rebuilt = True
 
-    rr_exporter = E.RunResultExporter()
+    #rr_exporter = E.RunResultExporter()
+    rr_exporter = E.PiraRuntimeExporter()
 
     # Build without any instrumentation
     L.get_logger().log('Building vanilla version for baseline measurements', level='info')
@@ -49,7 +50,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     instr_file = ''
 
     if (csv_config.should_export()):
-      rr_exporter.add_row('Vanilla', vanilla_rr)
+      rr_exporter.add_iteration_data('Vanilla', vanilla_rr)
 
     for iteration in range(0,InvocationConfig.get_instance().get_pira_iters()):
       L.get_logger().log('Running instrumentation iteration ' + str(iteration), level='info')
@@ -76,19 +77,20 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       L.get_logger().log('Running profiling measurements', level='info')
       instr_rr = runner.do_profile_run(target_config, iteration)
       if(csv_config.should_export()):
-        rr_exporter.add_row('Instrumented ' + str(iteration), instr_rr)
+        rr_exporter.add_iteration_data('Instrumented ' + str(iteration), instr_rr)
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rr.compute_overhead(vanilla_rr)
       L.get_logger().log('[RUNTIME] $' + str(iteration) + '$ ' + str(instr_rr.get_average()), level='perf')
       L.get_logger().log('[OVERHEAD] $' + str(iteration) + '$ ' + str(ovh_percentage), level='perf')
+      L.get_logger().log('[REPETITION SUM] $' + str(iteration) + '$ ' + str(instr_rr.get_accumulated_runtime()), level='perf')
 
       iteration_tracker.stop()
       user_time, system_time = iteration_tracker.get_time()
       L.get_logger().log('[ITERTIME] $' + str(iteration) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
 
     if(csv_config.should_export()):
-      file_name = target_config.get_target() + '_' +  target_config.get_flavor() + '.csv'
+      file_name = target_config.get_target() + '-' +  target_config.get_flavor() + '.csv'
       csv_file = os.path.join(csv_config.get_csv_dir(), file_name)
       try:
         U.make_dir(csv_config.get_csv_dir())
@@ -195,6 +197,7 @@ def main(cmdline_args) -> None:
       # A build/place is a top-level directory
       for build in configuration.get_builds():
         L.get_logger().log('Build: ' + str(build))
+        total_time = T.TimeTracker()
         app_tuple = (U.generate_random_string(), build, '', '')
         dbm.insert_data_application(app_tuple)
 
@@ -220,6 +223,10 @@ def main(cmdline_args) -> None:
             # TODO: Implement
             L.get_logger().log('In this version of PIRA it is not yet implemented', level='error')
             assert (False)
+
+        total_time.stop()
+        L.get_logger().log('PIRA total runtime: {}'.format(total_time.get_time()), level='perf')
+
 
     U.change_cwd(home_dir)
 
