@@ -47,14 +47,7 @@ cp imbalance.ipcg $PWD/../../../../extern/install/pgis/bin/imbalance_ct.mcg
 
 echo -e "\n----- Running Pira -----\n"
 
-# python3 ../../../../pira.py --version 2 --extrap-dir /tmp/piraII --extrap-prefix t --tape ../imbalance.tp $testDir/imbalance_config.json
-python3 ../../../../pira.py --config-version 2 --iterations 2 --repetitions 1 --tape ../imbalance.tp $testDir/imbalance_config.json || exit 1
+python3 ../../../../pira.py --config-version 2 --iterations 5 --repetitions 1 --tape ../imbalance.tp --load-imbalance-detection $testDir/load-imbalance-cfg.json $testDir/imbalance_config.json || exit 1
 
 pirafailed=$?
-
-rm -rf /tmp/piraII
-# rm -r /tmp/pira-*
-rm /tmp/pira-meta/* > /dev/null || true
-# rm -rf imbalance
-
 exit $pirafailed

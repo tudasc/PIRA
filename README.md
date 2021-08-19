@@ -14,6 +14,10 @@ For more information please see our papers:
   <td valign="top"><a name="ref-pira-2019"></a>[PI19]</td>
   <td>Jan-Patrick Lehr, Alexandru Calotoiu, Christian Bischof, Felix Wolf. <a href="https://doi.org/10.1109/ProTools49597.2019.00011">Automatic Instrumentation Refinement for Empirical Performance Modeling</a>. In <i>International Workshop on Programming and Performance Visualization Tools (ProTools)</i>, pages 40-47, IEEE, 2019.</td>
 </tr>
+<tr>
+  <td valign="top"><a id="ref-pira-2021"></a>[PI21]</td>
+  <td>Peter Arzt, Yannic Fischler, Jan-Patrick Lehr, Christian Bischof. <a href="https://doi.org/10.1007/978-3-030-85665-6_2">Automatic Low-Overhead Load-Imbalance Detection in MPI Applications</a>. TBP.</td>
+</tr>
 </table>
 
 
@@ -289,8 +293,8 @@ Currently, no information is passed to all functors
 * ***args***: The arguments passed to the target application as a list, i.e., `[0]` accesses the first argument, `[1]` the second, and so on.
 * ***LD_PRELOAD***: The path to the `.so` file implementing the MPI wrapper functions (crucial for MPI filtering).
 
-### Load imbalance detection
-To enable PIRA's load imbalance detection feature, provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:
+### Load imbalance detection (PIRA LIDe)
+For more details about the load imbalance detection feature, please refer to <a href="#ref-pira-2021">[PI21]</a>. Provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:
 
 ```{.json}
 {
@@ -304,3 +308,8 @@ To enable PIRA's load imbalance detection feature, provide the PIRA invocation w
     "childFraction": 0.001
 }
 ```
+* ***metricType***: Metric which is used to quantify load imbalance in function runtimes. If unsure, use *Imbalance Percentage*. (Other experimental options: *Efficiency*, *VariationCoeff*)
+* ***imbalanceThreshold***: Minimum metric value to be rated as imbalanced. For *Imbalance Percentage*, 5% can be used a starting value.
+* ***relevanceThreshold***: Minimum runtime fraction a function is required to surpass in order to be rated as relevant.
+* ***contextStrategy***: Optional context handling strategy to expand instrumentation with further functions. Use *MajorPathsToMain* for profile creation and *FindSynchronizationPoints* for tracing experiments. Use *None* to disable context handling. (Other experimental option: *MajorParentSteps* with its suboption *contextStepCount*)
+* ***childRelevanceStrategy***: Strategy to calculate statement threshold for the iterative descent. If unsure, use *RelativeToMain* which will calculate the threshold as max(*childConstantThreshold*, *childFraction* * (main's inclusive statement count))
