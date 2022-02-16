@@ -41,7 +41,7 @@ cgc main.cpp 2>&1 > /dev/null
 cgc SerialGoL.cpp 2>&1 > /dev/null
 echo "null" > gol.ipcg
 cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
-cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/gol_ct.mcg
+cp gol.ipcg $PWD/../../../../../extern/install/metacg/bin/gol_ct.mcg
 cd ../..
 
 cd gol

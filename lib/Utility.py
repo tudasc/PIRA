@@ -186,6 +186,9 @@ def get_default_pira_dir() -> str:
 def get_default_config_file() -> str:
   return get_cwd() + '/config.json'
 
+def get_default_analysis_parameters_config_file() -> str:
+  return get_cwd() + '/parameters.json'
+
 # --- File-related utils --- #
 
 def json_to_canonic(json_elem):

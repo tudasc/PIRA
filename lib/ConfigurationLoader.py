@@ -168,7 +168,7 @@ class SimplifiedConfigurationLoader:
     pira_item = PiraItem(item_key)
 
     analyzer_dir = item_tree[item_key]['analyzer']
-    if analyzer_dir is '':
+    if analyzer_dir == '':
       analyzer_dir = U.get_base_dir(__file__) + '/../extern/install/pgis/bin'
       L.get_logger().log('Analyzer: using analyzer default: ' + analyzer_dir, level='debug')
 

@@ -3,7 +3,7 @@
 		"%amg2013": {
 			"items": {
 				"amg": {
-					"analyzer": "../../../extern/install/pgis/bin/",
+					"analyzer": "../../../extern/install/metacg/bin/",
 					"argmap": {
 						"mapper": "Linear",
 							"X":[
@@ -14,7 +14,7 @@
 								40
 							]
 					},
-					"cubes": "CUBES_FOLDER",
+					"cubes": "/home/j_lehr/.local/share/pira/amg_cubes",
 					"flavors": [
 						"ct_mpi"
 					],

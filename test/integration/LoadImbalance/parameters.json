@@ -1,0 +1,12 @@
+{
+    "LIDe": {
+        "metricType": "ImbalancePercentage",
+        "imbalanceThreshold": 0.05,
+        "relevanceThreshold": 0.02,
+        "contextStrategy": "MajorPathsToMain",
+        "contextStepCount": -1,
+        "childRelevanceStrategy": "RelativeToMain",
+        "childConstantThreshold": 5,
+        "childFraction": 0.00003
+    }
+}

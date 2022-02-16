@@ -30,7 +30,7 @@ which scorep
 which wrap.py
 
 # XXX Currently required from PGIS
-mkdir $PWD/../../../extern/install/pgis/bin/out
+mkdir $PWD/../../../extern/install/metacg/bin/out
 
 # Download the target application
 stat amg2013_0.tgz
@@ -58,7 +58,7 @@ echo "null" > amg.ipcg # create empty json file
 find . -name "*.ipcg" -exec cgmerge amg.ipcg amg.ipcg {} + 2>&1 > ../cgcollector.log # merge all ipcg files into amg.ipcg
 # Move the CG to where PIRA expects it
 echo $PWD
-cp amg.ipcg $PWD/../../../../extern/install/pgis/bin/amg_ct_mpi.mcg
+cp amg.ipcg $PWD/../../../../extern/install/metacg/bin/amg_ct_mpi.mcg
 cd ..
 
 
@@ -74,7 +74,7 @@ echo -e "Using ${pira_dir} for runtime files\n"
 
 sed -i "s|CUBES_FOLDER|${pira_dir}/amg_cubes|g" $testDir/amg_config.json
 
-python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../amg.tp $testDir/amg_config.json
+python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../amg.tp --analysis-parameters $testDir/parameters.json $testDir/amg_config.json
 
 pirafailed=$?
 
