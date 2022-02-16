@@ -43,11 +43,11 @@ cgc lib.c 2>&1 > /dev/null || exit 1
 cgc util.h 2>&1 > /dev/null || exit 1
 echo "null" > imbalance.ipcg
 cgmerge imbalance.ipcg main.ipcg lib.ipcg util.ipcg || exit 1
-cp imbalance.ipcg $PWD/../../../../extern/install/pgis/bin/imbalance_ct.mcg
+cp imbalance.ipcg $PWD/../../../../extern/install/metacg/bin/imbalance_ct.mcg
 
 echo -e "\n----- Running Pira -----\n"
 
-python3 ../../../../pira.py --config-version 2 --iterations 5 --repetitions 1 --tape ../imbalance.tp --load-imbalance-detection $testDir/load-imbalance-cfg.json $testDir/imbalance_config.json || exit 1
+python3 ../../../../pira.py --config-version 2 --iterations 5 --tape ../imbalance.tp --lide --analysis-parameters $testDir/parameters.json $testDir/imbalance_config.json || exit 1
 
 pirafailed=$?
 exit $pirafailed

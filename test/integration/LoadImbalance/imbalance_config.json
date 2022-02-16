@@ -3,7 +3,7 @@
         "%imbalance": {
             "items": {
                 "imbalance": {
-                    "analyzer": "../../../extern/install/pgis/bin/",
+                    "analyzer": "../../../extern/install/metacg/bin/",
                     "argmap": {
                         "mapper": "Linear",
 			"size": [100]

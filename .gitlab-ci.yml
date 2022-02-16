@@ -178,6 +178,20 @@ run-gameoflife-hybrid-test:
     - ./run.sh
     - *lb-tear-down
 
+run-load-imbalance-detection-test:
+  stage: integration-test
+  tags:
+    - hlb0001
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running Load imbalance detection integration test'
+    - cd test/integration/LoadImbalance
+    - ./run.sh
+    - *lb-tear-down
+
 # The release tests should only run on release staging branches.
 # Uses git clone strategy, to start with a clean working copy of the PIRA repository. This is important for the .tar.gz parts.
 # Fetches the dependencies as .tar.gz from github instead of initializing the sub modules

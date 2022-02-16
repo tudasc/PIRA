@@ -117,7 +117,7 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
     self._num_elems = len(l_elem)
 
   def __iter__(self):
-    if len(self._argmap.keys()) is 1:
+    if len(self._argmap.keys()) == 1:
       key = list(self._argmap.keys())[0]
       # If this is not a file mapper, we just return as normal
       if self._files == None:
@@ -150,7 +150,7 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
         files = []
 
   def __getitem__(self, key):
-    if key is 0:
+    if key == 0:
       key = list(self._argmap.keys())[0]
       return PiraArgument(key, self._argmap[key][0])
 

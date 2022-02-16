@@ -65,10 +65,14 @@ class RunResultSeries:
     return stat.median(self.rt_values[start_idx:end_idx])
 
   def get_stdev(self, pos: int = 0, data_set: int = 0) -> float:
-    start_idx = pos + data_set * self.reps
-    end_idx = start_idx + self.reps
-    L.get_logger().log('Computing stdev for values: ' + str(self.rt_values[start_idx:end_idx]))
-    return stat.stdev(self.rt_values[start_idx:end_idx])
+    # prevent calculation of stdev on a single data point (self.reps == 1)
+    if self.reps > 1:
+      start_idx = pos + data_set * self.reps
+      end_idx = start_idx + self.reps
+      L.get_logger().log('Computing stdev for values: ' + str(self.rt_values[start_idx:end_idx]))
+      return stat.stdev(self.rt_values[start_idx:end_idx])
+    else:
+      return 0.0
 
   def compute_overhead(self, base_line, pos: int = 0, data_set: int = 0) -> float:
     L.get_logger().log('Computing overhead in RunResultSeries')
@@ -79,9 +83,9 @@ class RunResultSeries:
     return (self.get_median(pos) / base_median) - 1
 
   def get_all_averages(self) -> typing.List[float]:
-    if len(self.rt_values) % reps != 0:
+    if len(self.rt_values) % self.reps != 0:
       raise RuntimeError('number of runtime values must be cleanly divisable by num reps.')
-    num_averages = len(self.rt_values) / reps
+    num_averages = len(self.rt_values) / self.reps
 
     intermediate_averages = []
     for i in range(0, len(self.rt_values), self.reps):
@@ -275,7 +279,7 @@ class ScorepSystemHelper:
     return
 
   def get_exp_dir(self) -> str:
-    assert (self.cur_exp_directory is not '')
+    assert (self.cur_exp_directory != '')
     return self.cur_exp_directory
 
   def set_overwrite_exp_dir(self) -> None:

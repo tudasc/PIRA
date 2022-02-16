@@ -125,7 +125,7 @@ def needs_rebuild(iteration: int) -> bool:
 def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
   use_extra_p = False
   extrap_config = ExtrapConfig('', '', '')
-  if cmdline_args.extrap_dir is not '':
+  if cmdline_args.extrap_dir != '':
     use_extra_p = True
     extrap_config = ExtrapConfig(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
 
@@ -159,7 +159,7 @@ def main(cmdline_args) -> None:
   csv_config = process_args_for_csv(cmdline_args)
 
   try:
-    if invoc_cfg.get_config_version() is 1:
+    if invoc_cfg.get_config_version() == 1:
       config_loader = CLoader()
     else:
       config_loader = SCLoader()

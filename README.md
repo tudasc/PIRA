@@ -16,7 +16,7 @@ For more information please see our papers:
 </tr>
 <tr>
   <td valign="top"><a id="ref-pira-2021"></a>[PI21]</td>
-  <td>Peter Arzt, Yannic Fischler, Jan-Patrick Lehr, Christian Bischof. <a href="https://doi.org/10.1007/978-3-030-85665-6_2">Automatic Low-Overhead Load-Imbalance Detection in MPI Applications</a>. TBP.</td>
+  <td>Peter Arzt, Yannic Fischler, Jan-Patrick Lehr, Christian Bischof. <a href="https://doi.org/10.1007/978-3-030-85665-6_2">Automatic Low-Overhead Load-Imbalance Detection in MPI Applications</a>. In <i>Euro-Par 2021: Parallel Processing. Lecture Notes in Computer Science, vol 12820</i>, pages 19-34, Springer, 2021.</td>
 </tr>
 </table>
 
@@ -125,6 +125,7 @@ In contrast, with runtime filtering, the compiler inserts instrumentation hooks 
 * ```--extrap-dir``` The base directory where the Extra-p folder structure is placed.
 * ```--extrap-prefix``` Extra-P prefix, should be a sequence of characters.
 * ```--version``` Prints the version number of the PIRA installation
+* ```--analysis-parameters``` Path to configuration file containing analysis parameters for PGIS. Required for both Extra-P and LIDe mode.
 
 #### Highly Experimental Arguments to PIRA
 
@@ -292,6 +293,18 @@ Currently, no information is passed to all functors
 * ***util***: Reference to a PIRA *Utility* object.
 * ***args***: The arguments passed to the target application as a list, i.e., `[0]` accesses the first argument, `[1]` the second, and so on.
 * ***LD_PRELOAD***: The path to the `.so` file implementing the MPI wrapper functions (crucial for MPI filtering).
+
+#### Analyzer parameters
+Additional parameters are required for some analysis modes. Specifically, PIRA LIDe (see below) and Extra-P modeling analysis require user provided parameters. Create a JSON file and provide its path to PIRA using the `--analysis-parameters`-switch. The following example contains parameters for the Extra-P modeling mode. The available strategies to aggregate multiple Extra-P models (when a function is called in different contexts) are: `FirstModel`, `Sum`, `Average`, `Maximum`.
+```{.json}
+{
+    "Modeling": {
+        "extrapolationThreshold": 2.1,
+        "statementThreshold": 200,
+        "modelAggregationStrategy": "Sum"
+    }
+}
+```
 
 ### Load imbalance detection (PIRA LIDe)
 For more details about the load imbalance detection feature, please refer to <a href="#ref-pira-2021">[PI21]</a>. Provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:

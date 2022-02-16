@@ -3,7 +3,7 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-  return 'CXX="scorep --instrument-filter=${TEST_DIR}/../../../extern/install/pgis/bin/out/instrumented-gol_ct.txt clang++" make gol'
+  return 'CXX="scorep --instrument-filter=${TEST_DIR}/../../../extern/install/metacg/bin/out/instrumented-gol_ct.txt clang++" make gol'
 
 
 def active(benchmark, **kwargs):

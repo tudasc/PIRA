@@ -57,12 +57,9 @@ class Analyzer:
     # The invoke args can be retrieved from the configuration object.
     # Since the invoke args are iterable, we can create all necessary argument tuples here.
 
-    # We construct a json file that contains the necessary information to be parsed vy the
-    # PGIS tool. That way, we can make it easily traceable and debug from manual inspection.
-    # This will be the new standard way of pushing information to PGIS.
-    pgis_cfg_file = None
+    extrap_config_file = None
     if self._profile_sink.has_config_output():
-      pgis_cfg_file = self._profile_sink.output_config(benchmark, analyzer_dir)
+      extrap_config_file = self._profile_sink.output_config(benchmark, analyzer_dir)
 
     if analyze_functor.get_method()['active']:
       analyze_functor.active(benchmark, **kwargs)
@@ -93,7 +90,7 @@ class Analyzer:
           L.get_logger().log('Analyzer::analyze_local: instr_file available')
           U.rename(instr_files, prev_instr_file)
           tracker.f_track('Analysis', self.run_analyzer_command, command, analyzer_dir, flavor, benchmark_name,
-                          exp_dir, iterationNumber, pgis_cfg_file, was_rebuild)
+                          exp_dir, iterationNumber, extrap_config_file, was_rebuild)
           L.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
 
         else:
@@ -127,11 +124,12 @@ class Analyzer:
 
   @staticmethod
   def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
-                           iterationNumber: int, pgis_cfg_file: str, was_rebuilt: bool, hybrid_filter: bool = False) -> None:
+                           iterationNumber: int, extrap_config_file: str, was_rebuilt: bool, hybrid_filter: bool = False) -> None:
 
     export_performance_models = InvocCfg.get_instance().is_export()
     export_runtime_only = InvocCfg.get_instance().is_export_runtime_only()
     use_cs_instrumentation = InvocCfg.get_instance().use_cs_instrumentation()
+    analysis_parameters_path = InvocCfg.get_instance().get_analysis_parameters_path()
     export_str = ' '
     if export_performance_models:
       export_str += ' --export'
@@ -143,12 +141,14 @@ class Analyzer:
     cubex_file = U.get_cubex_file(cubex_dir, benchmark_name, flavor)
 
     # PIRA version 1 runner, i.e., only consider raw runtime of single run
-    if pgis_cfg_file is None:
-      if InvocCfg.get_instance().is_load_imbalance_detection_enabled():
+    if extrap_config_file is None:
+      if InvocCfg.get_instance().is_lide_enabled():
         # load imbalance detection mode
-        load_imbalance_detection_cfg_path = InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
         L.get_logger().log('Utility::run_analyzer_command: using Load Imbalance Detection Analyzer', level='info')
-        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --load-imbalance ' + load_imbalance_detection_cfg_path + ' --debug 1 --export ' + ipcg_file 
+        if analysis_parameters_path == '':
+          L.get_logger().log('Utility::run_analyzer_command: An analysis parameters file is required for PIRA LIDe!', level='error')
+
+        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --lide 1 --parameter-file ' + analysis_parameters_path + ' --debug 1 --export ' + ipcg_file 
 
       else:
         # vanilla PIRA version 1 runner
@@ -166,7 +166,9 @@ class Analyzer:
     if use_cs_instrumentation:
       command += ' --use-cs-instrumentation'
 
-    sh_cmd = command + export_str + ' --scorep-out --extrap ' + pgis_cfg_file + ' ' + ipcg_file
+    if analysis_parameters_path == '':
+      L.get_logger().log('Utility::run_analyzer_command: An analysis parameters file is required for Extra-P mode!', level='error')
+    sh_cmd = command + export_str + ' --scorep-out --debug 1 --parameter-file ' + analysis_parameters_path + ' --extrap ' + extrap_config_file + ' ' + ipcg_file
     L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
     out, _ = U.shell(sh_cmd)
     L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
@@ -177,8 +179,8 @@ class Analyzer:
     sh_cmd = command + ' --scorep-out --static '
 
     # load imbalancee detection mode
-    if InvocCfg.get_instance().is_load_imbalance_detection_enabled():
-      sh_cmd = sh_cmd + ' --debug 1 --load-imbalance ' + InvocCfg.get_instance().get_load_imbalance_detection_cfg_path()
+    if InvocCfg.get_instance().is_lide_enabled():
+      sh_cmd = sh_cmd + ' --debug 1 --lide 1 ' + InvocCfg.get_instance().get_analysis_parameters_path()
 
     sh_cmd = sh_cmd + ' ' + ipcg_file
 

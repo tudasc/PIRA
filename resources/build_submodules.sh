@@ -196,65 +196,31 @@ if [ ! -d "$extsourcedir/json" ]; then
     git clone -b v3.9.1 --depth 1 --single-branch https://github.com/nlohmann/json json >${allOutputTo} 2>&1 
 fi
 
-echo "[PIRA] Building PGIS analysis engine"
+echo "[PIRA] Building MetaCG"
 cd $extsourcedir/metacg
 
-# TODO Remove when merged
-#stat .git >${allOutputTo} 2>&1 
-#if [ $? -eq 0 ]; then
-#	git fetch
-#	git checkout v0.2.0
-#fi
-
-cd $extsourcedir/metacg/pgis
-
-check_directory_or_file_exists $extsourcedir/metacg/pgis/build
+check_directory_or_file_exists $extsourcedir/metacg/build
 if [ $? -ne 0 ]; then
-  rm -rf build
-  mkdir build && cd build
-	echo "[PIRA] Configuring PGIS"
-  cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSPDLOG_BUILD_SHARED=ON -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DCUBE_LIB=$extinstalldir/scorep/lib -DCXXOPTS_INCLUDE=$extsourcedir/cxxopts -DJSON_INCLUDE=$extsourcedir/json/single_include -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/pgis .. >${allOutputTo} 2>&1 
-	echo "[PIRA] Configuring PGIS done"
+	echo "[PIRA] Configuring MetaCG"
+  cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$extinstalldir/metacg -DCUBE_LIB=$extinstalldir/scorep/lib -DCUBE_INCLUDE=$extinstalldir/scorep/include/cubelib -DEXTRAP_INCLUDE=$extsourcedir/extrap/extrap-3.0/include -DEXTRAP_LIB=$extinstalldir/extrap/lib -DSPDLOG_BUILD_SHARED=ON -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON >${allOutputTo} 2>&1
+	echo "[PIRA] Configuring MetaCG done"
   if [ $? -ne 0 ]; then
-    echo "[PIRA] Configuring PGIS failed."
+    echo "[PIRA] Configuring MetaCG failed."
     exit 1
   fi
- 
-  make -j $parallel_jobs >${allOutputTo} 2>&1 
+
+  cmake --build build --parallel ${parallel_jobs} >${allOutputTo} 2>&1
   if [ $? -ne 0 ]; then
-    echo "[PIRA] Building PGIS failed."
+    echo "[PIRA] Building MetaCG failed."
     exit 1
   fi
-  make install >${allOutputTo} 2>&1 
+
+  cmake --install build >${allOutputTo} 2>&1
   if [ ! -d ${extinstalldir}/pgis/bin/out ]; then
-    mkdir ${extinstalldir}/pgis/bin/out >${allOutputTo} 2>&1
+    mkdir ${extinstalldir}/metacg/bin/out >${allOutputTo} 2>&1
   fi
-else
-  echo "[PIRA] PGIS already built"
-fi
-
-# CGCollector / merge tool
-echo "[PIRA] Building CGCollector"
-cd $extsourcedir/metacg/cgcollector
-
-check_directory_or_file_exists $extsourcedir/metacg/cgcollector/build
-if [ $? -ne 0 ]; then
-  rm -rf build
-  mkdir build && cd build
-  cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$extinstalldir/cgcollector -DJSON_INCLUDE_PATH=$extsourcedir/json/single_include -DCUBE_INCLUDE=$extinstalldir/scorep/include -DCUBE_LIB=$extinstalldir/scorep/lib ..  >${allOutputTo} 2>&1 
-  if [ $? -ne 0 ]; then
-    echo "[PIRA] Configuring CGCollector failed."
-    exit 1
-  fi
- 
-  make -j $parallel_jobs >${allOutputTo} 2>&1 
-  if [ $? -ne 0 ]; then
-    echo "[PIRA] Building CGCollector failed."
-    exit 1
-  fi
-  make install >${allOutputTo} 2>&1 
-else
-  echo "[PIRA] CGCollector already built"
+else 
+  echo "[PIRA] MetaCG already built"
 fi
 
 cd $scriptdir
