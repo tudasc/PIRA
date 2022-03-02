@@ -64,12 +64,12 @@ git submodule update --init
 
 ### Building PIRA
 
-Second, build the dependent submodules using the script provided.
+Second, build the dependent submodules using the script provided, or pass values for the different options (see usage info via `-h` for options available).
 Specify the number of compile processes to be spawned for the compilation of PIRA's externals.
 
 ```{.sh}
 cd resources
-./build_submodules.sh <ncores>
+./build_submodules.sh -p <ncores>
 ```
 
 #### PIRA Docker
@@ -88,7 +88,8 @@ XDG_DATA_HOME=/tmp ./run.sh
 
 ### Using PIRA
 
-For a full example how to use PIRA, checkout the `run.sh` scripts in the `/test/integration` folder.
+For a full example how to use PIRA, checkout the `run.sh` scripts in the `/test/integration/*` folder.
+A potentially good starting point is the `GameOfLife` folder and its test case.
 
 First, set up the required paths by sourcing the script in the `resources` folder.
 

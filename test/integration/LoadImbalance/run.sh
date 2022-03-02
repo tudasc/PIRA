@@ -9,14 +9,10 @@
 testDir=$PWD
 export TEST_DIR=$testDir
 
-export PATH=$PWD/../bear/install/bin:$PATH
-echo $PATH
-
 # Export all the Pira tools for the integration test
 cd $testDir/../../../resources
 . setup_paths.sh
 cd $testDir
-echo $PATH
 
 mkdir -p /tmp/pira-meta
 

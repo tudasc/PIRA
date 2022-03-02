@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # File: run.sh
 # License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
@@ -7,14 +8,10 @@
 testDir=$PWD
 export TEST_DIR=$testDir
 
-export PATH=$PWD/../bear/install/bin:$PATH
-echo $PATH
-
 # Export all the Pira tools for the integration test
 cd $testDir/../../../resources
 . setup_paths.sh
 cd $testDir
-echo $PATH
 
 echo -e "\n------ PATH -----"
 echo $PATH
