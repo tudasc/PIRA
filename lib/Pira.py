@@ -11,6 +11,7 @@ import lib.FunctorManagement as F
 import lib.TimeTracking as T
 import lib.Database as D
 import lib.Exporter as E
+import lib.Checker as C
 from lib.DefaultFlags import BackendDefaults
 from lib.RunnerFactory import PiraRunnerFactory
 from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader
@@ -21,7 +22,7 @@ from lib.Configuration import TargetConfig, PiraConfig, ExtrapConfig, Invocation
 from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as BU
 from lib.Analyzer import Analyzer as A
-from lib.Checker import Checker as checker
+
 
 import typing
 import sys
@@ -165,7 +166,7 @@ def main(cmdline_args) -> None:
       config_loader = SCLoader()
 
     configuration = config_loader.load_conf()
-    checker.check_configfile(configuration)
+    C.Checker.check_configfile(configuration)
 
     if B.check_queued_job():
       # FIXME: Implement

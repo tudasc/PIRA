@@ -9,16 +9,16 @@ scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"
 extsourcedir=$scriptdir/../extern/src
 
 function check_directory_or_file_exists {
-	dir_to_check=$1
-	
-	# According to https://unix.stackexchange.com/questions/590694/posix-compliant-way-to-redirect-stdout-and-stderr-to-a-file
-	# This is also POSIC compliant
-	stat $dir_to_check >/dev/null 2>&1
+  dir_to_check=$1
+  
+  # According to https://unix.stackexchange.com/questions/590694/posix-compliant-way-to-redirect-stdout-and-stderr-to-a-file
+  # This is also POSIC compliant
+  stat $dir_to_check >/dev/null 2>&1
 
-	if [ $? -ne 0 ]; then
-		return 1
-	fi
-	return 0
+  if [ $? -ne 0 ]; then
+    return 1
+  fi
+  return 0
 }
 
 function remove_if_exists {
@@ -27,42 +27,41 @@ function remove_if_exists {
   check_directory_or_file_exists $dir_to_remove
 
   if [ $? -eq 0 ]; then
-	  echo "Removing $dir_to_remove"
+    echo "Removing $dir_to_remove"
     rm -rdf $dir_to_remove
   fi
 }
 
 if [ -z "$1" ] || [ "llvm-instrumentation" == "$1" ]; then
-	echo "Testing llvm-instrumentation"
+  echo "Testing llvm-instrumentation"
   remove_if_exists $extsourcedir/llvm-instrumentation/build
 fi
 
 if [ -z "$1" ] || [ "scorep" == "$1" ]; then
-	echo "Testing scorep"
+  echo "Testing scorep"
   remove_if_exists $extsourcedir/scorep-mod/scorep-build
 fi
 
-if [ -z "$1" ] || [ "cgcollector" == "$1" ]; then
-	echo "Testing cgcollector"
-  remove_if_exists $extsourcedir/metacg/cgcollector/build
+if [ -z "$1" ] || [ "metacg" == "$1" ]; then
+  echo "Testing cgcollector"
+  remove_if_exists $extsourcedir/metacg/build
 fi
 
 if [ -z "$1" ] || [ "extrap" == "$1" ]; then
-	echo "Testing extrap"
+  echo "Testing extrap"
   remove_if_exists $extsourcedir/extrap/extrap-3.0/build
 fi
 
-if [ -z "$1" ] || [ "pgis" == "$1" ]; then
-	echo "Testing pgis"
-  remove_if_exists $extsourcedir/metacg/pgis/build
-fi
-
 if [ -z "$1" ] || [ "bear" == "$1" ]; then
-	echo "Testing bear"
-	remove_if_exists $extsourcedir/bear
+  echo "Testing bear"
+  remove_if_exists $extsourcedir/bear
 fi
 
 if [ -z "$1" ] || [ "mpiwrap" == "$1" ]; then
-	echo "Testing mpiwrap"
-	remove_if_exists $extsourcedir/mpiwrap
+  echo "Testing mpiwrap"
+  remove_if_exists $extsourcedir/mpiwrap
+fi
+
+if [ -z "$1" ] || [ "git" == "$1" ]; then
+  git restore ./setup_paths.sh
 fi

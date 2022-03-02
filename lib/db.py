@@ -13,7 +13,7 @@ class database:
     try:
       self.conn = db.connect(conf_db_name)
     except Exception as e:
-      log.get_logger().log(e.message, level='warn')
+      log.get_logger().log(str(e), level='warn')
     return None
 
   def create_cursor(self, conn):
@@ -21,13 +21,13 @@ class database:
       cursor = conn.cursor()
       return cursor
     except Exception as e:
-      log.get_logger().log(e.message, level='warn')
+      log.get_logger().log(str(e), level='warn')
 
   def create_table(self, cursor, table_name):
     try:
       cursor.execute(table_name)
     except Exception as e:
-      log.get_logger().log(e.message, level='warn')
+      log.get_logger().log(str(e), level='warn')
 
   def insert_data_application(self, cursor, values):
     #cursor.execute("INSERT INTO "+table_name+" VALUES (?,?,?)")

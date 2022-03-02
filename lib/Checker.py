@@ -1,6 +1,7 @@
 """
 File: Checker.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file
+at https://github.com/jplehr/pira/LICENSE.txt
 Description: Checks if files and paths in config-file are valid.
 """
 import lib.Utility as U
@@ -9,6 +10,7 @@ import lib.Logging as L
 
 class Checker:
 
+  @staticmethod
   def check_configfile_v1(configuration):
 
     error_message ='Error in configuration-file:\n\n'
@@ -52,6 +54,7 @@ class Checker:
       if exception_occured:
         raise C.PiraConfigErrorException(error_message)
 
+  @staticmethod
   def check_configfile_v2(configuration):
     if isinstance(configuration, C.PiraConfigAdapter):
       configuration = configuration.get_adapted()
@@ -75,7 +78,7 @@ class Checker:
 
         # instead of throwing an error, only an info is logged. This is due to that the directory is created in ProfileSink
         if not U.check_provided_directory(item.get_cubes_dir()):
-          L.get_logger().log('Creating Cubes-Directory' + item.get_cubes_dir(), level='info')
+          L.get_logger().log('Creating Cubes-Directory ' + item.get_cubes_dir(), level='info')
 
         if not U.check_provided_directory(item.get_functor_base_path()):
           error_message += 'Functors-Base-Directory ' + item.get_functor_base_path() + ' does not exist\n'
@@ -105,6 +108,7 @@ class Checker:
     if exception_occured:
       raise C.PiraConfigErrorException(error_message)
 
+  @staticmethod
   def check_configfile(configuration):
     if C.InvocationConfig.get_instance().get_config_version() == 1:
       Checker.check_configfile_v1(configuration)

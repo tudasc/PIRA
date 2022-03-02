@@ -75,8 +75,10 @@ def copy_file(source_file: str, target_file: str) -> None:
   # This may slow down the copy process and should be removed as soon as the underlying problem has been fixed.
   shutil._USE_CP_SENDFILE = False
 
-  shutil.copyfile(source_file, target_file)
-
+  try:
+    shutil.copyfile(source_file, target_file)
+  except Exception as e:
+    L.get_logger().log('Utility::copy_file: shutil.copyfile went wrong ' + str(e))
 
 
 def lines_in_file(file_name: str) -> int:
@@ -216,15 +218,6 @@ def json_to_canonic(json_elem):
 def remove_from_pgoe_out_dir(directory: str) -> None:
   remove(directory + "/" + "out")
 
-
-def lines_in_file(file_name: str) -> int:
-  if check_file(file_name):
-    content = read_file(file_name)
-    lines = len(content.split('\n'))
-    return lines
-
-  L.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
-  return 0
 
 def remove_arrow_lines(file_name: str) -> None:
   if check_file(file_name):
