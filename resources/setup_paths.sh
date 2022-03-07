@@ -12,12 +12,12 @@ if [[ -z "$scriptdir" ]]; then
 fi
 
 # The upper-case parts are sed'ed while installation
-cube_install_dir=/work/home/j_lehr/all_repos/gl-sc-pira/resources/../extern/install/scorep
-scorep_install_dir=/work/home/j_lehr/all_repos/gl-sc-pira/resources/../extern/install/scorep
-extrap_install_dir=/work/home/j_lehr/all_repos/gl-sc-pira/resources/../extern/install/extrap
-metacg_install_dir=/work/home/j_lehr/all_repos/gl-sc-pira/resources/../extern/install/metacg
-mpiwrap_install_dir=/work/home/j_lehr/all_repos/gl-sc-pira/resources/../extern/install/mpiwrap
-bear_install_dir=/work/home/j_lehr/all_repos/gl-sc-pira/resources/../extern/install/bear
+cube_install_dir=CUBEINSTALLDIR
+scorep_install_dir=SCOREPINSTALLDIR
+extrap_install_dir=EXTRAPINSTALLDIR
+metacg_install_dir=METACGINSTALLDIR
+mpiwrap_install_dir=MPIWRAPINSTALLDIR
+bear_install_dir=BEARINSTALLDIR
 
 echo -e "Cube installation dir:\t$cube_install_dir"
 echo -e "Score-P insitallation dir:\t$scorep_install_dir"
