@@ -28,12 +28,12 @@ fi
 
 cd test/unit
 for i in `find . -iname "*.py"`; do
-	testName=$(echo "$i" | awk -F . '{print substr($2,2)}')
-	echo "Running $i -> $testName"; 
-  $tester --junit-xml=report-${testName}.xml --cov=lib --cov-append $i; 
-	if [ $? -ne 0 ]; then 
-		let didfail=$didfail+1; 
-	fi ; 
+  testName=$(echo "$i" | awk -F . '{print substr($2,2)}')
+  echo "Running $i -> $testName"
+  $tester --junit-xml=report-${testName}.xml --cov=lib --cov-append $i
+  if [ $? -ne 0 ]; then
+    didfail=$((didfail+1))
+  fi
 done
   coverage combine
 cd ../..
