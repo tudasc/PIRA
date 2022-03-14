@@ -112,7 +112,7 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
     arg_vals = self._argmap.values()
     l_elem = list(arg_vals)[0]
     for e in arg_vals:
-      if len(e) is not len(l_elem):
+      if len(e) != len(l_elem):
         raise RuntimeError('CmdlineLinearArgumentMapper: All parameters need the same number of values')
     self._num_elems = len(l_elem)
 
@@ -177,7 +177,7 @@ class CmdlineCartesianProductArgumentMapper(ArgumentMapper):
     for k in keys:
       for v in self._argmap[k]:
         for kk in keys:
-          if k is kk:
+          if k == kk:
             continue
           for vv in self._argmap[kk]:
             res.append(k)

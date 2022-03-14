@@ -81,14 +81,16 @@ class Analyzer:
                                    benchmark_name)
           instr_files = U.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
           L.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
-          prev_instr_file = U.build_previous_instr_file_path(analyzer_dir, flavor, benchmark_name, iterationNumber)
+          numbered_instr_file = U.build_numbered_instr_file_path(analyzer_dir, flavor, benchmark_name, iterationNumber)
+        else:
+          raise RuntimeError(f'Analyzer::analyzer_local: Analyzer directory {analyzer_dir} does not exist')
 
         tracker = T.TimeTracker()
         
         # TODO: Alternate between expansion and pure filtering.
         if iterationNumber > 0 and U.is_file(instr_files):
           L.get_logger().log('Analyzer::analyze_local: instr_file available')
-          U.rename(instr_files, prev_instr_file)
+          U.remove(instr_files)
           tracker.f_track('Analysis', self.run_analyzer_command, command, analyzer_dir, flavor, benchmark_name,
                           exp_dir, iterationNumber, extrap_config_file, was_rebuild)
           L.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
@@ -96,7 +98,8 @@ class Analyzer:
         else:
           tracker.f_track('Initial analysis', self.run_analyzer_command_no_instr, command, analyzer_dir, flavor,
                           benchmark_name)
-            
+
+        U.copy_file(instr_files, numbered_instr_file)
         self.tear_down(build, exp_dir)
         return instr_files
 

@@ -74,7 +74,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
           instr_builder = BU(target_config, instrument, instr_file)
           tracker.m_track('Instrument Build', instr_builder, 'build')
 
-      #Run Phase
+      # Run Phase
       L.get_logger().log('Running profiling measurements', level='info')
       instr_rr = runner.do_profile_run(target_config, iteration)
       if(csv_config.should_export()):
@@ -123,7 +123,7 @@ def needs_rebuild(iteration: int) -> bool:
 
 
 
-def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
+def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, ExtrapConfig]:
   use_extra_p = False
   extrap_config = ExtrapConfig('', '', '')
   if cmdline_args.extrap_dir != '':
