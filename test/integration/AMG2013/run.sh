@@ -11,6 +11,7 @@ export TEST_DIR=$testDir
 
 echo -e "[ -- ## testDir == $testDir ## -- ]"
 
+export PATH=$PWD/../jq:$PATH
 # Export all the Pira tools for the integration test
 cd $testDir/../../../resources
 . setup_paths.sh
@@ -46,7 +47,7 @@ echo -e "\n----- Build AMG2013 / build call graph -----"
 # Builds the compile_commands.json file
 bear make CC="OMPI_CC=clang mpicc" -j
 # Now cgcollector can read the compile_commands.json file, to retrieve the commands required
-for f in $(find . -name "*.c"); do
+for f in $(cat compile_commands.json | jq  -r 'map(.directory + "/" + .file) | .[]'  | grep '\.c'); do
 	echo "Processing $f"
 	cgc $f >/dev/null 2>&1
 done

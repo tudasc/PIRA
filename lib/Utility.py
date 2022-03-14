@@ -377,7 +377,7 @@ def build_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -
   return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '.txt'
 
 
-def build_previous_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str, iteration_number: int) -> str:
+def build_numbered_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str, iteration_number: int) -> str:
   return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '_it-' + str(iteration_number) + '.txt'
 
 

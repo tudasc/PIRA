@@ -1,0 +1,26 @@
+{
+    "builds": {
+        "%gol": {
+            "items": {
+                "gol": {
+                    "analyzer": "../../../extern/install/metacg/bin/",
+                    "argmap": {
+                        "mapper": "Linear",
+												"size": [50, 80, 110, 150, 300, 500]
+                    },
+                    "cubes": "/home/j_lehr/.local/share/pira/gol_cubes",
+                    "flavors": [
+                        "ct"
+                    ],
+                    "functors": "./functors",
+                    "mode": "CT"
+                }
+            }
+        }
+    },
+    "directories": {
+        "gol": "./gol/serial_non_template"
+    },
+    "glob-flavors": [],
+    "glob-submitter": {}
+}

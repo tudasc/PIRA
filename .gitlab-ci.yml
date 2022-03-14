@@ -67,7 +67,7 @@ pira:
   artifacts:
     when: always
     reports:
-      junit: 
+      junit:
         - test/unit/report-*.xml
 
 # Run linting as part of unit-tests (early)
@@ -199,6 +199,21 @@ run-gameoflife-hybrid-test:
     - cd test/integration/GameOfLife_hybrid_filter
     - ./run.sh
     - *lb-tear-down
+
+# Disabled as it requires MetaCG Version 2
+# run-gameoflife-heuristic-test:
+#  stage: integration-test
+#  tags:
+#    - hlb0001
+#  before_script: *lb-setup
+#  variables:
+#    GIT_STRATEGY: none
+#    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+#  script:
+#    - echo 'Running GameOfLife-heuristic integration test'
+#    - cd test/integration/GameOfLife_heuristic
+#    - ./run.sh
+#    - *lb-tear-down
 
 run-load-imbalance-detection-test:
   stage: integration-test
