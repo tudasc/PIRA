@@ -1,22 +1,26 @@
 {
-  "builds":{
-		"%base": {
-			"items": {
-				"test_item": {
-					"analyzer": "/tmp",
-					"cubes": "/tmp",
-					"flavors": [ "ct" ],
-					"functors": "../functors",
-					"mode": "ct",
-					"argmap": {
-						"mapper": "Linear",
-						"p1": [ "1" ]
-					}
-				}
-			}
-		}
-	},
-	"directories": {
-		"base": "/tmp"
-	}
+  "builds": {
+    "%base": {
+      "items": {
+        "test_item": {
+          "analyzer": "/tmp",
+          "argmap": {
+            "mapper": "Linear",
+            "p1": [
+              "1"
+            ]
+          },
+          "cubes": "/tmp",
+          "flavors": [
+            "ct"
+          ],
+          "functors": "../functors",
+          "mode": "ct"
+        }
+      }
+    }
+  },
+  "directories": {
+    "base": "/tmp"
+  }
 }

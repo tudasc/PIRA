@@ -1,32 +1,32 @@
 {
-	"builds": {
-		"%amg2013": {
-			"items": {
-				"amg": {
-					"analyzer": "../../../extern/install/metacg/bin/",
-					"argmap": {
-						"mapper": "Linear",
-							"X":[
-								10,
-								12,
-								24,
-								30,
-								40
-							]
-					},
-					"cubes": "/home/j_lehr/.local/share/pira/amg_cubes",
-					"flavors": [
-						"ct_mpi"
-					],
-					"functors": "./functors",
-					"mode": "CT"
-				}
-			}
-		}
-	},
-	"directories": {
-		"amg2013": "./AMG2013"
-	},
-  "glob-flavors":[],
-  "glob-submitter":{}
+  "builds": {
+    "%amg2013": {
+      "items": {
+        "amg": {
+          "analyzer": "../../../extern/install/metacg/bin/",
+          "argmap": {
+            "X": [
+              10,
+              12,
+              24,
+              30,
+              40
+            ],
+            "mapper": "Linear"
+          },
+          "cubes": "/home/j_lehr/.local/share/pira/amg_cubes",
+          "flavors": [
+            "ct_mpi"
+          ],
+          "functors": "./functors",
+          "mode": "CT"
+        }
+      }
+    }
+  },
+  "directories": {
+    "amg2013": "./AMG2013"
+  },
+  "glob-flavors": [],
+  "glob-submitter": {}
 }
