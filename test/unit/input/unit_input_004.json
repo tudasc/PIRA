@@ -1,63 +1,60 @@
 {
-  "description":{
-    "directories":[
-      "/this/is/top_dir"
-    ],
+  "description": {
     "builds": {
-        "/this/is/top_dir": {
-          "prefix": "my_prefix",
-          "items": [
-            "item01",
-						"item02"
-          ],
-          "flavors": {
+      "/this/is/top_dir": {
+        "flavors": {
+          "builders": {
+            "item01": "/builder/directory/for/functor/item01",
+            "item02": "/builder/directory/for/functor/item02"
+          },
+          "instrument-analysis": {
             "item01": [
-              "item01-flavor01",
-              "item01-flavor02"
+              "/instrumentation_analysis/directory/for/functors/item01",
+              "/tmp/where/cube/files/are/item01",
+              "/path/to/analysis/tool/item01"
             ],
-						"item02": [
-							"item02-flavor01"
-						],
-            "instrument-analysis": {
-              "item01": [
-                "/instrumentation_analysis/directory/for/functors/item01",
-                "/tmp/where/cube/files/are/item01",
-                "/path/to/analysis/tool/item01"
-                ],
-              "item02":[
-                "/instrumentation_analysis/directory/for/functors/item02",
-                "/tmp/where/cube/files/are/item02",
-                "/path/to/analysis/tool/item02"
-              ]
+            "item02": [
+              "/instrumentation_analysis/directory/for/functors/item02",
+              "/tmp/where/cube/files/are/item02",
+              "/path/to/analysis/tool/item02"
+            ]
+          },
+          "item01": [
+            "item01-flavor01",
+            "item01-flavor02"
+          ],
+          "item02": [
+            "item02-flavor01"
+          ],
+          "run": {
+            "item01": {
+              "args": [
+                "argument item01",
+                "argument for item 02"
+              ],
+              "batch_script": "/batch_script/directory/for/item01",
+              "runner": "/runner/directory/for/functor/item01",
+              "submitter": "/submitter/directory/for/functor/item01"
             },
-            "builders": {
-              "item01": "/builder/directory/for/functor/item01",
-              "item02": "/builder/directory/for/functor/item02"
-            },
-            "run": {
-              "item01": {
-                "args": [
-									"argument item01",
-									"argument for item 02"
-                ],
-                "runner": "/runner/directory/for/functor/item01",
-                "submitter":"/submitter/directory/for/functor/item01",
-                "batch_script":"/batch_script/directory/for/item01"
-              },
-              "item02":{
-                "args":[
-                ],
-                "runner":"/runner/directory/for/functor/item02",
-                "submitter":"/submitter/directory/for/functor/item02",
-                "batch_script":"/batch_script/directory/for/item02"
-              }
+            "item02": {
+              "args": [],
+              "batch_script": "/batch_script/directory/for/item02",
+              "runner": "/runner/directory/for/functor/item02",
+              "submitter": "/submitter/directory/for/functor/item02"
             }
           }
-        }
-      },
-      "glob-flavors":[
-      ],
-      "glob-submitter":{
+        },
+        "items": [
+          "item01",
+          "item02"
+        ],
+        "prefix": "my_prefix"
       }
+    },
+    "directories": [
+      "/this/is/top_dir"
+    ],
+    "glob-flavors": [],
+    "glob-submitter": {}
   }
 }

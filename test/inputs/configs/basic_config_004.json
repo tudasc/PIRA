@@ -1,22 +1,26 @@
 {
-  "builds":{
-		"%base": {
-			"items": {
-				"i01": {
-					"analyzer": "/does/exist",
-					"cubes": "/does/exist",
-					"flavors": [ "invalid" ],
-					"functors": "../functors",
-					"mode": "ct",
-					"argmap": {
-						"mapper": "Linear",
-						"p1": [ "1" ]
-					}
-				}
-			}
-		}
-	},
-	"directories": {
-		"base": "/does/exist"
-	}
+  "builds": {
+    "%base": {
+      "items": {
+        "i01": {
+          "analyzer": "/does/exist",
+          "argmap": {
+            "mapper": "Linear",
+            "p1": [
+              "1"
+            ]
+          },
+          "cubes": "/does/exist",
+          "flavors": [
+            "invalid"
+          ],
+          "functors": "../functors",
+          "mode": "ct"
+        }
+      }
+    }
+  },
+  "directories": {
+    "base": "/does/exist"
+  }
 }

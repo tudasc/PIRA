@@ -2,29 +2,29 @@
   "builds": {
     "%home": {
       "items": {
-      "item01": {
-        "analyzer": "/path/to/analysis/tool",
-        "cubes": "/where/to/put/cube/files/item01",
-        "flavors": [
-          "test"
-        ],
-        "functors": "/directory/for/functors/item01",
-        "mode": "CT",
-        "argmap": {
-          "mapper": "Linear",
-          "param1": [
-            "val1",
-            "val2",
-            "val3"
+        "item01": {
+          "analyzer": "/path/to/analysis/tool",
+          "argmap": {
+            "mapper": "Linear",
+            "param1": [
+              "val1",
+              "val2",
+              "val3"
+            ],
+            "param2": [
+              "yval1",
+              "yval2",
+              "yval3"
+            ]
+          },
+          "cubes": "/where/to/put/cube/files/item01",
+          "flavors": [
+            "test"
           ],
-          "param2": [
-            "yval1",
-            "yval2",
-            "yval3"
-          ]
+          "functors": "/directory/for/functors/item01",
+          "mode": "CT"
         }
       }
-    }
     }
   },
   "directories": {

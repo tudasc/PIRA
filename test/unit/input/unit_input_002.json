@@ -2,45 +2,45 @@
   "builds": {
     "%home": {
       "items": {
-      "item01": {
-        "analyzer": "/path/to/analysis/tool",
-        "cubes": "/where/to/put/cube/files",
-        "flavors": [
-          "local-flav1",
-          "vanilla"
-        ],
-        "functors": "/directory/for/functors/item01",
-        "mode": "CT",
-        "argmap": {
-          "mapper": "CartesianProduct",
-          "param1": [
-            "val1",
-            "val2"
+        "item01": {
+          "analyzer": "/path/to/analysis/tool",
+          "argmap": {
+            "mapper": "CartesianProduct",
+            "param1": [
+              "val1",
+              "val2"
+            ],
+            "param2": [
+              "val3",
+              "val4"
+            ]
+          },
+          "cubes": "/where/to/put/cube/files",
+          "flavors": [
+            "local-flav1",
+            "vanilla"
           ],
-          "param2": [
-            "val3",
-            "val4"
-          ]
-        }
-      },
-      "item02": {
-        "analyzer": "/path/to/analysis/tool",
-        "cubes": "/where/to/put/cube/files/item02",
-        "flavors": [
-          "test-flav"
-        ],
-        "functors": "/directory/for/functors/item02",
-        "mode": "CT",
-        "argmap": {
-          "mapper": "Linear",
-          "param1": [
-            "val1",
-            "val2",
-            "val3"
-          ]
+          "functors": "/directory/for/functors/item01",
+          "mode": "CT"
+        },
+        "item02": {
+          "analyzer": "/path/to/analysis/tool",
+          "argmap": {
+            "mapper": "Linear",
+            "param1": [
+              "val1",
+              "val2",
+              "val3"
+            ]
+          },
+          "cubes": "/where/to/put/cube/files/item02",
+          "flavors": [
+            "test-flav"
+          ],
+          "functors": "/directory/for/functors/item02",
+          "mode": "CT"
         }
       }
-    }
     }
   },
   "directories": {

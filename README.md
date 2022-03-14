@@ -184,19 +184,18 @@ An item in PIRA is a target application, built in a specific way, which is the r
 
 ```{.json}
 {
-    "builds": {
-        "%gol": {
-            "items": {
-                "gol": {
-                    ...
-                }
-            }
+  "builds": {
+    "%gol": {
+      "items": {
+        "gol": {
+          ...
         }
+      }
     }
-    "directories": {
-        "gol": "./gol/serial_non_template"
-    }
-    }
+  }
+  "directories": {
+    "gol": "./gol/serial_non_template"
+  }
 }
 ```
 
@@ -214,8 +213,8 @@ In the example, a *linear* mapper is used, which simply iterates the values of t
 
 ```{.json}
 "argmap": {
-    "mapper": "Linear",
-    "size": [50, 80, 110, 150, 300, 500]
+  "mapper": "Linear",
+  "size": [50, 80, 110, 150, 300, 500]
 }
 ```
 ##### Cubes
@@ -238,8 +237,8 @@ In the example, PIRA is pointed to a directory called *functors* relative to the
 
 ```{.json}
 "flavors": [
-    "ct"
-    ],
+  "ct"
+],
 "functors": "./functors",
 "mode": "CT"
 ```
@@ -274,7 +273,6 @@ PIRA passes the following keyword arguments to all functors.
 In addition, different PIRA components may pass additional arguments.
 
 *Important*: We now ship our own Score-P version. Thus, it is no longer required to adjust compile commands in PIRA.
-As a result, some of the additionally passed functor arguments might go away or are deprecated.
 Check out the functors in `test/integration/AMG2013` for example usages of the different information.
 
 ##### All Functors
@@ -299,11 +297,11 @@ Currently, no information is passed to all functors
 Additional parameters are required for some analysis modes. Specifically, PIRA LIDe (see below) and Extra-P modeling analysis require user provided parameters. Create a JSON file and provide its path to PIRA using the `--analysis-parameters`-switch. The following example contains parameters for the Extra-P modeling mode. The available strategies to aggregate multiple Extra-P models (when a function is called in different contexts) are: `FirstModel`, `Sum`, `Average`, `Maximum`.
 ```{.json}
 {
-    "Modeling": {
-        "extrapolationThreshold": 2.1,
-        "statementThreshold": 200,
-        "modelAggregationStrategy": "Sum"
-    }
+  "Modeling": {
+    "extrapolationThreshold": 2.1,
+    "statementThreshold": 200,
+    "modelAggregationStrategy": "Sum"
+  }
 }
 ```
 
@@ -312,14 +310,14 @@ For more details about the load imbalance detection feature, please refer to <a 
 
 ```{.json}
 {
-    "metricType": "ImbalancePercentage",
-    "imbalanceThreshold": 0.05,
-    "relevanceThreshold": 0.05,
-    "contextStrategy": "None",
-    "contextStepCount": 5,
-    "childRelevanceStrategy": "RelativeToMain",
-    "childConstantThreshold": 1,
-    "childFraction": 0.001
+  "metricType": "ImbalancePercentage",
+  "imbalanceThreshold": 0.05,
+  "relevanceThreshold": 0.05,
+  "contextStrategy": "None",
+  "contextStepCount": 5,
+  "childRelevanceStrategy": "RelativeToMain",
+  "childConstantThreshold": 1,
+  "childFraction": 0.001
 }
 ```
 * ***metricType***: Metric which is used to quantify load imbalance in function runtimes. If unsure, use *Imbalance Percentage*. (Other experimental options: *Efficiency*, *VariationCoeff*)
