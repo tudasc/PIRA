@@ -4,7 +4,7 @@ License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICE
 Description: This is PIRA.
 """
 
-__version__ = '0.3.5'
+__version__ = '0.4.0'
 
 import argparse
 import lib.Logging as log
@@ -32,6 +32,7 @@ parser.add_argument('--config-version', help='Which config file version to use',
 parser.add_argument('--runtime-filter', help='Use run-time filtering', default=False, action='store_true')
 parser.add_argument('--iterations', help='Number of Pira iterations', default=3, type=int)
 parser.add_argument('--repetitions', help='Number of measurement repetitions', default=3, type=int)
+parser.add_argument('--analysis-parameters', help='Path to json file containing analysis parameters. (required for Extra-P and LIDe mode', default='')
 
 # --- Pira debug options
 parser.add_argument('--tape', help='Path to tape file to dump.')
@@ -52,7 +53,7 @@ experimental_group.add_argument('--call-site-instrumentation', help='Enable call
 experimental_group.add_argument('--hybrid-filter-iters', help='Do compiletime-filtering after x iterations', default=0, type=int)
 experimental_group.add_argument('--export', help='Export performance models to IPCG file.', default=False, action='store_true')
 experimental_group.add_argument('--export-runtime-only', help='Export only runtime data used for extra-p modeling', default=False, action='store_true')
-experimental_group.add_argument('--load-imbalance-detection', help='Provide a path to an load imbalance detection configuration file (JSON) to enable load imbalance detection', type=str, default='')
+experimental_group.add_argument('--lide', help='Enable load imbalance detection', action='store_true')
 
 # -- General Info
 parser.add_argument('--version', help='Shows the version of this PIRA installation', action='version', version='%(prog)s ' + __version__)

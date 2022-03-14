@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # File: run.sh
 # License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
@@ -7,14 +8,10 @@
 testDir=$PWD
 export TEST_DIR=$testDir
 
-export PATH=$PWD/../bear/install/bin:$PATH
-echo $PATH
-
 # Export all the Pira tools for the integration test
 cd $testDir/../../../resources
 . setup_paths.sh
 cd $testDir
-echo $PATH
 
 echo -e "\n------ PATH -----"
 echo $PATH
@@ -36,12 +33,12 @@ mv GameOfLife-PIRA-testing gol
 
 echo -e "\n----- Build GameOfLife / build call graph -----"
 cd gol/serial_non_template
-bear make gol 2>&1 > /dev/null
+bear make gol -j 2>&1 > /dev/null
 cgc main.cpp 2>&1 > /dev/null
 cgc SerialGoL.cpp 2>&1 > /dev/null
 echo "null" > gol.ipcg
 cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
-cp gol.ipcg $PWD/../../../../../extern/install/pgis/bin/gol_ct.mcg
+cp gol.ipcg $PWD/../../../../../extern/install/metacg/bin/gol_ct.mcg
 cd ../..
 
 cd gol
@@ -58,8 +55,7 @@ echo -e "Using ${pira_dir} for runtime files\n"
 
 sed -i "s|CUBES_FOLDER|${pira_dir}/gol_cubes|g" $testDir/gol_config.json
 
-python3 ../../../../pira.py --config-version 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../gol.tp $testDir/gol_config.json
-
+python3 ../../../../pira.py --config-version 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../gol.tp --analysis-parameters $testDir/parameters.json $testDir/gol_config.json
 pirafailed=$?
 
 rm -rf ${pira_dir}/piraII

@@ -11,6 +11,7 @@ import lib.FunctorManagement as F
 import lib.TimeTracking as T
 import lib.Database as D
 import lib.Exporter as E
+import lib.Checker as C
 from lib.DefaultFlags import BackendDefaults
 from lib.RunnerFactory import PiraRunnerFactory
 from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader
@@ -21,7 +22,7 @@ from lib.Configuration import TargetConfig, PiraConfig, ExtrapConfig, Invocation
 from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as BU
 from lib.Analyzer import Analyzer as A
-from lib.Checker import Checker as checker
+
 
 import typing
 import sys
@@ -73,7 +74,7 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
           instr_builder = BU(target_config, instrument, instr_file)
           tracker.m_track('Instrument Build', instr_builder, 'build')
 
-      #Run Phase
+      # Run Phase
       L.get_logger().log('Running profiling measurements', level='info')
       instr_rr = runner.do_profile_run(target_config, iteration)
       if(csv_config.should_export()):
@@ -122,10 +123,10 @@ def needs_rebuild(iteration: int) -> bool:
 
 
 
-def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, str]:
+def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, ExtrapConfig]:
   use_extra_p = False
   extrap_config = ExtrapConfig('', '', '')
-  if cmdline_args.extrap_dir is not '':
+  if cmdline_args.extrap_dir != '':
     use_extra_p = True
     extrap_config = ExtrapConfig(cmdline_args.extrap_dir, cmdline_args.extrap_prefix, '')
 
@@ -159,13 +160,13 @@ def main(cmdline_args) -> None:
   csv_config = process_args_for_csv(cmdline_args)
 
   try:
-    if invoc_cfg.get_config_version() is 1:
+    if invoc_cfg.get_config_version() == 1:
       config_loader = CLoader()
     else:
       config_loader = SCLoader()
 
     configuration = config_loader.load_conf()
-    checker.check_configfile(configuration)
+    C.Checker.check_configfile(configuration)
 
     if B.check_queued_job():
       # FIXME: Implement

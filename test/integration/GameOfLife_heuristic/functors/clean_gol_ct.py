@@ -3,7 +3,7 @@ def get_method():
 
 
 def passive(benchmark, **kwargs):
-  return 'make CC="OMPI_CC=clang mpicc" -j'
+  return 'make clean'
 
 
 def active(benchmark, **kwargs):

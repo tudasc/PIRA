@@ -75,8 +75,10 @@ def copy_file(source_file: str, target_file: str) -> None:
   # This may slow down the copy process and should be removed as soon as the underlying problem has been fixed.
   shutil._USE_CP_SENDFILE = False
 
-  shutil.copyfile(source_file, target_file)
-
+  try:
+    shutil.copyfile(source_file, target_file)
+  except Exception as e:
+    L.get_logger().log('Utility::copy_file: shutil.copyfile went wrong ' + str(e))
 
 
 def lines_in_file(file_name: str) -> int:
@@ -186,6 +188,9 @@ def get_default_pira_dir() -> str:
 def get_default_config_file() -> str:
   return get_cwd() + '/config.json'
 
+def get_default_analysis_parameters_config_file() -> str:
+  return get_cwd() + '/parameters.json'
+
 # --- File-related utils --- #
 
 def json_to_canonic(json_elem):
@@ -213,15 +218,6 @@ def json_to_canonic(json_elem):
 def remove_from_pgoe_out_dir(directory: str) -> None:
   remove(directory + "/" + "out")
 
-
-def lines_in_file(file_name: str) -> int:
-  if check_file(file_name):
-    content = read_file(file_name)
-    lines = len(content.split('\n'))
-    return lines
-
-  L.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
-  return 0
 
 def remove_arrow_lines(file_name: str) -> None:
   if check_file(file_name):
@@ -381,7 +377,7 @@ def build_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -
   return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '.txt'
 
 
-def build_previous_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str, iteration_number: int) -> str:
+def build_numbered_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str, iteration_number: int) -> str:
   return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '_it-' + str(iteration_number) + '.txt'
 
 

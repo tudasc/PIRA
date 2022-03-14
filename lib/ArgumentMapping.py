@@ -112,12 +112,12 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
     arg_vals = self._argmap.values()
     l_elem = list(arg_vals)[0]
     for e in arg_vals:
-      if len(e) is not len(l_elem):
+      if len(e) != len(l_elem):
         raise RuntimeError('CmdlineLinearArgumentMapper: All parameters need the same number of values')
     self._num_elems = len(l_elem)
 
   def __iter__(self):
-    if len(self._argmap.keys()) is 1:
+    if len(self._argmap.keys()) == 1:
       key = list(self._argmap.keys())[0]
       # If this is not a file mapper, we just return as normal
       if self._files == None:
@@ -150,7 +150,7 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
         files = []
 
   def __getitem__(self, key):
-    if key is 0:
+    if key == 0:
       key = list(self._argmap.keys())[0]
       return PiraArgument(key, self._argmap[key][0])
 
@@ -177,7 +177,7 @@ class CmdlineCartesianProductArgumentMapper(ArgumentMapper):
     for k in keys:
       for v in self._argmap[k]:
         for kk in keys:
-          if k is kk:
+          if k == kk:
             continue
           for vv in self._argmap[kk]:
             res.append(k)

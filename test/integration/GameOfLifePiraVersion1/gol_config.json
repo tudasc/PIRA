@@ -1,26 +1,28 @@
 {
-    "builds": {
-        "%gol": {
-            "items": {
-                "gol": {
-                    "analyzer": "../../../extern/install/pgis/bin/",
-                    "argmap": {
-                        "mapper": "Linear",
-												"size": [150]
-                    },
-                    "cubes": "CUBES_FOLDER",
-                    "flavors": [
-                        "ct"
-                    ],
-                    "functors": "./functors",
-                    "mode": "CT"
-                }
-            }
+  "builds": {
+    "%gol": {
+      "items": {
+        "gol": {
+          "analyzer": "../../../extern/install/metacg/bin/",
+          "argmap": {
+            "mapper": "Linear",
+            "size": [
+              150
+            ]
+          },
+          "cubes": "/home/j_lehr/.local/share/pira/gol_cubes",
+          "flavors": [
+            "ct"
+          ],
+          "functors": "./functors",
+          "mode": "CT"
         }
-    },
-    "directories": {
-        "gol": "./gol/serial_non_template"
-    },
-    "glob-flavors": [],
-    "glob-submitter": {}
+      }
+    }
+  },
+  "directories": {
+    "gol": "./gol/serial_non_template"
+  },
+  "glob-flavors": [],
+  "glob-submitter": {}
 }

@@ -2,7 +2,7 @@
 #
 # File: run.sh
 # License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-# Description: Runs the game of life integration test
+# Description: Runs the game of life integration test using a manually specified heuristic. Requires MetaCG version 2
 #
 
 testDir=$PWD
@@ -33,7 +33,7 @@ mv GameOfLife-PIRA-testing gol
 
 echo -e "\n----- Build GameOfLife / build call graph -----"
 cd gol/serial_non_template
-bear make gol 2>&1 > /dev/null
+bear make gol -j 2>&1 > /dev/null
 cgc main.cpp 2>&1 > /dev/null
 cgc SerialGoL.cpp 2>&1 > /dev/null
 echo "null" > gol.ipcg
@@ -55,8 +55,7 @@ echo -e "Using ${pira_dir} for runtime files\n"
 
 sed -i "s|CUBES_FOLDER|${pira_dir}/gol_cubes|g" $testDir/gol_config.json
 
-python3 ../../../../pira.py --config-version 2 --tape ../gol.tp $testDir/gol_config.json
-
+python3 ../../../../pira.py --config-version 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../gol.tp --analysis-parameters $testDir/parameters.json $testDir/gol_config.json
 pirafailed=$?
 
 rm -rf ${pira_dir}/piraII

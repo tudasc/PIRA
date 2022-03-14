@@ -1,0 +1,7 @@
+{
+  "Modeling": {
+    "extrapolationThreshold": 2.1,
+    "modelAggregationStrategy": "FirstModel",
+    "statementThreshold": 200
+  }
+}

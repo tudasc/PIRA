@@ -1,26 +1,28 @@
 {
-    "builds": {
-        "%imbalance": {
-            "items": {
-                "imbalance": {
-                    "analyzer": "../../../extern/install/pgis/bin/",
-                    "argmap": {
-                        "mapper": "Linear",
-			"size": [100]
-                    },
-                    "cubes": "/tmp/pira_imbalance",
-                    "flavors": [
-                        "ct"
-                    ],
-                    "functors": "./functors",
-                    "mode": "CT"
-                }
-            }
+  "builds": {
+    "%imbalance": {
+      "items": {
+        "imbalance": {
+          "analyzer": "../../../extern/install/metacg/bin/",
+          "argmap": {
+            "mapper": "Linear",
+            "size": [
+              100
+            ]
+          },
+          "cubes": "/tmp/pira_imbalance",
+          "flavors": [
+            "ct"
+          ],
+          "functors": "./functors",
+          "mode": "CT"
         }
-    },
-    "directories": {
-        "imbalance": "./imbalance"
-    },
-    "glob-flavors": [],
-    "glob-submitter": {}
+      }
+    }
+  },
+  "directories": {
+    "imbalance": "./imbalance"
+  },
+  "glob-flavors": [],
+  "glob-submitter": {}
 }

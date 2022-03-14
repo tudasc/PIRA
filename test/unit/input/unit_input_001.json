@@ -1,65 +1,63 @@
 {
-  "description":{
-    "directories":[
-      "/home/something/top_dir"
-    ],
+  "description": {
     "builds": {
-        "/home/something/top_dir": {
-          "prefix": "",
-          "items": [
-            "item01",
-						"item02"
-          ],
-          "flavors": {
+      "/home/something/top_dir": {
+        "flavors": {
+          "builders": {
+            "item01": "/builder/item01/directory",
+            "item02": "/another/builder/directory/for/item02"
+          },
+          "instrument-analysis": {
             "item01": [
-              "local-flav1",
-              "vanilla"
+              "/ins_anal/directory/for/functors",
+              "/where/to/put/cube/files",
+              "/path/to/analysis/tool"
             ],
-						"item02": [
-							"local-flav1"
-						],
-            "instrument-analysis": {
-              "item01": [
-                "/ins_anal/directory/for/functors",
-                "/where/to/put/cube/files",
-                "/path/to/analysis/tool"
-                ],
-              "item02":[
-                "/item02/path/to/functors",
-                "/shared/work/cubes",
-                "/directory/where_to/find/analyzer"
-              ]
+            "item02": [
+              "/item02/path/to/functors",
+              "/shared/work/cubes",
+              "/directory/where_to/find/analyzer"
+            ]
+          },
+          "item01": [
+            "local-flav1",
+            "vanilla"
+          ],
+          "item02": [
+            "local-flav1"
+          ],
+          "run": {
+            "item01": {
+              "args": [],
+              "batch_script": "/some/madeup/script.sh",
+              "runner": "/path/to/runner_functors/item01",
+              "submitter": "/another/path/to/item01/submitter"
             },
-            "builders": {
-              "item01": "/builder/item01/directory",
-              "item02": "/another/builder/directory/for/item02"
-            },
-            "run": {
-              "item01": {
-                "args": [
-                ],
-                "runner": "/path/to/runner_functors/item01",
-                "submitter":"/another/path/to/item01/submitter",
-                "batch_script":"/some/madeup/script.sh"
-              },
-              "item02":{
-                "args":[
-									"-i 200",
-									"-g 100"
-                ],
-                "runner":"/item02/runner/functors.dir",
-                "submitter":"",
-                "batch_script":""
-              }
+            "item02": {
+              "args": [
+                "-i 200",
+                "-g 100"
+              ],
+              "batch_script": "",
+              "runner": "/item02/runner/functors.dir",
+              "submitter": ""
             }
           }
-        }
-      },
-      "glob-flavors":[
-      ],
-      "glob-submitter":{
-        "flav1":"/path/to/py/functor",
-        "flav2":"path/to/py/functor"
+        },
+        "items": [
+          "item01",
+          "item02"
+        ],
+        "prefix": ""
       }
+    },
+    "directories": [
+      "/home/something/top_dir"
+    ],
+    "glob-flavors": [],
+    "glob-submitter": {
+      "flav1": "/path/to/py/functor",
+      "flav2": "path/to/py/functor"
+    }
   }
 }

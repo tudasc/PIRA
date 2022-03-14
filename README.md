@@ -14,6 +14,10 @@ For more information please see our papers:
   <td valign="top"><a name="ref-pira-2019"></a>[PI19]</td>
   <td>Jan-Patrick Lehr, Alexandru Calotoiu, Christian Bischof, Felix Wolf. <a href="https://doi.org/10.1109/ProTools49597.2019.00011">Automatic Instrumentation Refinement for Empirical Performance Modeling</a>. In <i>International Workshop on Programming and Performance Visualization Tools (ProTools)</i>, pages 40-47, IEEE, 2019.</td>
 </tr>
+<tr>
+  <td valign="top"><a id="ref-pira-2021"></a>[PI21]</td>
+  <td>Peter Arzt, Yannic Fischler, Jan-Patrick Lehr, Christian Bischof. <a href="https://doi.org/10.1007/978-3-030-85665-6_2">Automatic Low-Overhead Load-Imbalance Detection in MPI Applications</a>. In <i>Euro-Par 2021: Parallel Processing. Lecture Notes in Computer Science, vol 12820</i>, pages 19-34, Springer, 2021.</td>
+</tr>
 </table>
 
 
@@ -60,12 +64,12 @@ git submodule update --init
 
 ### Building PIRA
 
-Second, build the dependent submodules using the script provided.
+Second, build the dependent submodules using the script provided, or pass values for the different options (see usage info via `-h` for options available).
 Specify the number of compile processes to be spawned for the compilation of PIRA's externals.
 
 ```{.sh}
 cd resources
-./build_submodules.sh <ncores>
+./build_submodules.sh -p <ncores>
 ```
 
 #### PIRA Docker
@@ -84,7 +88,8 @@ XDG_DATA_HOME=/tmp ./run.sh
 
 ### Using PIRA
 
-For a full example how to use PIRA, checkout the `run.sh` scripts in the `/test/integration` folder.
+For a full example how to use PIRA, checkout the `run.sh` scripts in the `/test/integration/*` folder.
+A potentially good starting point is the `GameOfLife` folder and its test case.
 
 First, set up the required paths by sourcing the script in the `resources` folder.
 
@@ -121,6 +126,7 @@ In contrast, with runtime filtering, the compiler inserts instrumentation hooks 
 * ```--extrap-dir``` The base directory where the Extra-p folder structure is placed.
 * ```--extrap-prefix``` Extra-P prefix, should be a sequence of characters.
 * ```--version``` Prints the version number of the PIRA installation
+* ```--analysis-parameters``` Path to configuration file containing analysis parameters for PGIS. Required for both Extra-P and LIDe mode.
 
 #### Highly Experimental Arguments to PIRA
 
@@ -178,19 +184,18 @@ An item in PIRA is a target application, built in a specific way, which is the r
 
 ```{.json}
 {
-    "builds": {
-        "%gol": {
-            "items": {
-                "gol": {
-                    ...
-                }
-            }
+  "builds": {
+    "%gol": {
+      "items": {
+        "gol": {
+          ...
         }
+      }
     }
-    "directories": {
-        "gol": "./gol/serial_non_template"
-    }
-    }
+  }
+  "directories": {
+    "gol": "./gol/serial_non_template"
+  }
 }
 ```
 
@@ -208,8 +213,8 @@ In the example, a *linear* mapper is used, which simply iterates the values of t
 
 ```{.json}
 "argmap": {
-    "mapper": "Linear",
-    "size": [50, 80, 110, 150, 300, 500]
+  "mapper": "Linear",
+  "size": [50, 80, 110, 150, 300, 500]
 }
 ```
 ##### Cubes
@@ -232,8 +237,8 @@ In the example, PIRA is pointed to a directory called *functors* relative to the
 
 ```{.json}
 "flavors": [
-    "ct"
-    ],
+  "ct"
+],
 "functors": "./functors",
 "mode": "CT"
 ```
@@ -268,7 +273,6 @@ PIRA passes the following keyword arguments to all functors.
 In addition, different PIRA components may pass additional arguments.
 
 *Important*: We now ship our own Score-P version. Thus, it is no longer required to adjust compile commands in PIRA.
-As a result, some of the additionally passed functor arguments might go away or are deprecated.
 Check out the functors in `test/integration/AMG2013` for example usages of the different information.
 
 ##### All Functors
@@ -289,18 +293,35 @@ Currently, no information is passed to all functors
 * ***args***: The arguments passed to the target application as a list, i.e., `[0]` accesses the first argument, `[1]` the second, and so on.
 * ***LD_PRELOAD***: The path to the `.so` file implementing the MPI wrapper functions (crucial for MPI filtering).
 
-### Load imbalance detection
-To enable PIRA's load imbalance detection feature, provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:
+#### Analyzer parameters
+Additional parameters are required for some analysis modes. Specifically, PIRA LIDe (see below) and Extra-P modeling analysis require user provided parameters. Create a JSON file and provide its path to PIRA using the `--analysis-parameters`-switch. The following example contains parameters for the Extra-P modeling mode. The available strategies to aggregate multiple Extra-P models (when a function is called in different contexts) are: `FirstModel`, `Sum`, `Average`, `Maximum`.
+```{.json}
+{
+  "Modeling": {
+    "extrapolationThreshold": 2.1,
+    "statementThreshold": 200,
+    "modelAggregationStrategy": "Sum"
+  }
+}
+```
+
+### Load imbalance detection (PIRA LIDe)
+For more details about the load imbalance detection feature, please refer to <a href="#ref-pira-2021">[PI21]</a>. Provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:
 
 ```{.json}
 {
-    "metricType": "ImbalancePercentage",
-    "imbalanceThreshold": 0.05,
-    "relevanceThreshold": 0.05,
-    "contextStrategy": "None",
-    "contextStepCount": 5,
-    "childRelevanceStrategy": "RelativeToMain",
-    "childConstantThreshold": 1,
-    "childFraction": 0.001
+  "metricType": "ImbalancePercentage",
+  "imbalanceThreshold": 0.05,
+  "relevanceThreshold": 0.05,
+  "contextStrategy": "None",
+  "contextStepCount": 5,
+  "childRelevanceStrategy": "RelativeToMain",
+  "childConstantThreshold": 1,
+  "childFraction": 0.001
 }
 ```
+* ***metricType***: Metric which is used to quantify load imbalance in function runtimes. If unsure, use *Imbalance Percentage*. (Other experimental options: *Efficiency*, *VariationCoeff*)
+* ***imbalanceThreshold***: Minimum metric value to be rated as imbalanced. For *Imbalance Percentage*, 5% can be used a starting value.
+* ***relevanceThreshold***: Minimum runtime fraction a function is required to surpass in order to be rated as relevant.
+* ***contextStrategy***: Optional context handling strategy to expand instrumentation with further functions. Use *MajorPathsToMain* for profile creation and *FindSynchronizationPoints* for tracing experiments. Use *None* to disable context handling. (Other experimental option: *MajorParentSteps* with its suboption *contextStepCount*)
+* ***childRelevanceStrategy***: Strategy to calculate statement threshold for the iterative descent. If unsure, use *RelativeToMain* which will calculate the threshold as max(*childConstantThreshold*, *childFraction* * (main's inclusive statement count))

@@ -35,15 +35,15 @@ class FunctorManager:
       We use the wholename, i.e. fully qualified path to the functor, as the key
       in our functor cache.
       '''
-      if func is 'basebuild':
+      if func == 'basebuild':
         path, name, wnm = self.get_builder(build, item, flavor, True)
-      elif func is 'build':
+      elif func == 'build':
         path, name, wnm = self.get_builder(build, item, flavor)
-      elif func is 'clean':
+      elif func == 'clean':
         path, name, wnm = self.get_cleaner(build, item, flavor)
-      elif func is 'analyze':
+      elif func == 'analyze':
         path, name, wnm = self.get_analyzer(build, item, flavor)
-      elif func is 'run':
+      elif func == 'run':
         path, name, wnm = self.get_runner(build, item, flavor)
       else:
         raise Exception('No such option available to load functor for. Value = ' + func)

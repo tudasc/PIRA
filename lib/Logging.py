@@ -28,13 +28,13 @@ class Logger:
     self.state[state_id] = not self.state[state_id]
 
   def print_level(self, level, msg) -> None:
-    if level is 'debug':
+    if level == 'debug':
       self.print_debug(msg)
-    elif level is 'info':
+    elif level == 'info':
       self.print_info(msg)
-    elif level is 'warn':
+    elif level == 'warn':
       self.print_warn(msg)
-    elif level is 'error':
+    elif level == 'error':
       self.print_error(msg)
 
   def print_debug(self, msg) -> None:
