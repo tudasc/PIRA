@@ -63,7 +63,7 @@ function check_directory_or_file_exists {
 }
 
 # Get command line parameters
-while getopts ":e:c:p:h" opt; do
+while getopts ":e:c:p:o:h" opt; do
   case $opt in
     e)
       if [ ! -d $OPTARG ]; then
@@ -84,6 +84,10 @@ while getopts ":e:c:p:h" opt; do
     p)
       parallel_jobs=$OPTARG
       echo "Setting parallel builds to: $parallel_jobs" >&2
+      ;;
+    o)
+      add_flags="$OPTARG"
+      echo "Passing additional flags " ${additional_flags}
       ;;
     h)
       print_usage
