@@ -27,36 +27,33 @@ which cgcollector
 which scorep
 which wrap.py
 
-# XXX Currently required from PGIS
+# XXX Currently required by PGIS
 mkdir $PWD/../../../extern/install/metacg/bin/out
 
 # Download the target application
-stat amg2013_0.tgz
+stat LULESH
 if [ $? -ne 0 ]; then
-  wget https://asc.llnl.gov/sites/asc/files/2021-01/amg2013_0.tgz
+  git clone https://github.com/LLNL/LULESH.git
 fi
-tar xzf amg2013_0.tgz
-cd AMG2013
+cd LULESH
+git checkout 3e01c40
+git clean -dxf
 
-# XXX The clang version we use is built w/o OMP support, therefore, remove OMP flags
-sed -i "s/-fopenmp//" Makefile.include
-sed -i "s/-DHYPRE_USING_OPENMP//" Makefile.include
-
-
-echo -e "\n----- Build AMG2013 / build call graph -----"
+echo -e "\n----- Build LULESG / build call graph -----"
+export LULESH_CXXFLAGS="-DUSE_MPI=1 -O3 -g -I. -Wno-unknown-pragmas -Wall"
 # Builds the compile_commands.json file
-bear make CC="OMPI_CC=clang mpicc" -j
+bear make CXX="mpicxx" CXXFLAGS="$LULESH_CXXFLAGS" -j
 # Now cgcollector can read the compile_commands.json file, to retrieve the commands required
-for f in $(cat compile_commands.json | jq  -r 'map(.directory + "/" + .file) | .[]'  | grep '\.c'); do
+for f in $(cat compile_commands.json | jq  -r 'map(.directory + "/" + .file) | .[]'  | grep '\.cc'); do
 	echo "Processing $f"
 	cgc $f >/dev/null 2>&1
 done
 # Build the full whole-program call-graph
-echo "null" > amg.ipcg # create empty json file
-find . -name "*.ipcg" -exec cgmerge amg.ipcg amg.ipcg {} + 2>&1 > ../cgcollector.log # merge all ipcg files into amg.ipcg
+echo "null" > lulesh.mcg # create empty json file
+find . -name "*.ipcg" -exec cgmerge lulesh.mcg lulesh.mcg {} + 2>&1 > ../cgcollector.log # merge all ipcg files into lulesh.mcg
 # Move the CG to where PIRA expects it
 echo $PWD
-cp amg.ipcg $PWD/../../../../extern/install/metacg/bin/amg_ct_mpi.mcg
+cp lulesh.mcg $PWD/../../../../extern/install/metacg/bin/lulesh_ct.mcg
 cd ..
 
 
@@ -71,14 +68,14 @@ fi
 export PIRA_DIR=$pira_dir
 echo -e "Using ${pira_dir} for runtime files\n"
 
-python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../amg.tp --analysis-parameters $testDir/parameters.json $testDir/amg_config.json
+python3 ../../../pira.py --config-version 2 --iterations 10 --repetitions 1 --lide --tape lulesh.tp --analysis-parameters $testDir/parameters.json $testDir/lulesh_config.json
 
 pirafailed=$?
 
 #rm -rf ${pira_dir}/piraII
-#rm -rf ${pira_dir}/amg_cubes-*
+#rm -rf ${pira_dir}/lulesh_cubes-*
 cd $testDir
-#rm -rf AMG2013
-../check.py ../../../extern/install/metacg/bin/out expected_instrumentation.json amg_ct_mpi || exit 1
+#rm -rf LULESH
+../check.py ../../../extern/install/metacg/bin/out expected_instrumentation.json lulesh_ct || exit 1
 
 exit $pirafailed

@@ -51,16 +51,17 @@ if [[ -z "${XDG_DATA_HOME}" ]]; then
 else
   pira_dir=$XDG_DATA_HOME/pira
 fi
+export PIRA_DIR=$pira_dir
 echo -e "Using ${pira_dir} for runtime files\n"
-
-sed -i "s|CUBES_FOLDER|${pira_dir}/gol_cubes|g" $testDir/gol_config.json
 
 python3 ../../../../pira.py --config-version 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../gol.tp --analysis-parameters $testDir/parameters.json $testDir/gol_config.json
 pirafailed=$?
-
+cd $testDir
 rm -rf ${pira_dir}/piraII
 rm -rf ${pira_dir}/gol_cubes-*
 cd $testDir
 rm -rf gol
+
+../check.py ../../../extern/install/metacg/bin/out expected_instrumentation.json gol_ct || exit 1
 
 exit $pirafailed

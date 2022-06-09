@@ -10,7 +10,7 @@
               100
             ]
           },
-          "cubes": "/tmp/pira_imbalance",
+          "cubes": "${PIRA_DIR}/imbalance_cubes",
           "flavors": [
             "ct"
           ],

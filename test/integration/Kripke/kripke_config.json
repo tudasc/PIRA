@@ -1,22 +1,18 @@
 {
   "builds": {
-    "%amg2013": {
+    "%kripke": {
       "items": {
-        "amg": {
+        "kripke": {
           "analyzer": "../../../extern/install/metacg/bin/",
           "argmap": {
-            "X": [
-              10,
-              12,
-              24,
-              30,
-              40
+            "groups": [
+              128
             ],
             "mapper": "Linear"
           },
-          "cubes": "${PIRA_DIR}/amg_cubes",
+          "cubes": "${PIRA_DIR}/kripke_cubes",
           "flavors": [
-            "ct_mpi"
+            "ct"
           ],
           "functors": "./functors",
           "mode": "CT"
@@ -25,7 +21,7 @@
     }
   },
   "directories": {
-    "amg2013": "./AMG2013"
+    "kripke": "./Kripke/build"
   },
   "glob-flavors": [],
   "glob-submitter": {}
