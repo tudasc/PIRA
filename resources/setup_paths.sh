@@ -20,7 +20,7 @@ mpiwrap_install_dir=MPIWRAPINSTALLDIR
 bear_install_dir=BEARINSTALLDIR
 
 echo -e "Cube installation dir:\t$cube_install_dir"
-echo -e "Score-P insitallation dir:\t$scorep_install_dir"
+echo -e "Score-P installation dir:\t$scorep_install_dir"
 echo -e "Extra-P installation dir:\t$extrap_install_dir"
 echo -e "MetaCG installation dir:\t$metacg_install_dir"
 echo -e "mpiwrap installation dir:\t$mpiwrap_install_dir"

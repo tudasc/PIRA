@@ -1,22 +1,18 @@
 {
   "builds": {
-    "%amg2013": {
+    "%lulesh": {
       "items": {
-        "amg": {
+        "lulesh": {
           "analyzer": "../../../extern/install/metacg/bin/",
           "argmap": {
             "X": [
-              10,
-              12,
-              24,
-              30,
-              40
+              30
             ],
             "mapper": "Linear"
           },
-          "cubes": "${PIRA_DIR}/amg_cubes",
+          "cubes": "${PIRA_DIR}/lulesh_cubes",
           "flavors": [
-            "ct_mpi"
+            "ct"
           ],
           "functors": "./functors",
           "mode": "CT"
@@ -25,7 +21,7 @@
     }
   },
   "directories": {
-    "amg2013": "./AMG2013"
+    "lulesh": "./LULESH"
   },
   "glob-flavors": [],
   "glob-submitter": {}

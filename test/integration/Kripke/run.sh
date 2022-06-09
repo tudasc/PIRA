@@ -27,38 +27,52 @@ which cgcollector
 which scorep
 which wrap.py
 
-# XXX Currently required from PGIS
+export CXX_COMPILER_WRAPPER=${TEST_DIR}/cxx-wrapper.sh
+
+# XXX Currently required by PGIS
 mkdir $PWD/../../../extern/install/metacg/bin/out
 
 # Download the target application
-stat amg2013_0.tgz
+stat Kripke
 if [ $? -ne 0 ]; then
-  wget https://asc.llnl.gov/sites/asc/files/2021-01/amg2013_0.tgz
+  git clone git@github.com:LLNL/Kripke.git
 fi
-tar xzf amg2013_0.tgz
-cd AMG2013
+cd Kripke
+git checkout v1.2.4
+git submodule update --init
+git clean -dxf
 
-# XXX The clang version we use is built w/o OMP support, therefore, remove OMP flags
-sed -i "s/-fopenmp//" Makefile.include
-sed -i "s/-DHYPRE_USING_OPENMP//" Makefile.include
+echo -e "\n----- Build Kripke / build call graph -----"
+export LULESH_CXXFLAGS="-DUSE_MPI=1 -O3 -g -I. -Wno-unknown-pragmas -Wall"
 
+# Configure
+mkdir build
+cd build
+export CXX_WRAP="clang++"
+cmake -DENABLE_MPI=ON -Wno-dev -DCMAKE_CXX_COMPILER=${CXX_COMPILER_WRAPPER} .. || exit 1
 
-echo -e "\n----- Build AMG2013 / build call graph -----"
+# Initial build
 # Builds the compile_commands.json file
-bear make CC="OMPI_CC=clang mpicc" -j
+bear make -j || exit 1
+
+cd ..
+
+# CGCollection
 # Now cgcollector can read the compile_commands.json file, to retrieve the commands required
-for f in $(cat compile_commands.json | jq  -r 'map(.directory + "/" + .file) | .[]'  | grep '\.c'); do
+cp build/compile_commands.json .
+# for f in $(cat build/compile_commands.json | jq  -r 'map(.directory + "/" + .file) | .[]'  | grep '\.cpp'); do
+for f in $(find ./src -type f -iname "*.cpp" ); do
 	echo "Processing $f"
 	cgc $f >/dev/null 2>&1
 done
-# Build the full whole-program call-graph
-echo "null" > amg.ipcg # create empty json file
-find . -name "*.ipcg" -exec cgmerge amg.ipcg amg.ipcg {} + 2>&1 > ../cgcollector.log # merge all ipcg files into amg.ipcg
-# Move the CG to where PIRA expects it
-echo $PWD
-cp amg.ipcg $PWD/../../../../extern/install/metacg/bin/amg_ct_mpi.mcg
-cd ..
 
+# Build the full whole-program call-graph
+echo "null" > kripke.mcg # create empty json file
+find . -name "*.ipcg" -exec cgmerge kripke.mcg kripke.mcg {} + 2>&1 > ../cgmerge.log # merge all ipcg files into kripke.mcg
+
+# Move the CG to where PIRA expects it
+cp kripke.mcg $PWD/../../../../extern/install/metacg/bin/kripke_ct.mcg
+cd ..
 
 echo -e "\n----- Running Pira -----\n"
 
@@ -71,14 +85,12 @@ fi
 export PIRA_DIR=$pira_dir
 echo -e "Using ${pira_dir} for runtime files\n"
 
-python3 ../../../pira.py --config-version 2 --iterations 2 --repetitions 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../amg.tp --analysis-parameters $testDir/parameters.json $testDir/amg_config.json
-
+python3 ../../../pira.py --config-version 2 --iterations 4 --repetitions 1 --tape kripke.tp $testDir/kripke_config.json
 pirafailed=$?
 
 #rm -rf ${pira_dir}/piraII
-#rm -rf ${pira_dir}/amg_cubes-*
+#rm -rf ${pira_dir}/lulesh_cubes-*
 cd $testDir
-#rm -rf AMG2013
-../check.py ../../../extern/install/metacg/bin/out expected_instrumentation.json amg_ct_mpi || exit 1
+../check.py ../../../extern/install/metacg/bin/out expected_instrumentation.json kripke_ct || exit 1
 
 exit $pirafailed

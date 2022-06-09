@@ -6,8 +6,13 @@ export PYTHONPATH=$PWD:$PYTHONPATH
 # This seems to be specific to my machine...
 export PATH=~/.local/bin:$PATH
 
-
-for i in `find ./lib -iname "*.py"`; do
+# files and directories to be checked by pylint
+locations=(
+	./pira.py
+	./lib
+	./test/integration/check.py
+)
+for i in `find ${locations[@]} -iname "*.py"`; do
 	testName=$(echo "$i" | awk -F . '{print substr($2,2)}')
 	echo "Running $i -> $testName";
 	python -m pylint -E $i

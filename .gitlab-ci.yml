@@ -8,24 +8,21 @@ stages:
   - download-test
   - unit-test
   - dependence-build-test
+  - full-dependence-test
   - deps-unit-test
   - prepare-integration-test
   - integration-test
-  - full-dependence-test
 
 # Setting up the environment on the Lichtenberg system
 .lb-setup: &lb-setup
   - export LMOD_IGNORE_CACHE=1
-  - eval $(ssh-agent -s)
-  - ssh-add ~/.ssh/gitlab_ed25519
-  - module load gcc/8.4
-  - module load git python/3.7.4 cmake llvm/10 openmpi
+  - module load gcc/10.2
+  - module load git python/3 cmake llvm/10 openmpi
   - module load libcube/4.5
   - module load extrap/3.0
 
 .lb-tear-down: &lb-tear-down
   - rm -rf $(dirname $(echo $SSH_AUTH_SOCK))
-  - ssh-agent -k
 
 # Pull-in the git submodules that are used during development
 .get-submodules: &get-submodules
@@ -39,7 +36,7 @@ stages:
 download:
   stage: download-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: clone
@@ -54,7 +51,7 @@ download:
 pira:
   stage: unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -74,7 +71,7 @@ pira:
 python-lint:
   stage: unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -87,7 +84,7 @@ python-lint:
 shell-lint:
   stage: unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -100,7 +97,7 @@ shell-lint:
 build-reduced-deps:
   stage: dependence-build-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -117,14 +114,14 @@ build-reduced-deps:
 llvm-instrumentation:
   stage: deps-unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd extern/src/llvm-instrumentation/test
-    - $HOME/all_repos/gh-llvm-llvm-project/llvm/utils/lit/lit.py -v .
+    - lit -v .
     - *lb-tear-down
 
 # Runs the larger integration tests
@@ -132,8 +129,12 @@ llvm-instrumentation:
 # This would *significantly* reduce the time this stage requires.
 run-prepare-integration:
   stage: prepare-integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -146,8 +147,12 @@ run-prepare-integration:
 # Actually run the integration tests
 run-gameoflife-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -160,8 +165,12 @@ run-gameoflife-test:
 
 run-amg2013-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -174,8 +183,12 @@ run-amg2013-test:
 
 run-gameoflife-v1-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -188,8 +201,12 @@ run-gameoflife-v1-test:
 
 run-gameoflife-hybrid-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -204,7 +221,7 @@ run-gameoflife-hybrid-test:
 # run-gameoflife-heuristic-test:
 #  stage: integration-test
 #  tags:
-#    - hlb0001
+#    - pira-robo
 #  before_script: *lb-setup
 #  variables:
 #    GIT_STRATEGY: none
@@ -217,8 +234,12 @@ run-gameoflife-hybrid-test:
 
 run-load-imbalance-detection-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -229,13 +250,46 @@ run-load-imbalance-detection-test:
     - ./run.sh
     - *lb-tear-down
 
+run-lulesh-test:
+  stage: integration-test
+  only:
+    - merge_requests
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running LULESH test (using PIRA LIDe)'
+    - cd test/integration/LULESH
+    - ./run.sh
+    - *lb-tear-down
+
+# Disabled because it takes too long
+# run-kripke-test:
+#   stage: integration-test
+#   only:
+#     - merge_requests
+#   tags:
+#     - pira-robo
+#   before_script: *lb-setup
+#   variables:
+#     GIT_STRATEGY: none
+#     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+#   script:
+#     - echo 'Running Kripke test (using PIRA I)'
+#     - cd test/integration/Kripke
+#     - ./run.sh
+#     - *lb-tear-down
+
 # Do a full build of all dependencies via the convenience scripts for merge requests
 build-all-deps:
   stage: full-dependence-test
   only:
     - merge_requests
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -248,17 +302,5 @@ build-all-deps:
     - echo $EXTRAP_ROOT
     - cat ./setup_paths.sh
     - ./build_submodules.sh -p $(cat /proc/cpuinfo | grep processor | wc -l)
-    - cd ../test/integration
-    - . prepare_environment.sh
-    - cd AMG2013
-    - ./run.sh
-    - cd ../GameOfLife
-    - ./run.sh
-    - cd ../GameOfLife_hybrid_filter
-    - ./run.sh
-    - cd ../GameOfLifePiraVersion1
-    - ./run.sh
-    - cd ../LoadImbalance
-    - ./run.sh
     - *lb-tear-down
 
