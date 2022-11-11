@@ -1,0 +1,4 @@
+Kripke/
+*.tp
+*__pycache__
+_pira.sqlite

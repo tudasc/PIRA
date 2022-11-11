@@ -6,7 +6,6 @@ Description: Module implementing the main workflow of PIRA.
 
 import lib.Logging as L
 import lib.Utility as U
-import lib.BatchSystemHelper as B
 import lib.FunctorManagement as F
 import lib.TimeTracking as T
 import lib.Database as D
@@ -14,10 +13,10 @@ import lib.Exporter as E
 import lib.Checker as C
 from lib.DefaultFlags import BackendDefaults
 from lib.RunnerFactory import PiraRunnerFactory
-from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader
+from lib.ConfigurationLoader import SimplifiedConfigurationLoader as SCLoader, BatchSystemConfigurationLoader
 from lib.ConfigurationLoader import ConfigurationLoader as CLoader
 from lib.Configuration import TargetConfig, PiraConfig, ExtrapConfig, InvocationConfig, \
-  PiraConfigErrorException, CSVConfig
+  PiraConfigErrorException, CSVConfig, SlurmConfig
 
 from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as BU
@@ -151,7 +150,7 @@ def process_args_for_csv(cmdline_args):
 def main(cmdline_args) -> None:
   """ Main function for pira framework. Used to invoke the various components. """
   invoc_cfg = InvocationConfig(cmdline_args)
-  L.get_logger().log(str(invoc_cfg),level='info')
+  L.get_logger().log(str(invoc_cfg), level='info')
   use_extra_p, extrap_config = process_args_for_extrap(cmdline_args)
   home_dir = U.get_cwd()
   U.set_home_dir(home_dir)
@@ -168,66 +167,71 @@ def main(cmdline_args) -> None:
     configuration = config_loader.load_conf()
     C.Checker.check_configfile(configuration)
 
-    if B.check_queued_job():
-      # FIXME: Implement
-      L.get_logger().log('In this version of PIRA it is not yet implemented', level='error')
-      assert (False)
+    is_batch_system_run = invoc_cfg.get_slurm_config_path() is not None
 
+    if is_batch_system_run:
+      L.get_logger().log("Running the batch system case", "info")
     else:
-      '''
-      This branch is running PIRA actively on the local machine.
-      It is blocking, and the user can track the progress in the terminal.
-      '''
-      L.get_logger().log('Running the local case')
+      L.get_logger().log("Running the local case", "info")
 
-      # The FunctorManager manages loaded functors and generates the respective names
-      F.FunctorManager(configuration)
-      dbm = D.DBManager(D.DBManager.db_name + '.' + D.DBManager.db_ext)
-      dbm.create_cursor()
-      analyzer = A(configuration)
+    # The FunctorManager manages loaded functors and generates the respective names
+    F.FunctorManager(configuration)
+    dbm = D.DBManager(D.DBManager.db_name + '.' + D.DBManager.db_ext)
+    dbm.create_cursor()
+    analyzer = A(configuration)
 
-      runner_factory = PiraRunnerFactory(configuration)
+    runner_factory = PiraRunnerFactory(configuration)
+    if is_batch_system_run:
+      # setup slurm config
+      slurm_config_loader = BatchSystemConfigurationLoader(invoc_cfg)
+      slurm_config = slurm_config_loader.get_config()
+      # get slurm runners
+      runner = runner_factory.get_simple_slurm_runner(slurm_config, slurm_config_loader.get_batch_interface())
+      if use_extra_p:
+        L.get_logger().log('Running with Extra-P runner')
+        runner = runner_factory.get_scalability_slurm_runner(slurm_config, slurm_config_loader.get_batch_interface(),
+                                                             extrap_config)
+    else:
+      # get local runners
       runner = runner_factory.get_simple_local_runner()
       if use_extra_p:
         L.get_logger().log('Running with Extra-P runner')
         runner = runner_factory.get_scalability_runner(extrap_config)
+    if runner.has_sink():
+      analyzer.set_profile_sink(runner.get_sink())
 
-      if runner.has_sink():
-        analyzer.set_profile_sink(runner.get_sink())
+    # A build/place is a top-level directory
+    for build in configuration.get_builds():
+      L.get_logger().log('Build: ' + str(build))
+      total_time = T.TimeTracker()
+      app_tuple = (U.generate_random_string(), build, '', '')
+      dbm.insert_data_application(app_tuple)
 
-      # A build/place is a top-level directory
-      for build in configuration.get_builds():
-        L.get_logger().log('Build: ' + str(build))
-        total_time = T.TimeTracker()
-        app_tuple = (U.generate_random_string(), build, '', '')
-        dbm.insert_data_application(app_tuple)
+      # An item is a target/software in that directory
+      for item in configuration.get_items(build):
+        L.get_logger().log('Running for item ' + str(item))
 
-        # An item is a target/software in that directory
-        for item in configuration.get_items(build):
-          L.get_logger().log('Running for item ' + str(item))
+        # A flavor is a specific version to build
+        if configuration.has_local_flavors(build, item):
+          for flavor in configuration.get_flavors(build, item):
+            L.get_logger().log('Running for local flavor ' + flavor, level='debug')
 
-          # A flavor is a specific version to build
-          if configuration.has_local_flavors(build, item):
-            for flavor in configuration.get_flavors(build, item):
-              L.get_logger().log('Running for local flavor ' + flavor, level='debug')
+            # prepare database, and get a unique handle for current item.
+            db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
+            # Create configuration object for the item currently processed.
+            place = configuration.get_place(build)
+            t_config = TargetConfig(place, build, item, flavor, db_item_id)
+            # Execute it given the generated target description
+            execute_with_config(runner, analyzer, t_config, csv_config)
 
-              # prepare database, and get a unique handle for current item.
-              db_item_id = dbm.prep_db_for_build_item_in_flavor(configuration, build, item, flavor)
-              # Create configuration object for the item currently processed.
-              place = configuration.get_place(build)
-              t_config = TargetConfig(place, build, item, flavor, db_item_id)
-              # Execute using a local runner, given the generated target description
-              execute_with_config(runner, analyzer, t_config, csv_config)
+        # If global flavor
+        else:
+          # TODO: Implement
+          L.get_logger().log('In this version of PIRA it is not yet implemented', level='error')
+          assert False
 
-          # If global flavor
-          else:
-            # TODO: Implement
-            L.get_logger().log('In this version of PIRA it is not yet implemented', level='error')
-            assert (False)
-
-        total_time.stop()
-        L.get_logger().log('PIRA total runtime: {}'.format(total_time.get_time()), level='perf')
-
+      total_time.stop()
+      L.get_logger().log('PIRA total runtime: {}'.format(total_time.get_time()), level='perf')
 
     U.change_cwd(home_dir)
 

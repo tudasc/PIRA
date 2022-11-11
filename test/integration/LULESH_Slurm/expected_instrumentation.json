@@ -1,0 +1,138 @@
+[
+    {
+        "iteration": 0,
+        "expect": ["main"],
+        "may-expect": [],
+        "never-expect": []
+    },
+    {
+        "iteration": 1,
+        "expect": ["main"],
+        "may-expect": [
+            "_ZN6DomainCEiiiiiiiii",
+            "_Z8CommSendR6DomainiiPMS_FRdiEiiibb",
+            "_Z7CommSBNR6DomainiPMS_FRdiE",
+            "_ZN6DomainC2Eiiiiiiiii",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZN6DomainC1Eiiiiiiiii",
+            "_ZN6DomainC5Eiiiiiiiii"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 2,
+        "expect": ["main"],
+        "may-expect": [
+            "_Z8CommSendR6DomainiiPMS_FRdiEiiibb",
+            "_Z7CommSBNR6DomainiPMS_FRdiE",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL13LagrangeNodalR6Domain"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 3,
+        "expect": ["main"],
+        "may-expect": [
+            "_Z14CommSyncPosVelR6Domain",
+            "_ZL20CalcLagrangeElementsR6Domain",
+            "_ZL17CalcForceForNodesR6Domain",
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL31ApplyMaterialPropertiesForElemsR6Domain",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL13CalcQForElemsR6Domain"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 4,
+        "expect": [
+            "main", 
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL31ApplyMaterialPropertiesForElemsR6Domain"
+        ],
+        "may-expect": [
+            "_Z22CalcKinematicsForElemsR6Domaindi",
+            "_ZL20CalcLagrangeElementsR6Domain",
+            "_ZL22CalcMonotonicQForElemsR6Domain",
+            "_ZL17CalcForceForNodesR6Domain",
+            "_ZL15EvalEOSForElemsR6DomainPdiPii",
+            "_ZL23CalcVolumeForceForElemsR6Domain"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 5,
+        "expect": [
+            "main", 
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL31ApplyMaterialPropertiesForElemsR6Domain"
+        ],
+        "may-expect": [
+            "_ZL15EvalEOSForElemsR6DomainPdiPii",
+            "_ZL22CalcMonotonicQForElemsR6Domain",
+            "_ZL23IntegrateStressForElemsR6DomainPdS1_S1_S1_ii",
+            "_ZL28CalcHourglassControlForElemsR6DomainPdd",
+            "_ZL28CalcMonotonicQRegionForElemsR6Domainid"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 6,
+        "expect": [
+            "main", 
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL31ApplyMaterialPropertiesForElemsR6Domain"
+        ],
+        "may-expect": [
+            "_ZL15EvalEOSForElemsR6DomainPdiPii",
+            "_ZL23IntegrateStressForElemsR6DomainPdS1_S1_S1_ii",
+            "_ZL28CalcFBHourglassForceForElemsR6DomainPdS1_S1_S1_S1_S1_S1_dii",
+            "_ZL28CalcHourglassControlForElemsR6DomainPdd"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 7,
+        "expect": [
+            "main", 
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL31ApplyMaterialPropertiesForElemsR6Domain"
+        ],
+        "may-expect": [
+            "_ZL15EvalEOSForElemsR6DomainPdiPii"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 8,
+        "expect": [
+            "main", 
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL31ApplyMaterialPropertiesForElemsR6Domain"
+        ],
+        "may-expect": [
+            "_ZL15EvalEOSForElemsR6DomainPdiPii"
+        ],
+        "never-expect": []
+    },
+    {
+        "iteration": 9,
+        "expect": [
+            "main", 
+            "_ZL16LagrangeElementsR6Domaini",
+            "_ZL16LagrangeLeapFrogR6Domain",
+            "_ZL31ApplyMaterialPropertiesForElemsR6Domain"
+        ],
+        "may-expect": [
+            "_ZL15EvalEOSForElemsR6DomainPdiPii"
+        ],
+        "never-expect": []
+    }
+]

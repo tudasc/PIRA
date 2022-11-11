@@ -1,0 +1,11 @@
+{
+  "general": {
+    "force-sequential": true
+  },
+  "batch-settings":
+  {
+    "time": "00:10:00",
+    "mem-per-cpu": 3800,
+    "ntasks": 1
+  }
+}

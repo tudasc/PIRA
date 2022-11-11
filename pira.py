@@ -54,6 +54,8 @@ experimental_group.add_argument('--hybrid-filter-iters', help='Do compiletime-fi
 experimental_group.add_argument('--export', help='Export performance models to IPCG file.', default=False, action='store_true')
 experimental_group.add_argument('--export-runtime-only', help='Export only runtime data used for extra-p modeling', default=False, action='store_true')
 experimental_group.add_argument('--lide', help='Enable load imbalance detection', action='store_true')
+# --- Pira slurm option
+experimental_group.add_argument('--slurm-config', help='Path to the slurm configuration file', type=str, default=None)
 
 # -- General Info
 parser.add_argument('--version', help='Shows the version of this PIRA installation', action='version', version='%(prog)s ' + __version__)

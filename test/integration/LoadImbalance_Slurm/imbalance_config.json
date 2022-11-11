@@ -1,0 +1,28 @@
+{
+  "builds": {
+    "%imbalance": {
+      "items": {
+        "imbalance": {
+          "analyzer": "../../../extern/install/metacg/bin/",
+          "argmap": {
+            "mapper": "Linear",
+            "size": [
+              100
+            ]
+          },
+          "cubes": "${PIRA_DIR}/imbalance_cubes",
+          "flavors": [
+            "ct"
+          ],
+          "functors": "./functors",
+          "mode": "CT"
+        }
+      }
+    }
+  },
+  "directories": {
+    "imbalance": "./imbalance"
+  },
+  "glob-flavors": [],
+  "glob-submitter": {}
+}

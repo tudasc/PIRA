@@ -168,7 +168,7 @@ class ExtrapProfileSink(ProfileSinkBase):
         renamer = FolderRenamer()
         #new_dir_name = cur_ep_dir + '_' + U.generate_random_string()
         new_dir_name = renamer.get_renamed_folder(cur_ep_dir)
-        L.get_logger().log('ExtrapProfileSink::check_and_prepare: Moving old experiment directory to: ' + new_dir_name, level='info')
+        L.get_logger().log('ExtrapProfileSink::check_and_prepare: Moving old experiment directory (' + cur_ep_dir + ') to: ' + new_dir_name, level='info')
         U.rename(cur_ep_dir, new_dir_name)
 
       U.create_directory(cur_ep_dir)
