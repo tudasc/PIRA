@@ -163,6 +163,25 @@ run-gameoflife-test:
     - ./run.sh
     - *lb-tear-down
 
+run-gameoflife-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife Slurm (PIRA II) integration test'
+    - cd test/integration/GameOfLife_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 run-amg2013-test:
   stage: integration-test
   only:
@@ -178,6 +197,25 @@ run-amg2013-test:
   script:
     - echo 'Running AMG integration test'
     - cd test/integration/AMG2013
+    - ./run.sh
+    - *lb-tear-down
+
+run-amg2013-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running AMG Slurm integration test'
+    - cd test/integration/AMG2013_Slurm
     - ./run.sh
     - *lb-tear-down
 
@@ -199,6 +237,25 @@ run-gameoflife-v1-test:
     - ./run.sh
     - *lb-tear-down
 
+run-gameoflife-v1-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife Slurm (PIRA I) integration test'
+    - cd test/integration/GameOfLifePiraVersion1_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 run-gameoflife-hybrid-test:
   stage: integration-test
   only:
@@ -217,6 +274,25 @@ run-gameoflife-hybrid-test:
     - ./run.sh
     - *lb-tear-down
 
+run-gameoflife-hybrid-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife-hybrid-filtering Slurm integration test'
+    - cd test/integration/GameOfLife_hybrid_filter_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 # Disabled as it requires MetaCG Version 2
 # run-gameoflife-heuristic-test:
 #  stage: integration-test
@@ -229,6 +305,20 @@ run-gameoflife-hybrid-test:
 #  script:
 #    - echo 'Running GameOfLife-heuristic integration test'
 #    - cd test/integration/GameOfLife_heuristic
+#    - ./run.sh
+#    - *lb-tear-down
+
+# run-gameoflife-heuristic-test-slurm:
+#  stage: integration-test
+#  tags:
+#    - pira-robo
+#  before_script: *lb-setup
+#  variables:
+#    GIT_STRATEGY: none
+#    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+#  script:
+#    - echo 'Running GameOfLife-heuristic Slurm integration test'
+#    - cd test/integration/GameOfLife_heuristic_Slurm
 #    - ./run.sh
 #    - *lb-tear-down
 
@@ -250,6 +340,25 @@ run-load-imbalance-detection-test:
     - ./run.sh
     - *lb-tear-down
 
+run-load-imbalance-detection-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running Load imbalance detection Slurm integration test'
+    - cd test/integration/LoadImbalance_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 run-lulesh-test:
   stage: integration-test
   only:
@@ -263,6 +372,23 @@ run-lulesh-test:
   script:
     - echo 'Running LULESH test (using PIRA LIDe)'
     - cd test/integration/LULESH
+    - ./run.sh
+    - *lb-tear-down
+
+run-lulesh-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running LULESH test on Slurm (using PIRA LIDe)'
+    - cd test/integration/LULESH_Slurm
     - ./run.sh
     - *lb-tear-down
 
@@ -280,6 +406,22 @@ run-lulesh-test:
 #   script:
 #     - echo 'Running Kripke test (using PIRA I)'
 #     - cd test/integration/Kripke
+#     - ./run.sh
+#     - *lb-tear-down
+
+# run-kripke-test-slurm:
+#   stage: integration-test
+#   only:
+#     - merge_requests
+#   tags:
+#     - pira-robo
+#   before_script: *lb-setup
+#   variables:
+#     GIT_STRATEGY: none
+#     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+#   script:
+#     - echo 'Running Kripke test on Slurm (using PIRA I)'
+#     - cd test/integration/Kripke_Slurm
 #     - ./run.sh
 #     - *lb-tear-down
 

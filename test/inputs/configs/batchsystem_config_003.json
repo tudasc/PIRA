@@ -1,0 +1,8 @@
+{
+  "general": null,
+  "batch-settings":
+  {
+    "time": "00:10:00",
+    "mem-per-cpu": 3800
+  }
+}

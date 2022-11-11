@@ -1,0 +1,70 @@
+{
+  "general": {
+    "backend": "slurm",
+    "interface": "os",
+    "timings": "subprocess",
+    "force-sequential": false
+  },
+  "module-loads": [
+    {
+      "name": "gcc",
+      "version": "8.5",
+      "depends_on": null
+    },
+    {
+      "name": "cmake",
+      "version": "8.5",
+      "depends_on": null
+    },
+    {
+      "name": "llvm",
+      "version": "10.0.0",
+      "depends_on": [
+        {
+          "name": "gcc",
+          "version": "8.5"
+        }
+      ]
+    },
+    {
+      "name": "openmpi",
+      "version": "4.0.5",
+      "depends_on": [
+        {
+          "name": "gcc",
+          "version": "8.5"
+        }
+      ]
+    },
+    {
+      "name": "python",
+      "version": "3.9.5",
+      "depends_on": [
+        {
+          "name": "openmpi",
+          "version": "4.0.5"
+        }
+      ]
+    },
+    {
+      "name": "qt",
+      "version": "5.13.2",
+      "depends_on": [
+        {
+          "name": "python",
+          "version": "3.9.5"
+        }
+      ]
+    }
+  ],
+  "batch-settings":
+  {
+    "time": "00:10:00",
+    "mem-per-cpu": 475,
+    "ntasks": 8,
+    "partition": null,
+    "reservation": null,
+    "account": "project01823",
+    "cpus-per-task": 12
+  }
+}

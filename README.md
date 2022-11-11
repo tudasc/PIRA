@@ -127,6 +127,7 @@ In contrast, with runtime filtering, the compiler inserts instrumentation hooks 
 * ```--extrap-prefix``` Extra-P prefix, should be a sequence of characters.
 * ```--version``` Prints the version number of the PIRA installation
 * ```--analysis-parameters``` Path to configuration file containing analysis parameters for PGIS. Required for both Extra-P and LIDe mode.
+* ```--slurm-config [path to slurm cfg file]``` Enables running the target code on a slurm cluster. A slurm config file is needed. Please see [this section](#run-pira-on-a-slurm-cluster) for more information.
 
 #### Highly Experimental Arguments to PIRA
 
@@ -325,3 +326,75 @@ For more details about the load imbalance detection feature, please refer to <a 
 * ***relevanceThreshold***: Minimum runtime fraction a function is required to surpass in order to be rated as relevant.
 * ***contextStrategy***: Optional context handling strategy to expand instrumentation with further functions. Use *MajorPathsToMain* for profile creation and *FindSynchronizationPoints* for tracing experiments. Use *None* to disable context handling. (Other experimental option: *MajorParentSteps* with its suboption *contextStepCount*)
 * ***childRelevanceStrategy***: Strategy to calculate statement threshold for the iterative descent. If unsure, use *RelativeToMain* which will calculate the threshold as max(*childConstantThreshold*, *childFraction* * (main's inclusive statement count))
+
+### Run PIRA on a SLURM cluster
+
+To run PIRA on a cluster with the SLURM workload manager, invoke it with the `--slurm-config` flag. Give the path to your batch system configuration file with it. See the integration tests suffixed with `_Slurm` (`test/integration/*_Slurm/`). PIRA currently supports batch systems with the [SLURM workload manager](https://slurm.schedmd.com/overview.html). PIRA supports the use of a `module`-system, which may be found on slurm clusters.
+
+The batch system configuration file is a JSON-file, which is structured as follows:
+
+```{.json}
+{
+  "general": {
+    "backend": "slurm",
+    "interface": "pyslurm",
+    "timings": "subprocess"
+  },
+  "module-loads": [
+    {
+      "name": "gcc",
+      "version": "8.5"
+    },
+    {
+      "name": "llvm",
+      "version": "10.0.0",
+      "depends-on": [
+        {
+          "name": "gcc",
+          "version": "8.5"
+        }
+      ]
+    }
+  ],
+  "batch-settings": {
+    "time_str": "00:10:00",
+    "mem_per_cpu": 3800,
+    "number_of_tasks": 1,
+    "partition": null,
+    "reservation": null,
+    "account": "your_account_here",
+    "cpus_per_task": 96
+  }
+}
+```
+
+Breakdown:
+
+- `general` section: Lets you choose in which way PIRA will execute your code on the batch system. Since every option in this section is optional, you can omit the whole section, if you are fine with using the defaults:
+    + `backend`: What workload manager to use. Choices: `slurm`, for the slurm workload manager. Default: `slurm`, therefor optional.
+    + `interface`: In which way PIRA should interact with your batch system manager. For the SLURM backend, these are: `pyslurm`, to use [PySlurm](https://github.com/pyslurm/pyslurm) (this requires PySlurm to be installed, see [this section](#notes-on-installing-pyslurm); `sbatch-wait`, to use standard `sbatch` with the `--wait` flag; `os`, for standard `sbatch` and `squeue` interaction calls. Default: `pyslurm`, therefor optional.
+    + `timings`: How timing of the target code should be done. Choices: `subprocess`, for timing with a python wrapper and `os.times` in a subprocess (exactly like PIRA does it if ran local); `os`, to use `/usr/bin/time`. Default: `subprocess`, therefor optional.
+    + `force-sequential`: Default `false`. Set to `true` to force PIRA/your batch system to do all runs in sequential order (only one execution of the target code at a time). This means PIRA will take care that your batch system runs repetitions, as well as different jobs in scaling experiments in sequential order. If set to/left on `false` PIRA will try to instruct the batch system to do as many executions as possible within every iteration in parallel. 
+- `module-loads` section: *Currently not in use in PIRA, work in progress! Currently, you need to load all modules manually, before starting PIRA!* Meant for which modules should be loaded with the `module` system. This requires one to be in place (commands `module load` and `module purge` may be used by PIRA). If you do not have a `module` system in place, or do not want to use it, either omit this section completely, or set `"module-loads": null`. To specify modules PIRA should load, specify a list of modules, as in the example above. 
+    + Each module have to have a `name`. 
+    + The `version` is optional, if not given, it will depend on what the `module` system loads as default module version. It is recommended to always give versions explicitly.
+    + `depends-on` is also optional. Give a list of modules on which this module depends. These modules have to have a `name` and can optional have a `version` given. The dependencies defined here are used by PIRA to determine the order in which modules should be loaded
+        - If you do not give a version, it will only check that *some* version of this module was loaded. It is recommended to always give versions explicitly.
+        - If you do not specify this, or set it to `null`, it is assumed, this module has no dependencies. 
+        - Be aware that PIRA will crash with a corresponding error, if you define dependency cycles here. 
+        - Note that you can care about dependency management on your own: If not given any `depends-on` PIRA will (try to) load the modules in exactly that order that was given in the config file. 
+- `batch-setting` section: The actual hardware and job options for the batch system. Some options in the section are mandatory, you cannot omit this section.
+    + `time`: The `sbatch --time` option, mandatory. 
+    + `mem-per-cpu`: The `sbatch --mem-per-cpu` option, mandatory.
+    + `ntasks`: The `sbatch --ntasks` option, mandatory.
+    + You can optionally further specify the following options: `partition`, `reservation`, `account` (all default to `null`=not given), `cpus-per-task` (defaults to `4`), `exclusive` (defaults to `true`; not supported with `pyslurm`), and `cpu-freq` (defaults to `null`).
+    + Note that there are some `sbatch` options you cannot define in this config. This is due to some options used by PIRA internally, for example the `--array` option, to map the repetitions to job arrays.
+	
+#### Notes on installing PySlurm
+
+How and which version of PySlurm to install on your cluster, highly depends on your SLURM version, and your SLURM installation. The installation and packaging solution for pyslurm with PIRA is work in progress. Refer to their [README](https://github.com/PySlurm/pyslurm#readme). You might try some of the following:
+
+- If your SLURM version is XX.YY.\*, you want to look for a release/brach of pyslurm with the version XX.YY.\* (Note that \* does not have to be identical).
+- Determine where SLURM is set up, look for a `include` and a `lib` dir. 
+- Build pyslurm with these options, e.g. `python3 setup.py build --slurm-lib=/opt/slurm/21.08.6/lib --slurm-inc=/opt/slurm/21.08.6/include`
+- Install it: `python3 setup.py install --slurm-lib=/opt/slurm/21.08.6/lib --slurm-inc=/opt/slurm/21.08.6/include`.

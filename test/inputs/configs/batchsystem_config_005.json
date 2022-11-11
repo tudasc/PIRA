@@ -1,0 +1,7 @@
+{
+  "batch-settings":
+  {
+    "mem-per-cpu": 3800,
+    "ntasks": 1
+  }
+}

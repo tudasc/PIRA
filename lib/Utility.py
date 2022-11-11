@@ -3,7 +3,7 @@ File: Utility.py
 License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
 Description: Module to support other tasks.
 """
-
+import re
 import sys
 sys.path.append('..')
 
@@ -20,7 +20,6 @@ from random import choice
 from string import ascii_uppercase
 from timeit import timeit
 
-queued_job_filename = './queued_job.tmp'
 home_directory = ''
 
 def exit(code="1"):
@@ -39,6 +38,20 @@ def get_home_dir() -> str:
     raise PiraException('Utility::get_home_dir: No Home Directory Set!')
 
   return home_directory
+
+
+def get_pira_code_dir() -> str:
+  """
+  Returns the top-level directory of the pira code.
+  This is useful for testing and to reference the BatchSystemTimer file while dispatching.
+  """
+  this_file = os.path.dirname(__file__)
+  this_file = get_absolute_path(this_file)
+  # pira dir is a level up, and cut the file off
+  # .../pira/lib/Utility.py
+  pira_code_dir = "/".join(this_file.split("/")[:-1])
+  return pira_code_dir
+
 
 def set_export_perfomance_models(export: bool) -> None:
   global export_performance_models
@@ -151,7 +164,6 @@ def check_file(path: str) -> bool:
   return False
 
 def is_valid_file_name(file_name: str) -> bool:
-  import re
   search = re.compile(r'[^a-zA-z0-9/\._-]').search
   return not bool(search(file_name))
 
@@ -178,12 +190,25 @@ def remove_file(path: str) -> bool:
     return True
   return False
 
+
+def remove_file_with_pattern(path: str, pattern: str):
+  """
+  Removes all files that match the pattern. Patterns are defined by python's re module.
+  """
+  for f in os.listdir(path):
+    if re.search(pattern, f) and re.search(pattern, f).group(0) == f:
+      remove_file(os.path.join(path, f))
+
+
 def get_default_pira_dir() -> str:
   pira_dir = os.path.join(os.path.expanduser('~'), '.local/share/pira')
   if 'XDG_DATA_HOME' in os.environ:
     if os.environ['XDG_DATA_HOME'] != '':
       pira_dir = os.path.join(os.environ['XDG_DATA_HOME'], 'pira')
   return pira_dir
+
+def get_default_slurm_config_path() -> str:
+  return f"{get_default_pira_dir()}/batchsystem.json"
 
 def get_default_config_file() -> str:
   return get_cwd() + '/config.json'
@@ -210,6 +235,12 @@ def json_to_canonic(json_elem):
       key_v = json_to_canonic(k)
       new_dict[key_v] = json_to_canonic(json_elem[key_v])
     return new_dict
+
+  elif isinstance(json_elem, int):
+    return int(json_elem)
+
+  elif isinstance(json_elem, type(None)):
+    return None
 
   else:
     return str(json_elem)

@@ -205,7 +205,8 @@ class ScorepSystemHelper:
     L.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
     return ''
 
-  def set_up(self, target_config: TargetConfig, instrumentation_config: InstrumentConfig) -> None:
+  def set_up(self, target_config: TargetConfig, instrumentation_config: InstrumentConfig,
+             parameter_mapping=None) -> None:
     compile_time_filter = InvocationConfig.get_instance().is_compile_time_filtering()
     if not compile_time_filter:
       scorep_filter_file = self.prepare_scorep_filter_file(target_config.get_instr_file())
@@ -214,7 +215,7 @@ class ScorepSystemHelper:
 
     self._set_up(target_config.get_build(), target_config.get_target(), target_config.get_flavor(),
                  instrumentation_config.get_instrumentation_iteration(),
-                 instrumentation_config.is_instrumentation_run())
+                 instrumentation_config.is_instrumentation_run(), parameter_mapping)
 
   def prepare_scorep_filter_file(self, filter_file: str) -> None:
     ''' 
@@ -236,12 +237,16 @@ class ScorepSystemHelper:
     U.write_file(scorep_filter_file_name, scorep_filter_file_content)
     return scorep_filter_file_name
 
-  def _set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
+  def _set_up(self, build, item, flavor, it_nr, is_instr_run, param_mapping=None) -> None:
     L.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run), level='debug')
     if not is_instr_run:
       return
 
     exp_dir = self.config.get_analyzer_exp_dir(build, item)
+    # for batch system scaling experiments: Append parameter mapping to differentiate between jobs
+    if param_mapping is not None:
+      exp_dir = f"{exp_dir}-{param_mapping}"
+
     L.get_logger().log(
         'ScorepSystemHelper::_set_up: Retrieved analyzer experiment directory: ' + exp_dir, level='debug')
     effective_dir = U.get_cube_file_path(exp_dir, flavor, it_nr)

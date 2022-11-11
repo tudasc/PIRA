@@ -107,11 +107,6 @@ class Analyzer:
         L.get_logger().log(str(e), level='error')
         raise Exception('Problem in Analyzer')
 
-
-  def analyze_slurm(self, flavors, build, benchmark, kwargs, config):
-    L.get_logger().log('Analyzer::analyze_slurm: Not implemented. Aborting.', level='error')
-    assert(False)
-
   def set_up(self):
     pass
 

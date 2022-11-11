@@ -5,8 +5,9 @@ Description: Tests for the ConfigurationLoader module.
 """
 
 import lib.Logging as L
-from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader
-from lib.Configuration import PiraConfigAdapter, PiraConfigII, InvocationConfig
+from lib.BatchSystemBackends import BatchSystemBackendType, SlurmInterfaces, BatchSystemTimingType, SlurmBackend
+from lib.ConfigurationLoader import ConfigurationLoader, SimplifiedConfigurationLoader, BatchSystemConfigurationLoader
+from lib.Configuration import PiraConfigAdapter, PiraConfigII, InvocationConfig, BatchSystemHardwareConfig, SlurmConfig
 import os
 import unittest
 
@@ -314,6 +315,180 @@ class TestSimplifiedConfigLoader(unittest.TestCase):
 
     functor_dir = cfg.get_cleaner_path(b, i)
     self.assertEqual(functor_dir, expected_functors)
+
+
+class BatchSystemConfigLoaderTest(unittest.TestCase):
+  """
+  Test for the BatchSystemConfigurationLoader.
+  """
+
+  def test_get_config1(self):
+    """
+    Test the get_config method
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_001.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    cfg: SlurmConfig = cl.get_config()
+    # compare everything to the file content
+    self.assertListEqual(cfg.modules, [
+      {
+        "name": "gcc",
+        "version": "8.5"
+      },
+      {
+        "name": "cmake",
+        "version": "8.5"
+      },
+      {
+        "name": "llvm",
+        "version": "10.0.0",
+        "depends-on": [
+          {
+            "name": "gcc",
+            "version": "8.5"
+          }
+        ]
+      },
+      {
+        "name": "openmpi",
+        "version": "4.0.5",
+        "depends-on": [
+          {
+            "name": "gcc",
+            "version": "8.5"
+          }
+        ]
+      },
+      {
+        "name": "python",
+        "version": "3.9.5",
+        "depends-on": [
+          {
+            "name": "openmpi",
+            "version": "4.0.5"
+          }
+        ]
+      },
+      {
+        "name": "qt",
+        "version": "5.13.2",
+        "depends-on": [
+          {
+            "name": "python",
+            "version": "3.9.5"
+          }
+        ]
+      }
+    ])
+    self.assertEqual(cfg.time_str, "00:10:00")
+    self.assertEqual(cfg.mem_per_cpu, 3800)
+    self.assertEqual(cfg.number_of_tasks, 1)
+    self.assertEqual(cfg.partition, None)
+    self.assertEqual(cfg.reservation, None)
+    self.assertEqual(cfg.account, "project01823")
+    self.assertEqual(cfg.number_of_cores_per_task, 96)
+
+  def test_get_batch_interface1(self):
+    """
+    Test for get_batch_interface
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_001.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    cl.get_config()
+    bi = cl.get_batch_interface()
+    self.assertEqual(BatchSystemBackendType.SLURM, bi.backend)
+    self.assertEqual(SlurmInterfaces.PYSLURM, bi.interface)
+    self.assertEqual(BatchSystemTimingType.SUBPROCESS, bi.timing_type)
+    self.assertTrue(isinstance(bi, SlurmBackend))
+
+  def test_load_config2(self):
+    """
+    Test with config 002. This is a minimal config.
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_002.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    cfg: SlurmConfig = cl.get_config()
+    self.assertEqual(cfg.time_str, "00:10:00")
+    self.assertEqual(cfg.mem_per_cpu, 3800)
+    self.assertEqual(cfg.number_of_tasks, 1)
+    self.assertEqual(cfg.force_sequential, True)
+
+  def test_get_batch_interface2(self):
+    """
+    Test with config 002. This tests if the defaults are correctly in place:
+    Even though it is not given in the config file, it should be returned here.
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_002.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    cl.get_config()
+    bi = cl.get_batch_interface()
+    self.assertEqual(bi.backend, BatchSystemBackendType.SLURM)
+    self.assertEqual(bi.interface, SlurmInterfaces.PYSLURM)
+    self.assertEqual(bi.timing_type, BatchSystemTimingType.SUBPROCESS)
+
+  def test_get_config3(self):
+    """
+    Uses the config 003, to test if missing specifications lead to errors.
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_003.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    # 'batch-settings/number_of_tasks' option not found but mandatory.
+    self.assertRaises(RuntimeError, cl.get_config)
+
+  def test_get_config4(self):
+    """
+    Uses the config 004, to test if missing specifications lead to errors.
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_004.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    # 'batch-settings/mem_per_cpu' option not found but mandatory.
+    self.assertRaises(RuntimeError, cl.get_config)
+
+  def test_get_config5(self):
+    """
+    Uses the config 005, to test if missing specifications lead to errors.
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_005.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    # 'batch-settings/time_str' option not found but mandatory.
+    self.assertRaises(RuntimeError, cl.get_config)
+
+  def test_get_config6(self):
+    """
+    Uses the config 006, to test if missing specifications lead to errors.
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_006.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    # 'module-loads' Every module have to have a name.
+    self.assertRaises(RuntimeError, cl.get_config)
+
+  def test_get_config7(self):
+    """
+    Uses the config 007, to test if missing specifications lead to errors.
+    """
+    InvocationConfig.create_from_kwargs(
+      {"slurm-config": "../inputs/configs/batchsystem_config_007.json"})
+    invoc_conf = InvocationConfig.get_instance()
+    cl = BatchSystemConfigurationLoader(invoc_conf)
+    # 'module-loads': Every module dependency have to have a name (in module llvm).
+    self.assertRaises(RuntimeError, cl.get_config)
+
 
 if __name__ == '__main__':
   unittest.main()
