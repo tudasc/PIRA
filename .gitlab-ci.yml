@@ -24,12 +24,6 @@ stages:
 .lb-tear-down: &lb-tear-down
   - rm -rf $(dirname $(echo $SSH_AUTH_SOCK))
 
-# Pull-in the git submodules that are used during development
-.get-submodules: &get-submodules
-  - git submodule init;
-  - git submodule update --force extern/src/scorep-mod;
-  - git submodule update extern/src/metacg;
-
 # Only test that the submodules configured in here are accessible, so we do not block the Pipeline unneccessary long
 # GIT_STRATEGY: clone is used to always start with a clean checkout of the repository.
 # GIT_SUBMODULE_STRATEGY: none (default), i.e., git submodules need to be handled manually
@@ -42,7 +36,6 @@ download:
     GIT_STRATEGY: clone
     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
-    - *get-submodules
     - *lb-tear-down
 
 # Runs the unit tests 
@@ -294,20 +287,23 @@ run-gameoflife-hybrid-test-slurm:
     - *lb-tear-down
 
 # Disabled as it requires MetaCG Version 2
-# run-gameoflife-heuristic-test:
-#  stage: integration-test
-#  tags:
-#    - pira-robo
-#  before_script: *lb-setup
-#  variables:
-#    GIT_STRATEGY: none
-#    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
-#  script:
-#    - echo 'Running GameOfLife-heuristic integration test'
-#    - cd test/integration/GameOfLife_heuristic
-#    - ./run.sh
-#    - *lb-tear-down
+run-gameoflife-heuristic-test:
+  stage: integration-test
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife-heuristic integration test'
+    - cd test/integration/GameOfLife_heuristic
+    - ./run.sh
+    - *lb-tear-down
 
+## XXX: For now we leave this out as a Slurm test, as it would not add
+#       any insight in whether the Slurm implementation works.
+#       This is meant to test if we have MetaCG file format 2 ready.
 # run-gameoflife-heuristic-test-slurm:
 #  stage: integration-test
 #  tags:
