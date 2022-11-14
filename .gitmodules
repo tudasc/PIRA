@@ -1,6 +1,0 @@
-[submodule "extern/src/scorep-mod"]
-	path = extern/src/scorep-mod
-	url = https://github.com/jplehr/score-p-v6
-[submodule "extern/src/metacg"]
-	path = extern/src/metacg
-	url = https://github.com/tudasc/MetaCG
