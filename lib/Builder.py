@@ -1,6 +1,6 @@
 """
 File: Builder.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to build the target software.
 """
 
@@ -108,10 +108,9 @@ class Builder:
     ScorepSystemHelper.check_build_prerequisites()
 
   def build_flavors(self, kwargs) -> None:
-    L.get_logger().log(
-        'Builder::build_flavors: Building for ' + self.target_config.get_target() + ' in ' +
-        self.target_config.get_flavor(),
-        level='debug')
+    L.get_logger().log('Builder::build_flavors: Building for ' + self.target_config.get_target() +
+                       ' in ' + self.target_config.get_flavor(),
+                       level='debug')
     build = self.target_config.get_build()
     benchmark = self.target_config.get_target()
     flavor = self.target_config.get_flavor()
@@ -150,8 +149,9 @@ class Builder:
         ''' The build command uses CC and CXX to pass flags that are needed by PIRA for the given toolchain. '''
         build_command = build_functor.passive(benchmark, **kwargs)
         clean_command = clean_functor.passive(benchmark, **kwargs)
-        L.get_logger().log(
-            'Builder::build_flavors: Clean in ' + benchmark + '\n  Using ' + clean_command, level='debug')
+        L.get_logger().log('Builder::build_flavors: Clean in ' + benchmark + '\n  Using ' +
+                           clean_command,
+                           level='debug')
         U.shell(clean_command)
         L.get_logger().log('Builder::build_flavors: Building: ' + build_command, level='debug')
         U.shell(build_command)

@@ -1,12 +1,13 @@
 """
 File: DefaultFlags.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module holds a selection of default flags.
 """
 import typing
 import os
 
 from lib.Configuration import InvocationConfig
+
 
 class BackendDefaults:
   """
@@ -65,7 +66,6 @@ class BackendDefaults:
 
     def get_MPI_wrap_LD_PRELOAD(self) -> str:
       return 'LD_PRELOAD=' + self.get_wrap_so_file()
-
 
   instance = None
 

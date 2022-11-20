@@ -1,10 +1,11 @@
 """
 File: ArgumentMapping.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module provides mapper classes to handle argument.
 """
 
 import sys
+
 sys.path.append('..')
 
 
@@ -113,7 +114,8 @@ class CmdlineLinearArgumentMapper(ArgumentMapper):
     l_elem = list(arg_vals)[0]
     for e in arg_vals:
       if len(e) != len(l_elem):
-        raise RuntimeError('CmdlineLinearArgumentMapper: All parameters need the same number of values')
+        raise RuntimeError(
+            'CmdlineLinearArgumentMapper: All parameters need the same number of values')
     self._num_elems = len(l_elem)
 
   def __iter__(self):
@@ -193,6 +195,7 @@ class CmdlineCartesianProductArgumentMapper(ArgumentMapper):
 
 
 class MPIArgumentMapper(ArgumentMapper):
+
   def __init__(self, argmap, base_mapper):
     self._n_mpi = argmap['np']
     self._base_mapper = base_mapper
@@ -248,7 +251,8 @@ class ArgumentMapperFactory:
 
     elif requested_mapper == 'MPILinear':
       if is_file_mapper:
-        return MPIArgumentMapper(options['argmap'], CmdlineLinearArgumentMapper(options['argmap'], options['pira-file']))
+        return MPIArgumentMapper(
+            options['argmap'], CmdlineLinearArgumentMapper(options['argmap'], options['pira-file']))
       return MPIArgumentMapper(options['argmap'], CmdlineLinearArgumentMapper(options['argmap']))
 
     else:

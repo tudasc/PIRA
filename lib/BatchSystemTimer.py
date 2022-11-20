@@ -1,10 +1,9 @@
 """
 File: BatchSystemTimer.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Wrapper for timings in PIRA Slurm jobs, utilizes subprocess and os.times(). This way it is the
 same as in PIRA, with in the U.shell call.
 """
-
 
 import json
 import os
@@ -28,6 +27,7 @@ class BatchSystemTimer:
   - export_path: The path where the json results should go.
   - command: The command to run/to time.
   """
+
   def __init__(self, key: str, job_id: str, job_array_id: int, export_path: str, command: str):
     """
     Constructor.
@@ -52,12 +52,7 @@ class BatchSystemTimer:
     elapsed = t2[4] - t1[4]
     runtime = elapsed
     out = str(out.decode('utf-8'))
-    res = {
-      "cutime": cutime,
-      "cstime": cstime,
-      "elapsed": runtime,
-      "output": str(out)
-    }
+    res = {"cutime": cutime, "cstime": cstime, "elapsed": runtime, "output": str(out)}
     self.export_results(res)
 
   def export_results(self, res):

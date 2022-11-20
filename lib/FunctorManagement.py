@@ -1,6 +1,6 @@
 """
 File: FunctorManagement.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to load and manage the user-supplied functors.
 """
 
@@ -53,13 +53,17 @@ class FunctorManager:
       except KeyError:
         self.functor_cache[name] = U.load_functor(path, name)
 
-      L.get_logger().log(
-          'FunctorManager::get_or_load: The retrieved ' + func + ' functor: ' + str(self.functor_cache[name]),
-          level='debug')
+      L.get_logger().log('FunctorManager::get_or_load: The retrieved ' + func + ' functor: ' +
+                         str(self.functor_cache[name]),
+                         level='debug')
 
       return self.functor_cache[name]
 
-    def get_builder(self, build: str, item: str, flavor: str, base: bool = False) -> typing.Tuple[str, str, str]:
+    def get_builder(self,
+                    build: str,
+                    item: str,
+                    flavor: str,
+                    base: bool = False) -> typing.Tuple[str, str, str]:
       p = self.config.get_builder_path(build, item)
       n = self.get_builder_name(build, item, flavor)
       if base:

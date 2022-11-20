@@ -1,6 +1,6 @@
 """
 File: Pira.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module implementing the main workflow of PIRA.
 """
 
@@ -22,12 +22,13 @@ from lib.Runner import Runner, LocalRunner, LocalScalingRunner
 from lib.Builder import Builder as BU
 from lib.Analyzer import Analyzer as A
 
-
 import typing
 import sys
 import os
 
-def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig, csv_config: CSVConfig) -> None:
+
+def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig,
+                        csv_config: CSVConfig) -> None:
   try:
     instrument = False
     was_rebuilt = True
@@ -44,15 +45,15 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
     # Run without instrumentation for baseline
     L.get_logger().log('Running baseline measurements', level='info')
     vanilla_rr = runner.do_baseline_run(target_config)
-    L.get_logger().log(
-        'Pira::execute_with_config: RunResult: ' + str(vanilla_rr) + ' | avg: ' + str(vanilla_rr.get_average()),
-        level='debug')
+    L.get_logger().log('Pira::execute_with_config: RunResult: ' + str(vanilla_rr) + ' | avg: ' +
+                       str(vanilla_rr.get_average()),
+                       level='debug')
     instr_file = ''
 
     if (csv_config.should_export()):
       rr_exporter.add_iteration_data('Vanilla', vanilla_rr)
 
-    for iteration in range(0,InvocationConfig.get_instance().get_pira_iters()):
+    for iteration in range(0, InvocationConfig.get_instance().get_pira_iters()):
       L.get_logger().log('Running instrumentation iteration ' + str(iteration), level='info')
 
       # Only run the pgoe to get the functions name
@@ -61,50 +62,62 @@ def execute_with_config(runner: Runner, analyzer: A, target_config: TargetConfig
       # Analysis Phase
       instr_file = analyzer.analyze(target_config, iteration, was_rebuilt)
       was_rebuilt = False
-      L.get_logger().log('[WHITELIST] $' + str(iteration) + '$ ' + str(U.lines_in_file(instr_file)), level='perf')
+      L.get_logger().log('[WHITELIST] $' + str(iteration) + '$ ' + str(U.lines_in_file(instr_file)),
+                         level='perf')
       U.shell('stat ' + instr_file)
 
       # After baseline measurement is complete, do the instrumented build/run
       # This is only necessary in every iteration when run in compile-time mode.
       # For hybrid-filtering this is done after the specified amount of iterations
       if needs_rebuild(iteration):
-          was_rebuilt = True
-          instrument = True
-          instr_builder = BU(target_config, instrument, instr_file)
-          tracker.m_track('Instrument Build', instr_builder, 'build')
+        was_rebuilt = True
+        instrument = True
+        instr_builder = BU(target_config, instrument, instr_file)
+        tracker.m_track('Instrument Build', instr_builder, 'build')
 
       # Run Phase
       L.get_logger().log('Running profiling measurements', level='info')
       instr_rr = runner.do_profile_run(target_config, iteration)
-      if(csv_config.should_export()):
+      if (csv_config.should_export()):
         rr_exporter.add_iteration_data('Instrumented ' + str(iteration), instr_rr)
 
       # Compute overhead of instrumentation
       ovh_percentage = instr_rr.compute_overhead(vanilla_rr)
-      L.get_logger().log('[RUNTIME] $' + str(iteration) + '$ ' + str(instr_rr.get_average()), level='perf')
+      L.get_logger().log('[RUNTIME] $' + str(iteration) + '$ ' + str(instr_rr.get_average()),
+                         level='perf')
       L.get_logger().log('[OVERHEAD] $' + str(iteration) + '$ ' + str(ovh_percentage), level='perf')
-      L.get_logger().log('[REPETITION SUM] $' + str(iteration) + '$ ' + str(instr_rr.get_accumulated_runtime()), level='perf')
+      L.get_logger().log('[REPETITION SUM] $' + str(iteration) + '$ ' +
+                         str(instr_rr.get_accumulated_runtime()),
+                         level='perf')
 
       iteration_tracker.stop()
       user_time, system_time = iteration_tracker.get_time()
-      L.get_logger().log('[ITERTIME] $' + str(iteration) + '$ ' + str(user_time) + ', ' + str(system_time), level='perf')
+      L.get_logger().log('[ITERTIME] $' + str(iteration) + '$ ' + str(user_time) + ', ' +
+                         str(system_time),
+                         level='perf')
 
-    if(csv_config.should_export()):
-      file_name = target_config.get_target() + '-' +  target_config.get_flavor() + '.csv'
+    if (csv_config.should_export()):
+      file_name = target_config.get_target() + '-' + target_config.get_flavor() + '.csv'
       csv_file = os.path.join(csv_config.get_csv_dir(), file_name)
       try:
         U.make_dir(csv_config.get_csv_dir())
         rr_exporter.export(csv_file, csv_config.get_csv_dialect())
       except Exception as e:
-        L.get_logger().log(
-          'Pira::execute_with_config: Problem writing CSV file\nMessage:\n' + str(e), level='error')
+        L.get_logger().log('Pira::execute_with_config: Problem writing CSV file\nMessage:\n' +
+                           str(e),
+                           level='error')
 
   except Exception as e:
-    L.get_logger().log(
-        'Pira::execute_with_config: Problem during preparation of run.\nMessage:\n' + str(e), level='error')
+    L.get_logger().log('Pira::execute_with_config: Problem during preparation of run.\nMessage:\n' +
+                       str(e),
+                       level='error')
     raise RuntimeError(str(e))
 
-def do_rebuild(build_name: str, target_config: TargetConfig, instrument: bool, instr_file: str=None) -> None:
+
+def do_rebuild(build_name: str,
+               target_config: TargetConfig,
+               instrument: bool,
+               instr_file: str = None) -> None:
   if instrument and instr_file == None:
     L.get_logger().log('Should instrument but no instrumentation file.', level='error')
     raise Exception('instrument and no instrumentation file')
@@ -118,8 +131,8 @@ def needs_rebuild(iteration: int) -> bool:
   hybrid_filtering = InvocationConfig.get_instance().is_hybrid_filtering()
   hybrid_filter_iters = InvocationConfig.get_instance().get_hybrid_filter_iters()
   compile_time_filtering = InvocationConfig.get_instance().is_compile_time_filtering()
-  return compile_time_filtering or (iteration == 0) or (hybrid_filtering and (iteration % hybrid_filter_iters == 0))
-
+  return compile_time_filtering or (iteration == 0) or (hybrid_filtering and
+                                                        (iteration % hybrid_filter_iters == 0))
 
 
 def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, ExtrapConfig]:
@@ -131,10 +144,12 @@ def process_args_for_extrap(cmdline_args) -> typing.Tuple[bool, ExtrapConfig]:
 
     num_reps = cmdline_args.repetitions
     if num_reps < 5:
-      L.get_logger().log('At least 5 repetitions are recommended for Extra-P modelling.', level='warn')
+      L.get_logger().log('At least 5 repetitions are recommended for Extra-P modelling.',
+                         level='warn')
       if num_reps < 0:
         L.get_logger().log('REMEMBER TO REMOVE IN PIRA::process_args_for_extrap', level='warn')
-        L.get_logger().log('At least 3 repetitions are required for Extra-P modelling.', level='error')
+        L.get_logger().log('At least 3 repetitions are required for Extra-P modelling.',
+                           level='error')
         raise RuntimeError('At least 5 repetitions are needed for Extra-P modelling.')
 
   return use_extra_p, extrap_config
@@ -186,11 +201,12 @@ def main(cmdline_args) -> None:
       slurm_config_loader = BatchSystemConfigurationLoader(invoc_cfg)
       slurm_config = slurm_config_loader.get_config()
       # get slurm runners
-      runner = runner_factory.get_simple_slurm_runner(slurm_config, slurm_config_loader.get_batch_interface())
+      runner = runner_factory.get_simple_slurm_runner(slurm_config,
+                                                      slurm_config_loader.get_batch_interface())
       if use_extra_p:
         L.get_logger().log('Running with Extra-P runner')
-        runner = runner_factory.get_scalability_slurm_runner(slurm_config, slurm_config_loader.get_batch_interface(),
-                                                             extrap_config)
+        runner = runner_factory.get_scalability_slurm_runner(
+            slurm_config, slurm_config_loader.get_batch_interface(), extrap_config)
     else:
       # get local runners
       runner = runner_factory.get_simple_local_runner()

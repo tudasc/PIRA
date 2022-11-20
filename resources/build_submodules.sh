@@ -1,8 +1,9 @@
 #! /usr/bin/env bash
 #"""
 # File: build_submodules.sh
-# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-# Description: Helper script to build the git submodules useed in PIRA.
+# License: Part of the PIRA project. Licensed under BSD 3 clause license.
+# See LICENSE.txt file at https://github.com/tudasc/pira
+# Description: Script to build / install components required by PIRA
 #"""
 
 scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"
@@ -452,8 +453,8 @@ echo "==== ----"
 
 echo "[PIRA] sed'ing paths to setup_paths.sh script"
 sed -i "s|CUBEINSTALLDIR|${cube_install_dir}|g" "./setup_paths.sh"
-sed -i "s|SCOREPINSTALLDIR|${scorep_install_dir}|g" ./setup_paths.sh
+sed -i "s|SCOREPINSTALLDIR|${scorep_install_dir}|g" "./setup_paths.sh"
 sed -i "s|EXTRAPINSTALLDIR|${extrap_install_dir}|g" "./setup_paths.sh"
-sed -i "s|METACGINSTALLDIR|${metacg_install_dir}|g" ./setup_paths.sh
-sed -i "s|MPIWRAPINSTALLDIR|${mpiwrap_install_dir}|g" ./setup_paths.sh
-sed -i "s|BEARINSTALLDIR|${bear_install_dir}|g" ./setup_paths.sh
+sed -i "s|METACGINSTALLDIR|${metacg_install_dir}|g" "./setup_paths.sh"
+sed -i "s|MPIWRAPINSTALLDIR|${mpiwrap_install_dir}|g" "./setup_paths.sh"
+sed -i "s|BEARINSTALLDIR|${bear_install_dir}|g" "./setup_paths.sh"

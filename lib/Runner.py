@@ -1,10 +1,11 @@
 """
 File: Runner.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to run the target software.
 """
 
 import sys
+
 sys.path.append('..')
 
 import lib.Utility as U
@@ -23,6 +24,7 @@ import typing
 
 
 class Runner:
+
   def __init__(self, configuration: PiraConfig, sink):
     """ Runner are initialized once with a PiraConfiguration """
     self._config = configuration
@@ -49,10 +51,15 @@ class LocalBaseRunner(Runner):
     """ Runner are initialized once with a PiraConfiguration """
     super().__init__(configuration, sink)
 
-  def run(self, target_config: TargetConfig, instrument_config: InstrumentConfig, ) -> float:
+  def run(
+      self,
+      target_config: TargetConfig,
+      instrument_config: InstrumentConfig,
+  ) -> float:
     """ Implements the actual invocation """
     functor_manager = F.FunctorManager()
-    run_functor = functor_manager.get_or_load_functor(target_config.get_build(), target_config.get_target(),
+    run_functor = functor_manager.get_or_load_functor(target_config.get_build(),
+                                                      target_config.get_target(),
                                                       target_config.get_flavor(), 'run')
     default_provider = D.BackendDefaults()
     kwargs = default_provider.get_default_kwargs()
@@ -75,8 +82,9 @@ class LocalBaseRunner(Runner):
 
       command = run_functor.passive(target_config.get_target(), **kwargs)
       _, runtime = U.shell(command, time_invoc=True)
-      L.get_logger().log(
-          'LocalBaseRunner::run::passive_invocation -> Returned runtime: ' + str(runtime), level='debug')
+      L.get_logger().log('LocalBaseRunner::run::passive_invocation -> Returned runtime: ' +
+                         str(runtime),
+                         level='debug')
 
     except Exception as e:
       L.get_logger().log('LocalBaseRunner::run Exception\n' + str(e), level='error')
@@ -105,12 +113,14 @@ class LocalRunner(LocalBaseRunner):
     accu_runtime = .0
 
     if not target_config.has_args_for_invocation():
-      L.get_logger().log('LocalRunner::do_baseline_run: BEGIN not target_config.has_args_for_invocation()')
+      L.get_logger().log(
+          'LocalRunner::do_baseline_run: BEGIN not target_config.has_args_for_invocation()')
       # This runner only takes into account the first argument string (if not already set)
       args = self._config.get_args(target_config.get_build(), target_config.get_target())
       L.get_logger().log('LocalRunner::do_baseline_run: args: ' + str(args))
       target_config.set_args_for_invocation(args[0])
-      L.get_logger().log('LocalRunner::do_baseline_run: END not target_config.has_args_for_invocation()')
+      L.get_logger().log(
+          'LocalRunner::do_baseline_run: END not target_config.has_args_for_invocation()')
 
     # TODO Better evaluation of the obtained timings.
     time_series = M.RunResultSeries(reps=self.get_num_repetitions())
@@ -121,19 +131,22 @@ class LocalRunner(LocalBaseRunner):
       time_series.add_values(l_runtime, self.get_num_repetitions())
 
     run_result = M.RunResult(accu_runtime, self.get_num_repetitions())
-    L.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n', level='perf')
-    L.get_logger().log('[Vanilla][RTSeries] Average: ' + str(time_series.get_average()), level='perf')
+    L.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n',
+                       level='perf')
+    L.get_logger().log('[Vanilla][RTSeries] Average: ' + str(time_series.get_average()),
+                       level='perf')
     L.get_logger().log('[Vanilla][RTSeries] Median: ' + str(time_series.get_median()), level='perf')
     L.get_logger().log('[Vanilla][RTSeries] Stdev: ' + str(time_series.get_stdev()), level='perf')
-    L.get_logger().log('[Vanilla][REPETITION SUM] Vanilla sum: ' + str(time_series.get_accumulated_runtime()), level='perf')
+    L.get_logger().log('[Vanilla][REPETITION SUM] Vanilla sum: ' +
+                       str(time_series.get_accumulated_runtime()),
+                       level='perf')
 
     return time_series
 
-  def do_profile_run(self,
-                     target_config: TargetConfig,
-                     instr_iteration: int) -> M.RunResult:
-    L.get_logger().log(
-        'LocalRunner::do_profile_run: Received instrumentation file: ' + target_config.get_instr_file(), level='debug')
+  def do_profile_run(self, target_config: TargetConfig, instr_iteration: int) -> M.RunResult:
+    L.get_logger().log('LocalRunner::do_profile_run: Received instrumentation file: ' +
+                       target_config.get_instr_file(),
+                       level='debug')
     scorep_helper = M.ScorepSystemHelper(self._config)
     instrument_config = InstrumentConfig(True, instr_iteration)
     scorep_helper.set_up(target_config, instrument_config)
@@ -146,7 +159,8 @@ class LocalRunner(LocalBaseRunner):
 
     time_series = M.RunResultSeries(reps=self.get_num_repetitions())
     for y in range(0, self._num_repetitions):
-      L.get_logger().log('LocalRunner::do_profile_run: Running instrumentation iteration ' + str(y), level='debug')
+      L.get_logger().log('LocalRunner::do_profile_run: Running instrumentation iteration ' + str(y),
+                         level='debug')
       l_runtime = self.run(target_config, instrument_config)
       runtime += l_runtime
       time_series.add_values(l_runtime, self.get_num_repetitions())
@@ -154,11 +168,15 @@ class LocalRunner(LocalBaseRunner):
       self._sink.process(scorep_helper.get_exp_dir(), target_config, instrument_config)
 
     run_result = M.RunResult(runtime, self.get_num_repetitions())
-    L.get_logger().log(
-        '[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' + str(run_result.get_average()), level='perf')
-    L.get_logger().log('[Instrument][RTSeries] Average: ' + str(time_series.get_average()), level='perf')
-    L.get_logger().log('[Instrument][RTSeries] Median: ' + str(time_series.get_median()), level='perf')
-    L.get_logger().log('[Instrument][RTSeries] Stdev: ' + str(time_series.get_stdev()), level='perf')
+    L.get_logger().log('[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' +
+                       str(run_result.get_average()),
+                       level='perf')
+    L.get_logger().log('[Instrument][RTSeries] Average: ' + str(time_series.get_average()),
+                       level='perf')
+    L.get_logger().log('[Instrument][RTSeries] Median: ' + str(time_series.get_median()),
+                       level='perf')
+    L.get_logger().log('[Instrument][RTSeries] Stdev: ' + str(time_series.get_stdev()),
+                       level='perf')
 
     return time_series
 
@@ -173,9 +191,7 @@ class LocalScalingRunner(LocalRunner):
   def __init__(self, configuration: PiraConfig, sink):
     super().__init__(configuration, sink)
 
-  def do_profile_run(self,
-                     target_config: TargetConfig,
-                     instr_iteration: int) -> M.RunResult:
+  def do_profile_run(self, target_config: TargetConfig, instr_iteration: int) -> M.RunResult:
     L.get_logger().log('LocalScalingRunner::do_profile_run')
     # We run as many experiments as we have input data configs
     # TODO: How to handle the model parameter <-> input parameter relation, do we care?
@@ -210,19 +226,22 @@ class SlurmBaseRunner(Runner):
   """
   Base for all slurm runners.
   """
+
   def __init__(self, configuration: PiraConfig, slurm_configuration: SlurmConfig,
                batch_interface: BatchSystemInterface, sink):
     super().__init__(configuration, sink)
     self._slurm_config = slurm_configuration
     self.batch_interface = batch_interface
 
-  def add_run_command(self, target_config: TargetConfig, instrument_config: InstrumentConfig) -> str:
+  def add_run_command(self, target_config: TargetConfig,
+                      instrument_config: InstrumentConfig) -> str:
     """
     Prepares the command and adds it via the batch interface.
     Returns a key to identify the results after batch system jobs ran.
     """
     functor_manager = F.FunctorManager()
-    run_functor = functor_manager.get_or_load_functor(target_config.get_build(), target_config.get_target(),
+    run_functor = functor_manager.get_or_load_functor(target_config.get_build(),
+                                                      target_config.get_target(),
                                                       target_config.get_flavor(), 'run')
     default_provider = D.BackendDefaults()
     kwargs = default_provider.get_default_kwargs()
@@ -231,8 +250,10 @@ class SlurmBaseRunner(Runner):
     runtime = .0
 
     if run_functor.get_method()['active']:
-      L.get_logger().log('SlurmBaseRunner::add_run_command: Active running is not possible while '
-                         'dispatching to a cluster. Exiting.', level='error')
+      L.get_logger().log(
+          'SlurmBaseRunner::add_run_command: Active running is not possible while '
+          'dispatching to a cluster. Exiting.',
+          level='error')
       raise RuntimeError('Active running is not possible while dispatching to a cluster.')
 
     try:
@@ -242,7 +263,8 @@ class SlurmBaseRunner(Runner):
 
       kwargs['args'] = invoke_arguments
       if invoke_arguments is not None:
-        L.get_logger().log('SlurmBaseRunner::add_run_command: (args) ' + str(invoke_arguments), level="debug")
+        L.get_logger().log('SlurmBaseRunner::add_run_command: (args) ' + str(invoke_arguments),
+                           level="debug")
 
       command = run_functor.passive(target_config.get_target(), **kwargs)
 
@@ -250,12 +272,14 @@ class SlurmBaseRunner(Runner):
       # about telling the interface to run everything later, and care about retrieving
       # to results by "key" later to return them.
       key = U.generate_random_string()
-      L.get_logger().log("SlurmBaseRunner::add_run_command: Using key to reference results: " + key, level="debug")
+      L.get_logger().log("SlurmBaseRunner::add_run_command: Using key to reference results: " + key,
+                         level="debug")
 
       # Repetition not used, determined by the slurm config
       self.batch_interface.add_timed_command(key=key, cmd=command)
-      L.get_logger().log(f"SlurmBaseRunner::add_run_command: Added command via batch interface: {command}",
-                         level="debug")
+      L.get_logger().log(
+          f"SlurmBaseRunner::add_run_command: Added command via batch interface: {command}",
+          level="debug")
 
     except Exception as e:
       L.get_logger().log('SlurmBaseRunner::add_run_command: Exception\n' + str(e), level='error')
@@ -269,8 +293,7 @@ class SlurmBaseRunner(Runner):
     Start the execution of the added command(s) by dispatching to the cluster.
     :return: The job_id of the dispatched job.
     """
-    L.get_logger().log(f"SlurmBaseRunner::run: Dispatch added commands.",
-                       level="debug")
+    L.get_logger().log(f"SlurmBaseRunner::run: Dispatch added commands.", level="debug")
     job_id = self.batch_interface.dispatch(key)
     return job_id
 
@@ -286,8 +309,10 @@ class SlurmBaseRunner(Runner):
     """
     Return the results from a run, by requesting the batch system interface.
     """
-    L.get_logger().log(f"SlurmBaseRunner::get_runtime: Reading runtime for key {key}, repetition"
-                       f" {repetition}", level="debug")
+    L.get_logger().log(
+        f"SlurmBaseRunner::get_runtime: Reading runtime for key {key}, repetition"
+        f" {repetition}",
+        level="debug")
     return self.batch_interface.get_results(key, repetition)[0]
 
 
@@ -306,13 +331,12 @@ class SlurmRunner(SlurmBaseRunner):
     self._num_repetitions = InvocationConfig.get_instance().get_num_repetitions()
 
   def get_num_repetitions(self) -> int:
-      return self._num_repetitions
+    return self._num_repetitions
 
-  def do_profile_run(self,
-                     target_config: TargetConfig,
-                     instr_iteration: int) -> M.RunResultSeries:
-    L.get_logger().log(
-      'SlurmRunner::do_profile_run: Received instrumentation file: ' + target_config.get_instr_file(), level='debug')
+  def do_profile_run(self, target_config: TargetConfig, instr_iteration: int) -> M.RunResultSeries:
+    L.get_logger().log('SlurmRunner::do_profile_run: Received instrumentation file: ' +
+                       target_config.get_instr_file(),
+                       level='debug')
     scorep_helper = M.ScorepSystemHelper(self._config)
     instrument_config = InstrumentConfig(True, instr_iteration)
     scorep_helper.set_up(target_config, instrument_config)
@@ -335,13 +359,15 @@ class SlurmRunner(SlurmBaseRunner):
     # cube dir here, this is where the analyzer expects to find it
     # this ensures, that we know which cube will be used in the analyzer, instead of just using one of them.
     # one of them would work, but it can be good to know which one it is for error tracing.
-    last_rep = str(self.get_num_repetitions()-1)
+    last_rep = str(self.get_num_repetitions() - 1)
     last_rep_dir = f"{scorep_helper.get_exp_dir()}-{last_rep}"
     cube_src = f"{U.get_cubex_file(last_rep_dir, target_config.get_target(), target_config.get_flavor())}"
     cube_to = f"{U.get_cubex_file(scorep_helper.get_exp_dir(), target_config.get_target(), target_config.get_flavor())}"
     U.copy_file(f"{cube_src}", f"{cube_to}")
-    L.get_logger().log(f"SlurmRunner::do_profile_run: Copied cube form last repetition {cube_src} to {cube_to} for "
-                       f"examination by the analyzer.", level="debug")
+    L.get_logger().log(
+        f"SlurmRunner::do_profile_run: Copied cube form last repetition {cube_src} to {cube_to} for "
+        f"examination by the analyzer.",
+        level="debug")
     del last_rep, last_rep_dir, cube_src, cube_to
 
     self.collect_run(command_result_map, time_series, scorep_helper, target_config,
@@ -362,14 +388,16 @@ class SlurmRunner(SlurmBaseRunner):
     command_result_map: typing.List[typing.Tuple[int, str]] = []
 
     if not target_config.has_args_for_invocation():
-      L.get_logger().log('SlurmRunner::do_baseline_run: BEGIN not target_config.has_args_for_invocation()',
-                         level="debug")
+      L.get_logger().log(
+          'SlurmRunner::do_baseline_run: BEGIN not target_config.has_args_for_invocation()',
+          level="debug")
       # This runner only takes into account the first argument string (if not already set)
       args = self._config.get_args(target_config.get_build(), target_config.get_target())
       L.get_logger().log('SlurmRunner::do_baseline_run: args: ' + str(args), level="debug")
       target_config.set_args_for_invocation(args[0])
-      L.get_logger().log('SlurmRunner::do_baseline_run: END not target_config.has_args_for_invocation()',
-                         level="debug")
+      L.get_logger().log(
+          'SlurmRunner::do_baseline_run: END not target_config.has_args_for_invocation()',
+          level="debug")
 
     self.dispatch_run(target_config, InstrumentConfig(), command_result_map)
 
@@ -388,7 +416,9 @@ class SlurmRunner(SlurmBaseRunner):
   # by the do_baseline_run and do_profile_run methods of each this and the derived Scalability runner
   # in order in which they might be used
 
-  def dispatch_run(self, target_config: TargetConfig, instrumentation_config: InstrumentConfig,
+  def dispatch_run(self,
+                   target_config: TargetConfig,
+                   instrumentation_config: InstrumentConfig,
                    command_result_map: typing.List[typing.Tuple[int, str]],
                    scorep_var_export: bool = False) -> int:
     """
@@ -407,14 +437,15 @@ class SlurmRunner(SlurmBaseRunner):
     key = self.add_run_command(target_config, instrumentation_config)
     if scorep_var_export:
       # add export command for SCOREP_EXPERIMENT_DIRECTORY
-      self.batch_interface.add_preparation_command(key,
-                                                   "export SCOREP_EXPERIMENT_DIRECTORY="
-                                                   "$SCOREP_EXPERIMENT_DIRECTORY-$SLURM_ARRAY_TASK_ID")
+      self.batch_interface.add_preparation_command(
+          key, "export SCOREP_EXPERIMENT_DIRECTORY="
+          "$SCOREP_EXPERIMENT_DIRECTORY-$SLURM_ARRAY_TASK_ID")
     for y in range(0, self.get_num_repetitions()):
       # Add key for all repetitions
       # We can use this key, and the iteration number to retreive the result
       command_result_map.append((y, key))
-    L.get_logger().log('SlurmRunner::dispatch_run: Running all iterations on batch system', level='debug')
+    L.get_logger().log('SlurmRunner::dispatch_run: Running all iterations on batch system',
+                       level='debug')
     job_id = self.dispatch(key)
     return job_id
 
@@ -424,8 +455,14 @@ class SlurmRunner(SlurmBaseRunner):
     """
     self.wait()
 
-  def collect_run(self, command_result_map, time_series, scorep_helper=None, target_config=None, instrument_config=None,
-                  instr_iteration: int = None, append_repetition: bool = False) -> float:
+  def collect_run(self,
+                  command_result_map,
+                  time_series,
+                  scorep_helper=None,
+                  target_config=None,
+                  instrument_config=None,
+                  instr_iteration: int = None,
+                  append_repetition: bool = False) -> float:
     """
     Collect the results for all dispatched runs.
     :param command_result_map: The list of entries to collect results for.
@@ -446,23 +483,32 @@ class SlurmRunner(SlurmBaseRunner):
       time_series.add_values(l_runtime, self.get_num_repetitions())
       if scorep_helper is not None:
         # Enable further processing of the resulting profile
-        self._sink.process(f"{scorep_helper.get_exp_dir()}{'-'+str(repetition) if append_repetition else ''}",
-                           target_config, instrument_config)
+        self._sink.process(
+            f"{scorep_helper.get_exp_dir()}{'-'+str(repetition) if append_repetition else ''}",
+            target_config, instrument_config)
     run_result = M.RunResult(accu_runtime, self.get_num_repetitions())
     if scorep_helper is not None:
       # instrumentation prints
-      L.get_logger().log(
-        '[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' + str(run_result.get_average()), level='perf')
-      L.get_logger().log('[Instrument][RTSeries] Average: ' + str(time_series.get_average()), level='perf')
-      L.get_logger().log('[Instrument][RTSeries] Median: ' + str(time_series.get_median()), level='perf')
-      L.get_logger().log('[Instrument][RTSeries] Stdev: ' + str(time_series.get_stdev()), level='perf')
+      L.get_logger().log('[Instrument][RUNTIME] $' + str(instr_iteration) + '$ ' +
+                         str(run_result.get_average()),
+                         level='perf')
+      L.get_logger().log('[Instrument][RTSeries] Average: ' + str(time_series.get_average()),
+                         level='perf')
+      L.get_logger().log('[Instrument][RTSeries] Median: ' + str(time_series.get_median()),
+                         level='perf')
+      L.get_logger().log('[Instrument][RTSeries] Stdev: ' + str(time_series.get_stdev()),
+                         level='perf')
     else:
       # vanilla perf prints
-      L.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n', level='perf')
-      L.get_logger().log('[Vanilla][RTSeries] Average: ' + str(time_series.get_average()), level='perf')
-      L.get_logger().log('[Vanilla][RTSeries] Median: ' + str(time_series.get_median()), level='perf')
+      L.get_logger().log('[Vanilla][RUNTIME] Vanilla avg: ' + str(run_result.get_average()) + '\n',
+                         level='perf')
+      L.get_logger().log('[Vanilla][RTSeries] Average: ' + str(time_series.get_average()),
+                         level='perf')
+      L.get_logger().log('[Vanilla][RTSeries] Median: ' + str(time_series.get_median()),
+                         level='perf')
       L.get_logger().log('[Vanilla][RTSeries] Stdev: ' + str(time_series.get_stdev()), level='perf')
-      L.get_logger().log('[Vanilla][REPETITION SUM] Vanilla sum: ' + str(time_series.get_accumulated_runtime()),
+      L.get_logger().log('[Vanilla][REPETITION SUM] Vanilla sum: ' +
+                         str(time_series.get_accumulated_runtime()),
                          level='perf')
     return accu_runtime
 
@@ -499,9 +545,7 @@ class SlurmScalingRunner(SlurmRunner):
     # force scalability if set in config
     self.force_sequential = slurm_configuration.force_sequential
 
-  def do_profile_run(self,
-                     target_config: TargetConfig,
-                     instr_iteration: int) -> RunResultSeries:
+  def do_profile_run(self, target_config: TargetConfig, instr_iteration: int) -> RunResultSeries:
     """
     Slurm profile scaling run.
     """
@@ -519,9 +563,11 @@ class SlurmScalingRunner(SlurmRunner):
 
     # check if interface for dispatching adheres to rule 1), see class docstring
     if self.batch_interface.interface == SlurmInterfaces.SBATCH_WAIT:
-      L.get_logger().log("SlurmScalingRunner::do_profile_run: Interface 'sbatch-wait' is a blocking "
-                         "dispatch interface, which cannot be used with scaling experiments."
-                         " Downgrading to 'os'.", level="warn")
+      L.get_logger().log(
+          "SlurmScalingRunner::do_profile_run: Interface 'sbatch-wait' is a blocking "
+          "dispatch interface, which cannot be used with scaling experiments."
+          " Downgrading to 'os'.",
+          level="warn")
       self.batch_interface.interface = SlurmInterfaces.OS
 
     # map to save setup for the score-p related stuff
@@ -532,9 +578,9 @@ class SlurmScalingRunner(SlurmRunner):
       # setup args for invocation
       target_config.set_args_for_invocation(arg)
       # set up score-p related stuff upfront (needs to be initialized bevor the target runs)
-      L.get_logger().log(
-        'SlurmScalingRunner::do_profile_run: Received instrumentation file: ' + target_config.get_instr_file(),
-        level='debug')
+      L.get_logger().log('SlurmScalingRunner::do_profile_run: Received instrumentation file: ' +
+                         target_config.get_instr_file(),
+                         level='debug')
       scorep_helper = M.ScorepSystemHelper(self._config)
       instrument_config = InstrumentConfig(True, instr_iteration)
       # give the arg along, to set up the experiment dir of score-p:
@@ -550,15 +596,20 @@ class SlurmScalingRunner(SlurmRunner):
       else:
         self.batch_interface.generator.config.dependencies = ""
       # set scorep_var_export to split repetitions
-      job_id = self.dispatch_run(target_config, InstrumentConfig(), command_result_map, scorep_var_export=True)
+      job_id = self.dispatch_run(target_config,
+                                 InstrumentConfig(),
+                                 command_result_map,
+                                 scorep_var_export=True)
       jobs.append(job_id)
       cmd_maps.append(command_result_map)
 
     # waiting needs to be done with non-blocking wait 'os' - rule 2), see class docstring
     if self.batch_interface.interface != SlurmInterfaces.OS:
-      L.get_logger().log(f"SlurmScalingRunner::do_profile_run: {str(self.batch_interface.interface)} is a blocking "
-                         "wait interface, which cannot be used with scaling experiments."
-                         " Downgrading to 'os'.", level="warn")
+      L.get_logger().log(
+          f"SlurmScalingRunner::do_profile_run: {str(self.batch_interface.interface)} is a blocking "
+          "wait interface, which cannot be used with scaling experiments."
+          " Downgrading to 'os'.",
+          level="warn")
       self.batch_interface.interface = SlurmInterfaces.OS
     # wait for the group of all jobs to finish
     self.wait_run()
@@ -573,7 +624,12 @@ class SlurmScalingRunner(SlurmRunner):
       # init timing saving container and read results
       time_series = M.RunResultSeries(reps=self.get_num_repetitions())
       # set append_repetition to read from repetition cube-dirs - opponent to scorep_var_export from above
-      self.collect_run(cmd_map, time_series, scorep_helper, target_config, instrument_config, instr_iteration,
+      self.collect_run(cmd_map,
+                       time_series,
+                       scorep_helper,
+                       target_config,
+                       instrument_config,
+                       instr_iteration,
                        append_repetition=True)
       run_result.add_from(time_series)
 
@@ -600,9 +656,11 @@ class SlurmScalingRunner(SlurmRunner):
 
     # check if interface for dispatching adheres to rule 1), see class docstring
     if self.batch_interface.interface == SlurmInterfaces.SBATCH_WAIT:
-      L.get_logger().log("SlurmScalingRunner::do_baseline_run: Interface 'sbatch-wait' is a blocking "
-                         "dispatch interface, which cannot be used with scaling experiments. "
-                         "Downgrading to 'os'.", level="warn")
+      L.get_logger().log(
+          "SlurmScalingRunner::do_baseline_run: Interface 'sbatch-wait' is a blocking "
+          "dispatch interface, which cannot be used with scaling experiments. "
+          "Downgrading to 'os'.",
+          level="warn")
       self.batch_interface.interface = SlurmInterfaces.OS
     # dispatch job for each arg
     for i, arg in enumerate(args):
@@ -621,9 +679,11 @@ class SlurmScalingRunner(SlurmRunner):
 
     # waiting needs to be done with non-blocking wait 'os' - rule 2)s
     if self.batch_interface.interface != SlurmInterfaces.OS:
-      L.get_logger().log(f"SlurmScalingRunner::do_baseline_run: {str(self.batch_interface.interface)} is a blocking "
-                         "wait interface, which cannot be used with scaling experiments."
-                         " Downgrading to 'os'.", level="warn")
+      L.get_logger().log(
+          f"SlurmScalingRunner::do_baseline_run: {str(self.batch_interface.interface)} is a blocking "
+          "wait interface, which cannot be used with scaling experiments."
+          " Downgrading to 'os'.",
+          level="warn")
       self.batch_interface.interface = SlurmInterfaces.OS
     # wait for the group of all jobs to finish
     self.wait_run()
@@ -639,4 +699,3 @@ class SlurmScalingRunner(SlurmRunner):
     self.batch_interface.interface = config_batch_interface
 
     return run_result
-

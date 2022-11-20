@@ -1,4 +1,4 @@
-echo "Running Python lint"
+echo "Running Python formatting and linting"
 
 didfail=0
 
@@ -12,8 +12,18 @@ locations=(
 	./lib
 	./test/integration/check.py
 )
-for i in `find ${locations[@]} -iname "*.py"`; do
+
+# First check for formatting then lint
+for i in $(find ${locations[@]} -iname "*.py"); do
 	testName=$(echo "$i" | awk -F . '{print substr($2,2)}')
+
+  echo "Formatting check for $i -> $testName";
+  python -m yapf -q $i 
+  if [ $? -ne 0 ]; then
+    echo "Formatting check failed for $i"
+    exit 1
+  fi
+
 	echo "Running $i -> $testName";
 	python -m pylint -E $i
 	if [ $? -ne 0 ]; then 

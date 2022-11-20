@@ -1,12 +1,12 @@
 """
 File: Analyzer.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to encapsulate the underlying analysis engine.
 """
 
 import lib.Utility as U
 import lib.Logging as L
-import lib.TimeTracking as T 
+import lib.TimeTracking as T
 import lib.FunctorManagement as F
 import lib.DefaultFlags as D
 import lib.Exception as E
@@ -14,8 +14,10 @@ from lib.Configuration import TargetConfig, InvocationConfig as InvocCfg
 
 
 class PiraAnalyzerException(E.PiraException):
+
   def __init__(self, m):
     super().__init__(m)
+
 
 class Analyzer:
 
@@ -43,8 +45,8 @@ class Analyzer:
 
     return self.analyze_local(target_config, kwargs, iteration_number, was_rebuilt)
 
-
-  def analyze_local(self, target_config: TargetConfig, kwargs: dict, iterationNumber: int, was_rebuild: bool)  -> str:
+  def analyze_local(self, target_config: TargetConfig, kwargs: dict, iterationNumber: int,
+                    was_rebuild: bool) -> str:
     flavor = target_config.get_flavor()
     build = target_config.get_build()
     benchmark = target_config.get_target()
@@ -77,27 +79,29 @@ class Analyzer:
 
         if isdirectory_good:
           U.change_cwd(analyzer_dir)
-          L.get_logger().log('Analyzer::analyzer_local: Flavor = ' + flavor + ' | benchmark_name = ' +
-                                   benchmark_name)
+          L.get_logger().log('Analyzer::analyzer_local: Flavor = ' + flavor +
+                             ' | benchmark_name = ' + benchmark_name)
           instr_files = U.build_instr_file_path(analyzer_dir, flavor, benchmark_name)
           L.get_logger().log('Analyzer::analyzer_local: instrumentation file = ' + instr_files)
-          numbered_instr_file = U.build_numbered_instr_file_path(analyzer_dir, flavor, benchmark_name, iterationNumber)
+          numbered_instr_file = U.build_numbered_instr_file_path(analyzer_dir, flavor,
+                                                                 benchmark_name, iterationNumber)
         else:
-          raise RuntimeError(f'Analyzer::analyzer_local: Analyzer directory {analyzer_dir} does not exist')
+          raise RuntimeError(
+              f'Analyzer::analyzer_local: Analyzer directory {analyzer_dir} does not exist')
 
         tracker = T.TimeTracker()
-        
+
         # TODO: Alternate between expansion and pure filtering.
         if iterationNumber > 0 and U.is_file(instr_files):
           L.get_logger().log('Analyzer::analyze_local: instr_file available')
           U.remove(instr_files)
-          tracker.f_track('Analysis', self.run_analyzer_command, command, analyzer_dir, flavor, benchmark_name,
-                          exp_dir, iterationNumber, extrap_config_file, was_rebuild)
+          tracker.f_track('Analysis', self.run_analyzer_command, command, analyzer_dir, flavor,
+                          benchmark_name, exp_dir, iterationNumber, extrap_config_file, was_rebuild)
           L.get_logger().log('Analyzer::analyze_local: command finished', level='debug')
 
         else:
-          tracker.f_track('Initial analysis', self.run_analyzer_command_no_instr, command, analyzer_dir, flavor,
-                          benchmark_name)
+          tracker.f_track('Initial analysis', self.run_analyzer_command_no_instr, command,
+                          analyzer_dir, flavor, benchmark_name)
 
         U.copy_file(instr_files, numbered_instr_file)
         self.tear_down(build, exp_dir)
@@ -110,7 +114,6 @@ class Analyzer:
   def set_up(self):
     pass
 
-
   def tear_down(self, old_dir, exp_dir):
     isdirectory_good = U.check_provided_directory(exp_dir)
     if isdirectory_good:
@@ -119,10 +122,16 @@ class Analyzer:
       except Exception as e:
         L.get_logger().log(str(e), level='error')
 
-
   @staticmethod
-  def run_analyzer_command(command: str, analyzer_dir: str, flavor: str, benchmark_name: str, exp_dir: str,
-                           iterationNumber: int, extrap_config_file: str, was_rebuilt: bool, hybrid_filter: bool = False) -> None:
+  def run_analyzer_command(command: str,
+                           analyzer_dir: str,
+                           flavor: str,
+                           benchmark_name: str,
+                           exp_dir: str,
+                           iterationNumber: int,
+                           extrap_config_file: str,
+                           was_rebuilt: bool,
+                           hybrid_filter: bool = False) -> None:
 
     export_performance_models = InvocCfg.get_instance().is_export()
     export_runtime_only = InvocCfg.get_instance().is_export_runtime_only()
@@ -142,11 +151,14 @@ class Analyzer:
     if extrap_config_file is None:
       if InvocCfg.get_instance().is_lide_enabled():
         # load imbalance detection mode
-        L.get_logger().log('Utility::run_analyzer_command: using Load Imbalance Detection Analyzer', level='info')
+        L.get_logger().log('Utility::run_analyzer_command: using Load Imbalance Detection Analyzer',
+                           level='info')
         if analysis_parameters_path == '':
-          L.get_logger().log('Utility::run_analyzer_command: An analysis parameters file is required for PIRA LIDe!', level='error')
+          L.get_logger().log(
+              'Utility::run_analyzer_command: An analysis parameters file is required for PIRA LIDe!',
+              level='error')
 
-        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --lide 1 --parameter-file ' + analysis_parameters_path + ' --debug 1 --export ' + ipcg_file 
+        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --lide 1 --parameter-file ' + analysis_parameters_path + ' --debug 1 --export ' + ipcg_file
 
       else:
         # vanilla PIRA version 1 runner
@@ -155,7 +167,8 @@ class Analyzer:
 
       L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
       out, _ = U.shell(sh_cmd)
-      L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
+      L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out,
+                         level='debug')
       return
 
     if hybrid_filter and not was_rebuilt:
@@ -165,24 +178,28 @@ class Analyzer:
       command += ' --use-cs-instrumentation'
 
     if analysis_parameters_path == '':
-      L.get_logger().log('Utility::run_analyzer_command: An analysis parameters file is required for Extra-P mode!', level='error')
+      L.get_logger().log(
+          'Utility::run_analyzer_command: An analysis parameters file is required for Extra-P mode!',
+          level='error')
     sh_cmd = command + export_str + ' --scorep-out --debug 1 --parameter-file ' + analysis_parameters_path + ' --extrap ' + extrap_config_file + ' ' + ipcg_file
     L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
     out, _ = U.shell(sh_cmd)
     L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
 
   @staticmethod
-  def run_analyzer_command_no_instr(command: str, analyzer_dir: str, flavor: str, benchmark_name: str) -> None:
+  def run_analyzer_command_no_instr(command: str, analyzer_dir: str, flavor: str,
+                                    benchmark_name: str) -> None:
     ipcg_file = U.get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
     sh_cmd = command + ' --scorep-out --static '
 
     # load imbalancee detection mode
     if InvocCfg.get_instance().is_lide_enabled():
-      sh_cmd = sh_cmd + ' --debug 1 --lide 1 ' + InvocCfg.get_instance().get_analysis_parameters_path()
+      sh_cmd = sh_cmd + ' --debug 1 --lide 1 ' + InvocCfg.get_instance(
+      ).get_analysis_parameters_path()
 
     sh_cmd = sh_cmd + ' ' + ipcg_file
 
     L.get_logger().log('Utility::run_analyzer_command_noInstr: NO INSTR: Run cmd: ' + sh_cmd)
     out, _ = U.shell(sh_cmd)
-    L.get_logger().log('Utility::run_analyzer_command_noInstr: Output of analyzer:\n' + out, level='debug')
-
+    L.get_logger().log('Utility::run_analyzer_command_noInstr: Output of analyzer:\n' + out,
+                       level='debug')

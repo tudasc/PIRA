@@ -1,10 +1,11 @@
 """
 File: Database.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to run the target software.
 """
 
 import sys
+
 sys.path.append('..')
 
 import lib.FunctorManagement as F
@@ -107,18 +108,20 @@ class DBManager:
       # TODO implement the get_submitter_file(build, item, flavor) method!
 
       benchmark_name = config.get_benchmark_name(item)
-      submitter_functor = config.get_runner_func(build, item) + '/slurm_submitter_' + benchmark_name + flavor
+      submitter_functor = config.get_runner_func(
+          build, item) + '/slurm_submitter_' + benchmark_name + flavor
       exp_dir = config.get_analyzer_exp_dir(build, item)
 
       db_item_id = U.generate_random_string()
-      db_item_data = (db_item_id, benchmark_name, analyze_functor, build_functor, '', run_functor, submitter_functor,
-                      exp_dir, build)
+      db_item_data = (db_item_id, benchmark_name, analyze_functor, build_functor, '', run_functor,
+                      submitter_functor, exp_dir, build)
       self.insert_data_items(db_item_data)
 
       return db_item_id
 
-    def enter_run_data(self, unique_id: str, item_name: str, iteration_no: int, is_instrumented_run: bool,
-                       path_to_cube: str, runtime: float, db_item_id) -> None:
+    def enter_run_data(self, unique_id: str, item_name: str, iteration_no: int,
+                       is_instrumented_run: bool, path_to_cube: str, runtime: float,
+                       db_item_id) -> None:
       pass
 
   #### END OF INNER CLASS ###

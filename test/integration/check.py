@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 File: check.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: 
     This script is used to check the output of the integration tests against expectations defined in a file.
     Call this script from the run-script of each integration test. (Usage information: `check.py -h`)
@@ -79,7 +79,9 @@ class ExpectationTriple:
 
     conflict = set(self.expect) & set(self.never_expect)
     if conflict:
-      print(f"Problem in expectations file. The following functions are both expected and never-expected: {conflict}")
+      print(
+          f"Problem in expectations file. The following functions are both expected and never-expected: {conflict}"
+      )
       return False
 
     # test whether all expected functions are present
@@ -116,14 +118,19 @@ class ExpectationTriple:
 
 def main():
   # parse cli arguments
-  parser = argparse.ArgumentParser(description="Check instrumentation output of PIRA integration tests.")
+  parser = argparse.ArgumentParser(
+      description="Check instrumentation output of PIRA integration tests.")
   parser.add_argument('instr_dir_path',
                       metavar='dir',
                       help="Path to directory containing the filter lists produced by PIRA.")
-  parser.add_argument('expected_path', metavar='expected', help="Path to JSON file describing the expected output.")
-  parser.add_argument('benchmark_name',
-                      metavar='benchmark',
-                      help="Benchmark name as in the filter list files. Most likely;: \"application_name\"_\"flavour\"")
+  parser.add_argument('expected_path',
+                      metavar='expected',
+                      help="Path to JSON file describing the expected output.")
+  parser.add_argument(
+      'benchmark_name',
+      metavar='benchmark',
+      help=
+      "Benchmark name as in the filter list files. Most likely;: \"application_name\"_\"flavour\"")
   parser.add_argument('-v',
                       '--verbose',
                       action='store_true',
