@@ -38,52 +38,62 @@ In contrast, in runtime filtering, the compiler inserts instrumentation hooks in
 
 ### Requirements
 
-PIRA requires CMake (>=3.5), Clang/LLVM 10, Python 3, Qt5 and OpenMPI 4.
-It will further download (and build)
+PIRA requires CMake (>=3.16), Clang/LLVM 10, Python 3, Qt5 and OpenMPI 4.
+It (or MetaCG) will further download (and build)
 
 - [MetaCG](https://github.com/tudasc/MetaCG)
 - [Modified Score-P 6.0](https://github.com/jplehr/score-p-v6)
 - [Extra-P (version 3.0)](https://www.scalasca.org/software/extra-p/download.html)
 - [LLNL's wrap](https://github.com/LLNL/wrap)
 - [bear (version 2.4.2)](https://github.com/rizsotto/Bear)
-- [cxxopts (version 2.1)](https://github.com/jarro2783/cxxopts)
-- [nlohmann json (version 3.9.1)](https://github.com/nlohmann/json)
+- [cxxopts (version 2.2.1)](https://github.com/jarro2783/cxxopts)
+- [nlohmann json (version 3.10.5)](https://github.com/nlohmann/json)
+- [spdlog (version 1.8.2)](https://github.com/gabime/spdlog)
 
 If you want to build PIRA in an environment without internet access, please see the `resources/build_submodules.sh` script, and adjust it to your needs.
-Making this process easier and more configurable is work-in-progress.
 
 ### Obtaining PIRA
 
-Clone the PIRA repository and initialize the submodules.
+Clone the PIRA repository.
 
 ```{.sh}
-git clone https://github.com/tudasc/pira
-cd pira
-git submodule update --init
+$> git clone https://github.com/tudasc/pira
+$> cd pira
 ```
 
 ### Building PIRA
 
 Second, build the dependent submodules using the script provided, or pass values for the different options (see usage info via `-h` for options available).
+All downloaded and built files will be placed into `external/src/` while all installations will be placed into `external/install/`.
 Specify the number of compile processes to be spawned for the compilation of PIRA's externals.
+The script will download PIRA's dependencies in their default version.
+These versions are also tested in our CI and are expected to work.
 
 ```{.sh}
-cd resources
-./build_submodules.sh -p <ncores>
+$> cd resources
+$> ./build_submodules.sh -p <ncores>
 ```
+
+As final step, the build script will write the install paths of the submodules into the file `resources/setup_paths.sh`.
+Should you wish to rebuild PIRA, please remember to `git restore` this file.
 
 #### PIRA Docker
 
-We also provide a (early work) `Dockerfile` to build PIRA and try it.
+We also provide an (experimental) `Dockerfile` to build PIRA and try it.
+
+```{.sh}
+$> podman build -t pira:master -f docker/Dockerfile .
+```
+
 When running inside the container, e.g., the integration tests, please invoke the scripts as follows.
 
 ```{.sh}
-cd resources
-. setup_paths.sh
-cd ../test/integration/GameOfLife # Example test case
+$> cd resources
+$> . setup_paths.sh
+$> cd ../test/integration/GameOfLife # Example test case
 # By default PIRA will look into $HOME/.local, which is not currently existent in the docker
 # XDG_DATA_HOME signals where to put the profiling data PIRA generates
-XDG_DATA_HOME=/tmp ./run.sh 
+$> XDG_DATA_HOME=/tmp ./run.sh 
 ```
 
 ### Using PIRA
@@ -94,15 +104,15 @@ A potentially good starting point is the `GameOfLife` folder and its test case.
 First, set up the required paths by sourcing the script in the `resources` folder.
 
 ```{.sh}
-cd resources/
-. setup_paths.sh
+$> cd resources/
+$> . setup_paths.sh
 ```
 
 Then, you can run an example application of PIRA on a very simple implementation of Conway's Game of Life by using the provided `run.sh` script in the `./test/integration/GameOfLife` folder.
 
 ```{.sh}
-cd ./test/integration/GameOfLife
-./run.sh
+$> cd ./test/integration/GameOfLife
+$> ./run.sh
 ```
 
 The script performs all steps required from the start, i.e., preparing all components for a new target code, to finally invoke PIRA.
@@ -168,7 +178,7 @@ Currently, it is important that the file in the PGIS directory is named followin
 
 ~~~{.sh}
 # Assuming $PIRA holds the top-level PIRA directory
-cp my-app.ipcg $PIRA/extern/install/pgis/bin/item_flavor.ipcg
+$> cp my-app.ipcg $PIRA/extern/install/pgis/bin/item_flavor.ipcg
 ~~~
 
 #### Configuration

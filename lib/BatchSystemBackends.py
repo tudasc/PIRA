@@ -1,3 +1,8 @@
+"""
+File: BatchSystemBackends.py
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
+Description:
+"""
 
 import time
 import json
@@ -66,7 +71,9 @@ class BatchSystemInterface:
   for timed commands, only one timed command per job can be added. But this should be enough for PIRA.
   See individual *Backend classes for more detail.
   """
-  def __init__(self, backend_type: BatchSystemBackendType = BatchSystemBackendType.SLURM,
+
+  def __init__(self,
+               backend_type: BatchSystemBackendType = BatchSystemBackendType.SLURM,
                interface_type: BatchSystemInterfaceType = None,
                timings_type: BatchSystemTimingType = None,
                check_interval_in_seconds: int = 30) -> None:
@@ -99,7 +106,8 @@ class BatchSystemInterface:
     """
     self.interface = interface
 
-  def configure(self, batch_config: BatchSystemHardwareConfig, batch_generator: BatchSystemGenerator) -> None:
+  def configure(self, batch_config: BatchSystemHardwareConfig,
+                batch_generator: BatchSystemGenerator) -> None:
     """
     Set up the configuration for the batch system. This is used to add a batch system configuration
     and a batch system generator to be used, form the outside.
@@ -222,7 +230,9 @@ class SlurmBackend(BatchSystemInterface):
   """
   Backend for the SLURM batch system runner.
   """
-  def __init__(self, backend_type: BatchSystemBackendType = BatchSystemBackendType.SLURM,
+
+  def __init__(self,
+               backend_type: BatchSystemBackendType = BatchSystemBackendType.SLURM,
                interface_type: BatchSystemInterfaceType = SlurmInterfaces.PYSLURM,
                timing_type: BatchSystemTimingType = BatchSystemTimingType.SUBPROCESS) -> None:
     """
@@ -256,9 +266,9 @@ class SlurmBackend(BatchSystemInterface):
     :param cmd: The command.
     """
     for array_id in range(
-          self.config.job_array_start,
-          self.config.job_array_end+1,
-          self.config.job_array_step,
+        self.config.job_array_start,
+        self.config.job_array_end + 1,
+        self.config.job_array_step,
     ):
       # add a placeholder for the results
       self.results[(key, array_id)] = None
@@ -281,7 +291,8 @@ class SlurmBackend(BatchSystemInterface):
     if key in self.preparation_commands:
       self.generator.add_command(self.preparation_commands[key])
     if key not in self.timed_commands:
-      L.get_logger().log(f"SlurmBackend::dispatch: There is no command to be added for key {key}.", level="error")
+      L.get_logger().log(f"SlurmBackend::dispatch: There is no command to be added for key {key}.",
+                         level="error")
     # add the timing with the command
     if self.timing_type == BatchSystemTimingType.SUBPROCESS:
       cmd = f"python3 {U.get_pira_code_dir()}/lib/BatchSystemTimer.py {key} $SLURM_ARRAY_JOB_ID " \
@@ -295,8 +306,10 @@ class SlurmBackend(BatchSystemInterface):
       else:
         # but local commands seem to crash with it when in quotes
         self.generator.add_command(f"/usr/bin/time --format=%e {self.timed_commands[key]}")
-      L.get_logger().log(f"SlurmBackend::dispatch: Added command '/usr/bin/time --format="
-                         f"%e {self.timed_commands[key]}'", level="debug")
+      L.get_logger().log(
+          f"SlurmBackend::dispatch: Added command '/usr/bin/time --format="
+          f"%e {self.timed_commands[key]}'",
+          level="debug")
     else:
       L.get_logger().log("SlurmBackend::dispatch: Invalid timing_type. Exiting.", level="error")
       U.exit(1)
@@ -313,17 +326,22 @@ class SlurmBackend(BatchSystemInterface):
       job_opts = self.generator.get_pyslurm_args()
       job_id = job_controller.submit_batch_job(job_opts)
       job_id = int(job_id)
-      L.get_logger().log(f"SlurmBackend::dispatch: Dispatched job {job_id} to slurm via PySlurm.", level="debug")
+      L.get_logger().log(f"SlurmBackend::dispatch: Dispatched job {job_id} to slurm via PySlurm.",
+                         level="debug")
       del job_controller
     elif self.interface == SlurmInterfaces.SBATCH_WAIT:
-      L.get_logger().log(f"SlurmBackend::dispatch: Starting execution of repetitions via sbatch --wait...", level="debug")
-      job_id = self.generator.sbatch(script_path=self.config.slurm_script_file, active=True, wait=True)
+      L.get_logger().log(
+          f"SlurmBackend::dispatch: Starting execution of repetitions via sbatch --wait...",
+          level="debug")
+      job_id = self.generator.sbatch(script_path=self.config.slurm_script_file,
+                                     active=True,
+                                     wait=True)
     elif self.interface == SlurmInterfaces.OS:
       # sbatch it
       job_id = self.generator.sbatch(script_path=self.config.slurm_script_file, active=True)
       L.get_logger().log(
-        f"SlurmBackend::dispatch: Sbatch'ed jobscript {self.config.slurm_script_file} via systems sbatch.",
-        level="debug")
+          f"SlurmBackend::dispatch: Sbatch'ed jobscript {self.config.slurm_script_file} via systems sbatch.",
+          level="debug")
     else:
       L.get_logger().log(f"SlurmBackend::dispatch: Interface is None. Exiting.", level="error")
       raise RuntimeError("SlurmBackend::dispatch: Interface is None. Exiting.")
@@ -367,8 +385,10 @@ class SlurmBackend(BatchSystemInterface):
         # give all jobs along
         self.generator.wait(job_ids=jobs)
       else:
-        L.get_logger().log("SlurmBackend::wait: Trying to wait for a group of jobs with method other then 'os'."
-                           "Only non-blocking wait methods are allowed for waiting on groups: 'os'.", level="error")
+        L.get_logger().log(
+            "SlurmBackend::wait: Trying to wait for a group of jobs with method other then 'os'."
+            "Only non-blocking wait methods are allowed for waiting on groups: 'os'.",
+            level="error")
     # After waiting: Read/obtain the results, and populate the result dict with it
     self.populate_result_dict()
 
@@ -380,28 +400,38 @@ class SlurmBackend(BatchSystemInterface):
     # filter for dispatched (and finished) jobs
     key_job_map = {key: value for key, value in self.job_id_map.items() if value is not None}
     for job_key, job_id in key_job_map.items():
-      L.get_logger().log(f"SlurmBackend::populate_result_dict: Obtaining results for job {str(job_id)}, "
-                         f"key {job_key}", level="debug")
-      L.get_logger().log("SlurmBackend::populate_result_dict: Timing method is: " + str(self.timing_type),
+      L.get_logger().log(
+          f"SlurmBackend::populate_result_dict: Obtaining results for job {str(job_id)}, "
+          f"key {job_key}",
+          level="debug")
+      L.get_logger().log("SlurmBackend::populate_result_dict: Timing method is: " +
+                         str(self.timing_type),
                          level="debug")
       if self.timing_type == BatchSystemTimingType.SUBPROCESS:
         # for all repetitions of the job_key
         for key, repetition in [(k, r) for (k, r) in self.results.keys() if k == job_key]:
           try:
-            with open(f"{U.get_default_pira_dir()}/pira-slurm-{job_id}-{key}-{repetition}.json", "r") as f:
+            with open(f"{U.get_default_pira_dir()}/pira-slurm-{job_id}-{key}-{repetition}.json",
+                      "r") as f:
               try:
                 result_dict = json.load(f)
-                self.results[(key, repetition)] = float(result_dict["elapsed"]), result_dict["output"]
+                self.results[(key,
+                              repetition)] = float(result_dict["elapsed"]), result_dict["output"]
               except KeyError:
-                L.get_logger().log(f"SlurmBackend::populate_result_dict: Failed to read results for "
-                                   f"key {key}, repetition {repetition} from json result file.", level="error")
+                L.get_logger().log(
+                    f"SlurmBackend::populate_result_dict: Failed to read results for "
+                    f"key {key}, repetition {repetition} from json result file.",
+                    level="error")
           except FileNotFoundError:
-            L.get_logger().log(f"SlurmBackend::populate_result_dict: Opening runtime json "
-                               f"file failed: {U.get_default_pira_dir()}/pira-"
-                               f"slurm-{job_id}-{key}-{repetition}.json. Exiting.", level="error")
-            raise RuntimeError(f"SlurmBackend::populate_result_dict: Reading runtime from runtime json "
-                               f"file failed: {U.get_default_pira_dir()}/pira-"
-                               f"slurm-{job_id}-{key}-{repetition}.json. Exiting.")
+            L.get_logger().log(
+                f"SlurmBackend::populate_result_dict: Opening runtime json "
+                f"file failed: {U.get_default_pira_dir()}/pira-"
+                f"slurm-{job_id}-{key}-{repetition}.json. Exiting.",
+                level="error")
+            raise RuntimeError(
+                f"SlurmBackend::populate_result_dict: Reading runtime from runtime json "
+                f"file failed: {U.get_default_pira_dir()}/pira-"
+                f"slurm-{job_id}-{key}-{repetition}.json. Exiting.")
       elif self.timing_type == BatchSystemTimingType.OS_TIME:
         # for all repetitions of the job_key
         for key, repetition in [(k, r) for (k, r) in self.results.keys() if k == job_key]:
@@ -411,16 +441,23 @@ class SlurmBackend(BatchSystemInterface):
               try:
                 runtime = float(lines[-1].strip())
               except (ValueError, IndexError):
-                L.get_logger().log(f"SlurmBackend::populate_result_dict: Reading runtime from out-file "
-                                   f"failed: {self.config.std_out_path}.{job_id}_{repetition}. Exiting.", level="error")
-                raise RuntimeError(f"SlurmBackend::populate_result_dict: Reading runtime from out-file "
-                                   f"failed: {self.config.std_out_path}.{job_id}_{repetition}. Exiting.")
+                L.get_logger().log(
+                    f"SlurmBackend::populate_result_dict: Reading runtime from out-file "
+                    f"failed: {self.config.std_out_path}.{job_id}_{repetition}. Exiting.",
+                    level="error")
+                raise RuntimeError(
+                    f"SlurmBackend::populate_result_dict: Reading runtime from out-file "
+                    f"failed: {self.config.std_out_path}.{job_id}_{repetition}. Exiting.")
               self.results[(key, repetition)] = runtime, "\n".join(lines[:-1])
           except FileNotFoundError:
-            L.get_logger().log(f"SlurmBackend::populate_result_dict: Opening out-file "
-                               f"failed: {self.config.std_err_path}.{job_id}_{repetition}. Exiting.", level="error")
-            raise RuntimeError(f"SlurmBackend::populate_result_dict: Opening "
-                               f"out-file failed: {self.config.std_err_path}.{job_id}_{repetition}. Exiting.")
+            L.get_logger().log(
+                f"SlurmBackend::populate_result_dict: Opening out-file "
+                f"failed: {self.config.std_err_path}.{job_id}_{repetition}. Exiting.",
+                level="error")
+            raise RuntimeError(
+                f"SlurmBackend::populate_result_dict: Opening "
+                f"out-file failed: {self.config.std_err_path}.{job_id}_{repetition}. Exiting.")
       else:
-        L.get_logger().log(f"SlurmBackend::populate_result_dict: Timing type is None. Exiting.", level="error")
+        L.get_logger().log(f"SlurmBackend::populate_result_dict: Timing type is None. Exiting.",
+                           level="error")
         raise RuntimeError("SlurmBackend::populate_result_dict: Timing type is None. Exiting.")

@@ -1,6 +1,6 @@
 """
 File: Logging.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to handle output of PIRA.
 """
 
@@ -81,6 +81,7 @@ class Logger:
       for msg in self.tape:
         print(msg)
 
+
 # to enable logging with datetime, comment in this line instead
 #FORMAT = "[%(levelname)s at %(asctime)s in '%(caller_filename)s' in '%(caller_function)s' line %(caller_line_number)d]: %(message)s"
 FORMAT = "[%(levelname)s in '%(caller_filename)s' in '%(caller_function)s' line %(caller_line_number)d]: %(message)s"
@@ -132,10 +133,10 @@ class PiraLogger:
   def log(self, msg, level='debug') -> None:
     filename, line_number, function_name, stack_info = self.get_caller()
     extras = {
-      "caller_filename": filename,
-      "caller_line_number": line_number,
-      "caller_function": function_name,
-      "caller_stack_info": stack_info,
+        "caller_filename": filename,
+        "caller_line_number": line_number,
+        "caller_function": function_name,
+        "caller_stack_info": stack_info,
     }
     if self.state[level]:
       self.log_level(level, msg, extras)
@@ -173,9 +174,11 @@ class PiraLogger:
       extras.pop("caller_stack_info")
     if level == 'debug':
       if self.stack_debug:
-        self.logger.debug("\n[DEBUG] // Start\n"+msg+"\n"+str(extras["caller_stack_info"]+"\n[DEBUG] // End"), extra=extras)
+        self.logger.debug("\n[DEBUG] // Start\n" + msg + "\n" +
+                          str(extras["caller_stack_info"] + "\n[DEBUG] // End"),
+                          extra=extras)
       else:
-        self.logger.debug("\n[DEBUG] // Start\n"+msg+"\n[DEBUG] // End", extra=extras)
+        self.logger.debug("\n[DEBUG] // Start\n" + msg + "\n[DEBUG] // End", extra=extras)
     elif level == 'info':
       self.logger.info(msg, extra=extras)
     elif level == 'warn':

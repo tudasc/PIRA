@@ -1,5 +1,5 @@
 # File: .gitlab-ci.yml
-# License: Part of the PIRA proect. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+# License: Part of the PIRA proect. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 # Description: File to configure our Gitlab CI
 
 # The order of unit-test, dependence-build-test, and deps-unit-test is to not do time-heavy dependency building

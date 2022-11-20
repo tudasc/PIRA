@@ -1,8 +1,9 @@
 #! /usr/bin/env bash
 #"""
 # File: load_submodules.sh
-# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-# Description: Helper script to build the git submodules useed in PIRA.
+# License: Part of the PIRA project. Licensed under BSD 3 clause license.
+# See LICENSE.txt file at https://github.com/tudasc/pira
+# Description: Script provides environment information for PIRA
 #"""
 
 scriptdir="$1"

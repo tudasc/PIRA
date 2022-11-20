@@ -1,3 +1,9 @@
+"""
+File: BatchSystemGenerator.py
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
+Description:
+"""
+
 import math
 import os
 import subprocess
@@ -50,7 +56,8 @@ class CommandExecutionException(SlurmBaseException):
     if invalid:
       super().__init__(f"Error while command execution of '{command}': Command not found.")
     elif non_zero:
-      super().__init__(f"Error while command execution of '{command}': Returned non-zero exit code.")
+      super().__init__(
+          f"Error while command execution of '{command}': Returned non-zero exit code.")
 
 
 # Helper enum class
@@ -71,7 +78,10 @@ class _Module:
   Helper class for module system modules.
   """
 
-  def __init__(self, name: str, version: Optional[str] = None, depends_on: Optional[List[str]] = None) -> None:
+  def __init__(self,
+               name: str,
+               version: Optional[str] = None,
+               depends_on: Optional[List[str]] = None) -> None:
     """
     Constructor.
     :param name: The modules name.
@@ -98,12 +108,15 @@ class _Module:
               # if either general module or module with version depends back on this module
               if self.name in compare_module.depends_on or \
                    (self.version is not None and self.name + "/" + self.version in compare_module.depends_on):
-                L.get_logger().log(f"_Module::check_dependency_conflicts: Dependency conflict: Module {self.name} "
-                                   f"depends on {dependency}, but {compare_module.name} "
-                                   f"depends on {self.name}.", level="error")
-                raise ModuleDependencyConflict(f"Dependency conflict: Module {self.name} depends on "
-                                               f"{dependency}, but {compare_module.name} "
-                                               f"depends on {self.name}.")
+                L.get_logger().log(
+                    f"_Module::check_dependency_conflicts: Dependency conflict: Module {self.name} "
+                    f"depends on {dependency}, but {compare_module.name} "
+                    f"depends on {self.name}.",
+                    level="error")
+                raise ModuleDependencyConflict(
+                    f"Dependency conflict: Module {self.name} depends on "
+                    f"{dependency}, but {compare_module.name} "
+                    f"depends on {self.name}.")
 
   def deps_satisfied_with(self, others) -> bool:
     """
@@ -147,6 +160,7 @@ class BatchSystemGenerator:
   E.g. for the SLURM workload manager there is the SlurmGenerator class, which will care
   about generating arguments, options and scripts to be used with the slurm workload manager.
   """
+
   def __init__(self, config: BatchSystemHardwareConfig) -> None:
     """
     Constructor.
@@ -178,7 +192,10 @@ class SlurmGenerator(BatchSystemGenerator):
     self.commands = []
     self.slurm_options = None
 
-  def add_module(self, name: str, version: str = None, depends_on: Optional[List[str]] = None) -> None:
+  def add_module(self,
+                 name: str,
+                 version: str = None,
+                 depends_on: Optional[List[str]] = None) -> None:
     """
     Adds a module to be loaded from the module system. If this module (same name) was already added, this will
     only override the version, or do nothing.
@@ -284,17 +301,23 @@ class SlurmGenerator(BatchSystemGenerator):
         modules_with_deps.append(module)
         tries = tries + 1
       if tries > max_tries:
-        conflicts_on = [f"{mod.name} (depends on {mod.depends_on})" if mod.version is None else
-                        f"{mod.name}/{mod.version} (depends on {mod.depends_on})" for mod in modules_with_deps]
+        conflicts_on = [
+            f"{mod.name} (depends on {mod.depends_on})"
+            if mod.version is None else f"{mod.name}/{mod.version} (depends on {mod.depends_on})"
+            for mod in modules_with_deps
+        ]
         # delete duplicates
         conflicts_on = list(set(conflicts_on))
         # raise error
-        L.get_logger().log(f"SlurmGenerator::__sort_module_loads: Modules could not be sorted in a way they do not "
-                           f"conflict each other or some module dependencies cannot be fulfilled. "
-                           f"Modules that cannot be sorted in are: {conflicts_on}.", level="error")
-        raise ModuleDependencyConflict(f"Modules could not be sorted in a way they do not conflict each other "
-                                       f"or some module dependencies cannot be fulfilled. "
-                                       f"Modules that cannot be sorted in are: {conflicts_on}.")
+        L.get_logger().log(
+            f"SlurmGenerator::__sort_module_loads: Modules could not be sorted in a way they do not "
+            f"conflict each other or some module dependencies cannot be fulfilled. "
+            f"Modules that cannot be sorted in are: {conflicts_on}.",
+            level="error")
+        raise ModuleDependencyConflict(
+            f"Modules could not be sorted in a way they do not conflict each other "
+            f"or some module dependencies cannot be fulfilled. "
+            f"Modules that cannot be sorted in are: {conflicts_on}.")
     self.modules = modules_sorted
 
   def to_slurm_options(self) -> None:
@@ -398,13 +421,13 @@ class SlurmGenerator(BatchSystemGenerator):
           had_days = True
           # days in format
           days, s = s.split("-", 1)
-          minutes = minutes + (int(days)*60*24)
+          minutes = minutes + (int(days) * 60 * 24)
         if s.count(":") == 2:
           # hh:mm:ss layout
           hours, mins, secs = s.split(":")
           # add a minute if it had seconds not 0 ("ceil")
           mins = int(mins) + 1 if int(secs) > 0 else int(mins)
-          minutes = minutes + (int(hours)*60 + mins)
+          minutes = minutes + (int(hours) * 60 + mins)
         elif s.count(":") == 1:
           # mm:ss layout - or hh:mm if it had days in it
           if had_days:
@@ -417,7 +440,7 @@ class SlurmGenerator(BatchSystemGenerator):
         elif s.count(":") == 0:
           # just minutes - or hours if it had days in it
           if had_days:
-            minutes = minutes + (60*int(s))
+            minutes = minutes + (60 * int(s))
           else:
             minutes = minutes + int(s)
         res["time_limit"] = minutes
@@ -425,15 +448,17 @@ class SlurmGenerator(BatchSystemGenerator):
         rest = value
         if "%" in value:
           # TODO max_parr jobs not supported by pyslurm
-          L.get_logger().log("SlurmGenerator::get_pyslurm_args: 'force-sequential' cannot be enforced "
-                             "with interface 'pyslurm' for repetitions. They may run in parallel.", level="warn")
+          L.get_logger().log(
+              "SlurmGenerator::get_pyslurm_args: 'force-sequential' cannot be enforced "
+              "with interface 'pyslurm' for repetitions. They may run in parallel.",
+              level="warn")
           value = value.split("%")[0]
         step = 1
         if ":" in value:
           rest, step = value.split(":")
         begin, end = rest.split("-")
         ids = []
-        for i in range(int(begin), int(end)+1, int(step)):
+        for i in range(int(begin), int(end) + 1, int(step)):
           ids.append(str(i))
         res["array_inx"] = ",".join(ids)
       elif flag == "job-name":
@@ -448,13 +473,17 @@ class SlurmGenerator(BatchSystemGenerator):
         res["cpus_per_task"] = value
       # TODO: wait is not supported by pyslurm
       elif flag == "wait":
-        L.get_logger().log("SlurmGenerator::get_pyslurm_args: You try to use SLURMs 'wait' option "
-                           "with interface 'pyslurm', which is not supported by pyslurm.", level="warn")
+        L.get_logger().log(
+            "SlurmGenerator::get_pyslurm_args: You try to use SLURMs 'wait' option "
+            "with interface 'pyslurm', which is not supported by pyslurm.",
+            level="warn")
         continue
       # TODO: exclusive is not supported by pyslurm
       elif flag == "exclusive":
-        L.get_logger().log("SlurmGenerator::get_pyslurm_args: You try to use SLURMs 'exclusive' option "
-                           "with interface 'pyslurm', which is not supported by pyslurm.", level="warn")
+        L.get_logger().log(
+            "SlurmGenerator::get_pyslurm_args: You try to use SLURMs 'exclusive' option "
+            "with interface 'pyslurm', which is not supported by pyslurm.",
+            level="warn")
         continue
       else:
         # put everything else in as is
@@ -518,11 +547,16 @@ class SlurmGenerator(BatchSystemGenerator):
     if not os.path.isdir(out_dir):
       res = subprocess.run(["mkdir", "-p", out_dir])
       if not res.returncode == 0:
-        L.get_logger().log(f"SlurmGenerator::make_dirs: Creation of directories with mkdir -p {out_dir} "
-                           f"failed", level="warn")
+        L.get_logger().log(
+            f"SlurmGenerator::make_dirs: Creation of directories with mkdir -p {out_dir} "
+            f"failed",
+            level="warn")
         raise CommandExecutionException(f"mkdir -p {out_dir}")
 
-  def sbatch(self, script_path: Optional[str] = None, active: bool = False, wait: bool = False,
+  def sbatch(self,
+             script_path: Optional[str] = None,
+             active: bool = False,
+             wait: bool = False,
              load_modules: bool = False) -> Union[int, str]:
     """
     Saves the SLURM script to the file and submits the job on the system via "sbatch"-commands.
@@ -566,7 +600,8 @@ class SlurmGenerator(BatchSystemGenerator):
       res = res.split("\n")[0]
       res = res.split("Submitted batch job ")[1]
       self.job_id = int(res)
-      L.get_logger().log(f"SlurmGenerator::sbatch: Submitted batch job {self.job_id}", level="debug")
+      L.get_logger().log(f"SlurmGenerator::sbatch: Submitted batch job {self.job_id}",
+                         level="debug")
       return self.job_id
 
   def __check_squeue(self, job_ids: List[int] = None) -> bool:
@@ -593,7 +628,7 @@ class SlurmGenerator(BatchSystemGenerator):
       # print a usefull summary
       log = "State summary:\n"
       for i, (job, fin) in enumerate(map.items()):
-        endwith = '' if i == len(list(map.keys()))-1 else '\n'
+        endwith = '' if i == len(list(map.keys())) - 1 else '\n'
         log = log + f"Job {job} is{'' if fin else ' not yet'} finished.{endwith}"
       L.get_logger().log(f"SlurmGenerator::__check_squeue: {log}", level="debug")
       del map, log
