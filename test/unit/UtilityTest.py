@@ -1,9 +1,9 @@
 """
 File: UtilityTest.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Tests for the utility module
 """
-
+import os.path
 import unittest
 import lib.Utility as U
 import lib.Logging as L
@@ -123,6 +123,41 @@ class TestUtility(unittest.TestCase):
 
   def test_default_config(self):
       U.get_default_config_file()
+
+  def test_get_pira_dir(self):
+    path = os.path.dirname(__file__)
+    path = "/".join(path.split("/")[:-2])
+    self.assertEqual(path, U.get_pira_code_dir())
+
+  def test_get_default_slurm_config_dir(self):
+    self.assertEqual(f"{U.get_default_pira_dir()}/batchsystem.json", U.get_default_slurm_config_path())
+
+  def test_remove_file_with_pattern(self):
+    U.write_file(f"{os.path.dirname(__file__)}/testa.txt", "Test")
+    U.write_file(f"{os.path.dirname(__file__)}/testb.txt", "Test2")
+    U.write_file(f"{os.path.dirname(__file__)}/Atestc.txt", "Test3")
+    U.remove_file_with_pattern(os.path.dirname(__file__), "test[a-c].txt")
+    self.assertFalse(U.check_file(f"{os.path.dirname(__file__)}/testa.txt"))
+    self.assertFalse(U.check_file(f"{os.path.dirname(__file__)}/testb.txt"))
+    self.assertTrue(U.check_file(f"{os.path.dirname(__file__)}/Atestc.txt"))
+    U.remove_file(f"{os.path.dirname(__file__)}/Atestc.txt")
+
+  def test_json_to_canonic(self):
+    json_loads = {
+      "a": "astring",
+      "b": 12,
+      "c": None,
+      "d": {
+        "e": "innerstr",
+        "f": None
+      },
+      "g": [
+        {"a": 1},
+        {"b": 2}
+      ]
+    }
+    self.assertEqual(U.json_to_canonic(json_loads), json_loads)
+
 
 if __name__ == '__main__':
   unittest.main()

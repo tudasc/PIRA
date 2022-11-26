@@ -1,8 +1,9 @@
 #! /usr/bin/env bash
 #"""
 # File: load_submodules.sh
-# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-# Description: Helper script to build the git submodules useed in PIRA.
+# License: Part of the PIRA project. Licensed under BSD 3 clause license.
+# See LICENSE.txt file at https://github.com/tudasc/pira
+# Description: Script provides environment information for PIRA
 #"""
 
 scriptdir="$1"
@@ -20,7 +21,7 @@ mpiwrap_install_dir=MPIWRAPINSTALLDIR
 bear_install_dir=BEARINSTALLDIR
 
 echo -e "Cube installation dir:\t$cube_install_dir"
-echo -e "Score-P insitallation dir:\t$scorep_install_dir"
+echo -e "Score-P installation dir:\t$scorep_install_dir"
 echo -e "Extra-P installation dir:\t$extrap_install_dir"
 echo -e "MetaCG installation dir:\t$metacg_install_dir"
 echo -e "mpiwrap installation dir:\t$mpiwrap_install_dir"

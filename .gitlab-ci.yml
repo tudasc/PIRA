@@ -1,5 +1,5 @@
 # File: .gitlab-ci.yml
-# License: Part of the PIRA proect. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+# License: Part of the PIRA proect. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 # Description: File to configure our Gitlab CI
 
 # The order of unit-test, dependence-build-test, and deps-unit-test is to not do time-heavy dependency building
@@ -8,30 +8,21 @@ stages:
   - download-test
   - unit-test
   - dependence-build-test
+  - full-dependence-test
   - deps-unit-test
   - prepare-integration-test
   - integration-test
-  - full-dependence-test
 
 # Setting up the environment on the Lichtenberg system
 .lb-setup: &lb-setup
   - export LMOD_IGNORE_CACHE=1
-  - eval $(ssh-agent -s)
-  - ssh-add ~/.ssh/gitlab_ed25519
-  - module load gcc/8.4
-  - module load git python/3.7.4 cmake llvm/10 openmpi
+  - module load gcc/10.2
+  - module load git python/3 cmake llvm/10 openmpi
   - module load libcube/4.5
   - module load extrap/3.0
 
 .lb-tear-down: &lb-tear-down
   - rm -rf $(dirname $(echo $SSH_AUTH_SOCK))
-  - ssh-agent -k
-
-# Pull-in the git submodules that are used during development
-.get-submodules: &get-submodules
-  - git submodule init;
-  - git submodule update --force extern/src/scorep-mod;
-  - git submodule update extern/src/metacg;
 
 # Only test that the submodules configured in here are accessible, so we do not block the Pipeline unneccessary long
 # GIT_STRATEGY: clone is used to always start with a clean checkout of the repository.
@@ -39,13 +30,12 @@ stages:
 download:
   stage: download-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: clone
     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
-    - *get-submodules
     - *lb-tear-down
 
 # Runs the unit tests 
@@ -54,7 +44,7 @@ download:
 pira:
   stage: unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -74,7 +64,7 @@ pira:
 python-lint:
   stage: unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -87,7 +77,7 @@ python-lint:
 shell-lint:
   stage: unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -100,7 +90,7 @@ shell-lint:
 build-reduced-deps:
   stage: dependence-build-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -117,14 +107,14 @@ build-reduced-deps:
 llvm-instrumentation:
   stage: deps-unit-test
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
   script:
     - cd extern/src/llvm-instrumentation/test
-    - $HOME/all_repos/gh-llvm-llvm-project/llvm/utils/lit/lit.py -v .
+    - lit -v .
     - *lb-tear-down
 
 # Runs the larger integration tests
@@ -132,8 +122,12 @@ llvm-instrumentation:
 # This would *significantly* reduce the time this stage requires.
 run-prepare-integration:
   stage: prepare-integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -146,8 +140,12 @@ run-prepare-integration:
 # Actually run the integration tests
 run-gameoflife-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -158,10 +156,33 @@ run-gameoflife-test:
     - ./run.sh
     - *lb-tear-down
 
+run-gameoflife-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife Slurm (PIRA II) integration test'
+    - cd test/integration/GameOfLife_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 run-amg2013-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -172,10 +193,33 @@ run-amg2013-test:
     - ./run.sh
     - *lb-tear-down
 
+run-amg2013-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running AMG Slurm integration test'
+    - cd test/integration/AMG2013_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 run-gameoflife-v1-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -186,10 +230,33 @@ run-gameoflife-v1-test:
     - ./run.sh
     - *lb-tear-down
 
+run-gameoflife-v1-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife Slurm (PIRA I) integration test'
+    - cd test/integration/GameOfLifePiraVersion1_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 run-gameoflife-hybrid-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -200,25 +267,65 @@ run-gameoflife-hybrid-test:
     - ./run.sh
     - *lb-tear-down
 
+run-gameoflife-hybrid-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife-hybrid-filtering Slurm integration test'
+    - cd test/integration/GameOfLife_hybrid_filter_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
 # Disabled as it requires MetaCG Version 2
-# run-gameoflife-heuristic-test:
+run-gameoflife-heuristic-test:
+  stage: integration-test
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running GameOfLife-heuristic integration test'
+    - cd test/integration/GameOfLife_heuristic
+    - ./run.sh
+    - *lb-tear-down
+
+## XXX: For now we leave this out as a Slurm test, as it would not add
+#       any insight in whether the Slurm implementation works.
+#       This is meant to test if we have MetaCG file format 2 ready.
+# run-gameoflife-heuristic-test-slurm:
 #  stage: integration-test
 #  tags:
-#    - hlb0001
+#    - pira-robo
 #  before_script: *lb-setup
 #  variables:
 #    GIT_STRATEGY: none
 #    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
 #  script:
-#    - echo 'Running GameOfLife-heuristic integration test'
-#    - cd test/integration/GameOfLife_heuristic
+#    - echo 'Running GameOfLife-heuristic Slurm integration test'
+#    - cd test/integration/GameOfLife_heuristic_Slurm
 #    - ./run.sh
 #    - *lb-tear-down
 
 run-load-imbalance-detection-test:
   stage: integration-test
+  only:
+    - merge_requests
+    - branches
+    - tags
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: none
@@ -229,13 +336,98 @@ run-load-imbalance-detection-test:
     - ./run.sh
     - *lb-tear-down
 
+run-load-imbalance-detection-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+    - branches
+    - tags
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running Load imbalance detection Slurm integration test'
+    - cd test/integration/LoadImbalance_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
+run-lulesh-test:
+  stage: integration-test
+  only:
+    - merge_requests
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running LULESH test (using PIRA LIDe)'
+    - cd test/integration/LULESH
+    - ./run.sh
+    - *lb-tear-down
+
+run-lulesh-test-slurm:
+  stage: integration-test
+  allow_failure: true
+  only:
+    - merge_requests
+  tags:
+    - pira-robo
+  before_script: *lb-setup
+  variables:
+    GIT_STRATEGY: none
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+  script:
+    - echo 'Running LULESH test on Slurm (using PIRA LIDe)'
+    - cd test/integration/LULESH_Slurm
+    - ./run.sh
+    - *lb-tear-down
+
+# Disabled because it takes too long
+# run-kripke-test:
+#   stage: integration-test
+#   only:
+#     - merge_requests
+#   tags:
+#     - pira-robo
+#   before_script: *lb-setup
+#   variables:
+#     GIT_STRATEGY: none
+#     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+#   script:
+#     - echo 'Running Kripke test (using PIRA I)'
+#     - cd test/integration/Kripke
+#     - ./run.sh
+#     - *lb-tear-down
+
+# run-kripke-test-slurm:
+#   stage: integration-test
+#   only:
+#     - merge_requests
+#   tags:
+#     - pira-robo
+#   before_script: *lb-setup
+#   variables:
+#     GIT_STRATEGY: none
+#     GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_COMMIT_SHA
+#   script:
+#     - echo 'Running Kripke test on Slurm (using PIRA I)'
+#     - cd test/integration/Kripke_Slurm
+#     - ./run.sh
+#     - *lb-tear-down
+
 # Do a full build of all dependencies via the convenience scripts for merge requests
 build-all-deps:
   stage: full-dependence-test
   only:
     - merge_requests
   tags:
-    - hlb0001
+    - pira-robo
   before_script: *lb-setup
   variables:
     GIT_STRATEGY: fetch
@@ -248,17 +440,5 @@ build-all-deps:
     - echo $EXTRAP_ROOT
     - cat ./setup_paths.sh
     - ./build_submodules.sh -p $(cat /proc/cpuinfo | grep processor | wc -l)
-    - cd ../test/integration
-    - . prepare_environment.sh
-    - cd AMG2013
-    - ./run.sh
-    - cd ../GameOfLife
-    - ./run.sh
-    - cd ../GameOfLife_hybrid_filter
-    - ./run.sh
-    - cd ../GameOfLifePiraVersion1
-    - ./run.sh
-    - cd ../LoadImbalance
-    - ./run.sh
     - *lb-tear-down
 

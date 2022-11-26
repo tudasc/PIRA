@@ -1,10 +1,11 @@
 """
 File: ProfileSink.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module hosts different profile sinks. These can process resulting profile files outside of regular PIRA iteration.
 """
 
 import sys
+
 sys.path.append('../')
 
 import lib.Logging as L
@@ -18,6 +19,7 @@ import json
 class FolderRenamer:
 
   class __FolderRenamerImpl:
+
     def __init__(self) -> None:
       self.currentStr = U.generate_random_string()
 
@@ -60,6 +62,7 @@ class NopSink(ProfileSinkBase):
   '''
   NopSink: To be used whenever a sink is required as an argument, but not needed for functionality
   '''
+
   def __init__(self):
     super().__init__()
 
@@ -74,6 +77,7 @@ class PiraOneProfileSink(ProfileSinkBase):
   '''
   PiraOneProfileSink: To be used in PIRA version 1 mode.
   '''
+
   def __init__(self):
     super().__init__()
 
@@ -106,8 +110,8 @@ class ExtrapProfileSink(ProfileSinkBase):
 
   def output_config(self, benchmark, output_dir):
     L.get_logger().log('ExtrapProfileSink::output_config:\ndir: ' + self._base_dir + '\nprefix: ' +
-                         self._prefix + '\npostfix: ' + self._postfix + '\nreps: ' + str(self._total_reps) +
-                         '\nNiter: ' + str(self._iteration + 1))
+                       self._prefix + '\npostfix: ' + self._postfix + '\nreps: ' +
+                       str(self._total_reps) + '\nNiter: ' + str(self._iteration + 1))
     s = ''
     for p in self._params:
       s += p + ', '
@@ -159,39 +163,51 @@ class ExtrapProfileSink(ProfileSinkBase):
 
   def check_and_prepare(self, experiment_dir: str, target_config: TargetConfig,
                         instr_config: InstrumentConfig) -> str:
-    cur_ep_dir = self.get_extrap_dir_name(target_config, instr_config.get_instrumentation_iteration())
+    cur_ep_dir = self.get_extrap_dir_name(target_config,
+                                          instr_config.get_instrumentation_iteration())
     if not U.is_valid_file_name(cur_ep_dir):
       L.get_logger().log(
-          'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort\n' + cur_ep_dir, level='error')
+          'ExtrapProfileSink::check_and_prepare: Generated directory name no good. Abort\n' +
+          cur_ep_dir,
+          level='error')
     else:
       if U.check_provided_directory(cur_ep_dir):
         renamer = FolderRenamer()
         #new_dir_name = cur_ep_dir + '_' + U.generate_random_string()
         new_dir_name = renamer.get_renamed_folder(cur_ep_dir)
-        L.get_logger().log('ExtrapProfileSink::check_and_prepare: Moving old experiment directory to: ' + new_dir_name, level='info')
+        L.get_logger().log(
+            'ExtrapProfileSink::check_and_prepare: Moving old experiment directory (' + cur_ep_dir +
+            ') to: ' + new_dir_name,
+            level='info')
         U.rename(cur_ep_dir, new_dir_name)
 
       U.create_directory(cur_ep_dir)
-      cubex_name = U.get_cubex_file(experiment_dir, target_config.get_target(), target_config.get_flavor())      
+      cubex_name = U.get_cubex_file(experiment_dir, target_config.get_target(),
+                                    target_config.get_flavor())
       L.get_logger().log(cubex_name)
 
       if not U.is_file(cubex_name):
-        L.get_logger().log('ExtrapProfileSink::check_and_prepare: Returned experiment cube name is no file: ' +
-                             cubex_name)
+        L.get_logger().log(
+            'ExtrapProfileSink::check_and_prepare: Returned experiment cube name is no file: ' +
+            cubex_name)
       else:
         return cubex_name
 
-    raise ProfileSinkException('ExtrapProfileSink: Could not create target directory or Cube dir bad.')
+    raise ProfileSinkException(
+        'ExtrapProfileSink: Could not create target directory or Cube dir bad.')
 
   def do_copy(self, src_cube_name: str, dest_dir: str) -> None:
-    L.get_logger().log('ExtrapProfileSink::do_copy: ' + src_cube_name + ' => ' + dest_dir + '/' + self._filename)
+    L.get_logger().log('ExtrapProfileSink::do_copy: ' + src_cube_name + ' => ' + dest_dir + '/' +
+                       self._filename)
     # return  # TODO make this actually work
     U.copy_file(src_cube_name, dest_dir + '/' + self._filename)
 
-  def process(self, exp_dir: str, target_config: TargetConfig, instr_config: InstrumentConfig) -> None:
-    L.get_logger().log('ExtrapProfileSink::process: ' + str(instr_config.get_instrumentation_iteration()))
-    if instr_config.get_instrumentation_iteration() > self._iteration or target_config.get_args_for_invocation(
-    ) is not self._VALUE:
+  def process(self, exp_dir: str, target_config: TargetConfig,
+              instr_config: InstrumentConfig) -> None:
+    L.get_logger().log('ExtrapProfileSink::process: ' +
+                       str(instr_config.get_instrumentation_iteration()))
+    if instr_config.get_instrumentation_iteration(
+    ) > self._iteration or target_config.get_args_for_invocation() is not self._VALUE:
       self._iteration = instr_config.get_instrumentation_iteration()
       self._repetition = -1
       self._VALUE = ()

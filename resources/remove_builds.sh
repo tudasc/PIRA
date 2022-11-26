@@ -1,8 +1,8 @@
 #! /usr/bin/env bash
 #"""
-# File: build_submodules.sh
-# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-# Description: Helper script to build the git submodules useed in PIRA.
+# File: remove_builds.sh
+# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
+# Description: Helper script to remove build folders in PIRA external dependencies
 #"""
 
 scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"

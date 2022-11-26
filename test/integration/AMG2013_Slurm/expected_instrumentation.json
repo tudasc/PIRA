@@ -1,0 +1,14 @@
+[
+    {
+        "iteration": 0,
+        "expect": ["main", "GenerateLaplacian27pt", "GenerateVarDifConv", "BuildParLaplacian", "BuildParVarDifConv", "GenerateLaplacian", "BuildParLaplacian27pt", "DistributeData", "ReadData"],
+        "may-expect": ["HYPRE_.*", "hypre_.*"],
+        "never-expect": []
+    },
+    {
+        "iteration": 1,
+        "expect": ["main", "BuildParVarDifConv", "BuildParLaplacian", "BuildParLaplacian27pt"],
+        "may-expect": ["HYPRE_.*", "hypre_.*"],
+        "never-expect": []
+    }
+]

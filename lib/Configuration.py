@@ -1,10 +1,13 @@
 """
 File: Configuration.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module that provides to main data structures.
 """
 
 import sys
+
+# from lib.BatchSystemGenerator import MailType
+
 sys.path.append('..')
 import lib.Logging as L
 import lib.Exception as E
@@ -12,9 +15,12 @@ import lib.Utility as U
 import typing
 from argparse import Namespace
 
+
 class PiraConfigErrorException(E.PiraException):
+
   def __init__(self, m):
     super().__init__(m)
+
 
 class PiraItem:
 
@@ -61,7 +67,7 @@ class PiraItem:
   def get_run_options(self):
     return self._run_options
 
-  def set_base_path(self, path : str) -> None:
+  def set_base_path(self, path: str) -> None:
     self._base_path = path
 
   def set_analyzer_dir(self, directory) -> None:
@@ -279,13 +285,13 @@ class PiraConfig:
     self.flavors[dir][item].update({'flavors': flavors})
 
   def get_builds(self) -> typing.List[str]:
-    return [ x for x in self.builds.keys() ]
+    return [x for x in self.builds.keys()]
 
   def get_place(self, dir):
     return dir
 
   def get_items(self, b: str) -> typing.List[str]:
-    return [ x for x in self.items[b].keys() ]
+    return [x for x in self.items[b].keys()]
 
   def get_flavors(self, b: str, it: str) -> typing.List[str]:
     return self.flavors[b][it]['flavors']
@@ -425,7 +431,8 @@ class TargetConfig:
 
   def get_args_for_invocation(self) -> str:
     if self._args_for_invocation is None:
-      L.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.', level='warn')
+      L.get_logger().log('TargetConfiguration::get_args_for_invocation: args are None.',
+                         level='warn')
 
     return self._args_for_invocation
 
@@ -478,22 +485,26 @@ class InvocationConfig:
   @staticmethod
   def get_instance():
     if InvocationConfig.__instance == None:
-      L.get_logger().log('InvocationConfig::get_instance: InvocationConfig not initialized.', level='error')
+      L.get_logger().log('InvocationConfig::get_instance: InvocationConfig not initialized.',
+                         level='error')
       raise Exception('InvocationConfiguration not initialized!')
     return InvocationConfig.__instance
 
   def __init__(self, cmdline_args: Namespace):
 
     if InvocationConfig.__instance != None:
-      L.get_logger().log('InvocationConfig::__init__: InvocationConfig already initialized!', level='error')
+      L.get_logger().log('InvocationConfig::__init__: InvocationConfig already initialized!',
+                         level='error')
       raise Exception('re-initializing Singleton')
 
     else:
       InvocationConfig.__instance = self
       self._pira_dir = cmdline_args.pira_dir
+      self._slurm_config_path = cmdline_args.slurm_config
       self._config_version = cmdline_args.config_version
       self._config_path = cmdline_args.config
-      self._compile_time_filtering = not (cmdline_args.runtime_filter or (cmdline_args.hybrid_filter_iters != 0))
+      self._compile_time_filtering = not (cmdline_args.runtime_filter or
+                                          (cmdline_args.hybrid_filter_iters != 0))
       self._pira_iters = cmdline_args.iterations
       self._repetitions = cmdline_args.repetitions
       self._hybrid_filter_iters = cmdline_args.hybrid_filter_iters
@@ -506,7 +517,8 @@ class InvocationConfig:
   def __str__(self) -> str:
     cf_str = 'runtime filtering'
     if self.is_hybrid_filtering():
-      cf_str = 'hybrid filtering: rebuilding every ' + str(self.get_hybrid_filter_iters()) + ' iterations'
+      cf_str = 'hybrid filtering: rebuilding every ' + str(
+          self.get_hybrid_filter_iters()) + ' iterations'
     if self.is_compile_time_filtering():
       cf_str = 'compiletime filtering'
     return 'Running PIRA in ' + cf_str + ' with configuration\n ' + str(self.get_path_to_cfg())
@@ -514,12 +526,21 @@ class InvocationConfig:
   @staticmethod
   def reset_to_default() -> None:
     if InvocationConfig.__instance == None:
-      L.get_logger().log('InvocationConfig::reset_to_default: InvocationConfig not initialized, creating a new instance', level='warn')
-      cmdline_args = Namespace(pira_dir=U.get_default_pira_dir(), config_version=2,
-                               config=U.get_default_config_file(), runtime_filter=False,
-                               hybrid_filter_iters=0, iterations=4, repetitions=5, export=False,
-                               export_runtime_only=False, lide=False, 
-                               analysis_parameters=U.get_default_analysis_parameters_config_file(), 
+      L.get_logger().log(
+          'InvocationConfig::reset_to_default: InvocationConfig not initialized, creating a new instance',
+          level='warn')
+      cmdline_args = Namespace(pira_dir=U.get_default_pira_dir(),
+                               slurm_config=None,
+                               config_version=2,
+                               config=U.get_default_config_file(),
+                               runtime_filter=False,
+                               hybrid_filter_iters=0,
+                               iterations=4,
+                               repetitions=5,
+                               export=False,
+                               export_runtime_only=False,
+                               lide=False,
+                               analysis_parameters=U.get_default_analysis_parameters_config_file(),
                                call_site_instrumentation=False)
       InvocationConfig(cmdline_args)
 
@@ -527,6 +548,7 @@ class InvocationConfig:
       instance = InvocationConfig.__instance
 
       instance._pira_dir = U.get_default_pira_dir()
+      instance._slurm_config_path = None
       instance._config_version = 2
       instance._config_path = U.get_default_config_file()
       instance._compile_time_filtering = True
@@ -542,11 +564,16 @@ class InvocationConfig:
   @staticmethod
   def create_from_kwargs(args: dict) -> None:
 
-    required_args = ['runtime_filter','iterations','repetitions','hybrid_filter_iters','export','export_runtime_only','config_version']
+    required_args = [
+        'runtime_filter', 'iterations', 'repetitions', 'hybrid_filter_iters', 'export',
+        'export_runtime_only', 'config_version'
+    ]
     for arg in required_args:
       if args.get(arg) == None or InvocationConfig.__instance == None:
         InvocationConfig.reset_to_default()
-        L.get_logger().log("Invocation-Config not fully initialized. Assuming one or more default values", level='warn')
+        L.get_logger().log(
+            "Invocation-Config not fully initialized. Assuming one or more default values",
+            level='warn')
         break
 
     instance = InvocationConfig.__instance
@@ -557,11 +584,19 @@ class InvocationConfig:
     if args.get('pira_dir') != None:
       instance._pira_dir = args['pira_dir']
 
+    if args.get('slurm-config') != None:
+      instance._slurm_config_path = args['slurm-config']
+    else:
+      # set it None, if flag was not given
+      # (will decide the local vs. slurm branch)
+      instance._slurm_config_path = None
+
     if args.get('config_version') != None:
       instance._config_version = args['config_version']
 
     if args.get('hybrid_filter_iters') != None and args.get('runtime_filter') != None:
-        instance._compile_time_filtering = not (args['runtime_filter'] or (args['hybrid_filter_iters'] != 0))
+      instance._compile_time_filtering = not (args['runtime_filter'] or
+                                              (args['hybrid_filter_iters'] != 0))
 
     if args.get('iterations') != None:
       instance._pira_iters = args['iterations']
@@ -577,13 +612,15 @@ class InvocationConfig:
 
     if args.get('export_runtime_only') != None:
       instance._export_runtime_only = args['export_runtime_only']
-    
+
     if args.get('use_cs_instrumentation') != None:
       instance._use_call_site_instrumentation = args['use_cs_instrumentation']
 
-
   def get_pira_dir(self) -> str:
     return self._pira_dir
+
+  def get_slurm_config_path(self) -> str:
+    return self._slurm_config_path
 
   def get_config_version(self) -> str:
     return self._config_version
@@ -610,7 +647,7 @@ class InvocationConfig:
     return self._export
 
   def is_export_runtime_only(self) -> bool:
-    return  self._export_runtime_only
+    return self._export_runtime_only
 
   def is_lide_enabled(self) -> bool:
     return self._lide
@@ -637,3 +674,128 @@ class CSVConfig:
   def get_csv_dialect(self) -> str:
     return self._csv_dialect
 
+
+class BatchSystemHardwareConfig:
+  """
+  Base class for Hardware config. Holding all hardware data.
+  """
+
+  def __init__(self,
+               mem_per_cpu: int,
+               number_of_tasks: int,
+               number_of_cores_per_task: int,
+               cpu_frequency_str: typing.Optional[str] = None,
+               shell: str = "/bin/bash"):
+    """
+    Constructor.
+    :param mem_per_cpu: Memory per thread, the --mem-per-cpu setting.
+    :param number_of_tasks: Number of cores/individual processing units you want, the -n or --ntasks setting.
+    E.g. important for MPI.
+    :param number_of_cores_per_task: Number of threads per process you want, the --cpus-per-task or -c setting.
+    :param cpu_frequency_str: Set this to ensure the processors run on equal speeds
+    (disables all fancy overclocking, hyperboots, ... features), the --cpu-freq setting.
+    Do not specify if you do not want a fixed cpu speed. Default: None.
+    :param shell: The shell/shebang for the system. Default: "/bin/bash".
+    """
+    self.mem_per_cpu = mem_per_cpu
+    self.number_of_tasks = number_of_tasks
+    self.number_of_cores_per_task = number_of_cores_per_task
+    self.cpu_frequency_str = cpu_frequency_str
+    self.shell = shell
+
+
+class SlurmConfig(BatchSystemHardwareConfig):
+  """
+  Holds config for SLURM run. This info can than be used to sbatch it as SLURM job via a job script, or srun it.
+  """
+
+  def __init__(self,
+               slurm_script_file: str = f"{U.get_default_pira_dir()}/pira-slurm-job.sh",
+               job_name: str = "pira-slurm-job",
+               std_out_path: str = f"{U.get_default_pira_dir()}/pira-slurm-out",
+               std_err_path: str = f"{U.get_default_pira_dir()}/pira-slurm-err",
+               mem_per_cpu: int = 1000,
+               number_of_tasks: int = 1,
+               number_of_cores_per_task: int = 1,
+               time_str: str = "00:10:00",
+               cpu_frequency_str: typing.Optional[str] = None,
+               shell: str = "/bin/bash",
+               partition: typing.Optional[str] = None,
+               reservation: typing.Optional[str] = None,
+               account: typing.Optional[str] = None,
+               job_array_start: typing.Optional[int] = None,
+               job_array_end: typing.Optional[int] = None,
+               job_array_step: int = 1,
+               exclusive: bool = False,
+               wait: bool = False,
+               dependencies: typing.Optional[typing.List[str]] = None,
+               mail_types=None,
+               mail_address: typing.Optional[str] = None,
+               uses_module_system: bool = False,
+               purge_modules_at_start: bool = True,
+               check_interval_in_seconds: int = 5,
+               modules: typing.List[typing.Dict[str,
+                                                typing.Union[str,
+                                                             typing.List[typing.Dict[str,
+                                                                                     str]]]]] = {},
+               force_sequential: bool = False) -> None:
+    """
+    Constructor. Check here for defaults of the config. If not given by the loader, these defaults will be in place
+    in the resulting config.
+
+    :param slurm_script_file: The file to save the SLURM script.
+    :param job_name: Job name, -J or --job-name setting.
+    :param std_out_path: Path to put the stdout of the job, -o or --out setting. Give the absolute file path.
+    The job id will be added at the back automatically.
+    :param std_err_path: Path to put the stderr of the job, -e or --err setting. Give the absolute file path.
+    The job id will be added at the back automatically.
+    :param mem_per_cpu: Memory per thread, the --mem-per-cpu setting.
+    :param number_of_tasks: Number of cores/individual processing units you want, the -n or --ntasks setting.
+    E.g. important for MPI.
+    :param number_of_cores_per_task: Number of threads per process you want, the --cpus-per-task or -c setting.
+    :param time_str: Time limit for the job, --time or -t setting.
+    :param cpu_frequency_str: Set this to ensure the processors run on equal speeds, the --cpu-freq setting.
+    Do not specify if you do not want a fixed cpu speed.
+    :param shell: The shell/shebang for the system.
+    :param partition: Partition for the job, -p or --partition setting.
+    :param reservation: Reservation for the job, the --reservation setting.
+    :param account: Allocation for the job, the -A option.
+    :param job_array_start: Start id for job array, part of the -a setting.
+    If you do not want a job array, do not specify job_array_start and job_array_end.
+    :param job_array_end: End id for job array, part of the -a setting.
+    If you do not want a job array, do not specify job_array_start and job_array_end.
+    :param job_array_step: Step for the job array, part of the -a setting.
+    :param wait: Whether the sbatch command should block until the job is finished.
+    :param dependencies: List of dependency stings.
+    :param mail_types: Mail types, the --mail-type setting.
+    If not specified, --mail-type=NONE will be set automatically.
+    :param mail_address: Mail address, the --mail-user setting.
+    :param uses_module_system: Whether the system uses a module system, with "module load/purge" commands.
+    :param purge_modules_at_start: If modules should be purged bevor module load commands.
+    Has no effect if "uses_module_system" is not True.
+    :param check_interval: Check interval in seconds for wait method.
+    :param force_sequential: Whether to force all executions to be sequential on slurm runs.
+    """
+    super().__init__(mem_per_cpu, number_of_tasks, number_of_cores_per_task, cpu_frequency_str,
+                     shell)
+    self.slurm_script_file = slurm_script_file
+    self.job_name = job_name
+    self.std_out_path = std_out_path
+    self.std_err_path = std_err_path
+    self.time_str = time_str
+    self.partition = partition
+    self.reservation = reservation
+    self.account = account
+    self.job_array_start = job_array_start
+    self.job_array_end = job_array_end
+    self.job_array_step = job_array_step
+    self.wait = wait
+    self.exclusive = exclusive
+    self.dependencies = dependencies
+    self.mail_types = mail_types
+    self.mail_address = mail_address
+    self.uses_module_system = uses_module_system
+    self.purge_modules_at_start = purge_modules_at_start
+    self.check_interval = check_interval_in_seconds
+    self.modules = modules
+    self.force_sequential = force_sequential

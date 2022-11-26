@@ -1,0 +1,17 @@
+{
+  "Modeling": {
+      "extrapolationThreshold": 2.1,
+      "statementThreshold": 200,
+      "modelAggregationStrategy": "Sum"
+  },
+  "LIDe": {
+      "metricType": "ImbalancePercentage",
+      "imbalanceThreshold": 0.10,
+      "relevanceThreshold": 0.02,
+      "contextStrategy": "None",
+      "contextStepCount": -1,
+      "childRelevanceStrategy": "RelativeToMain",
+      "childConstantThreshold": 150,
+      "childFraction": 0.00003
+  }
+}

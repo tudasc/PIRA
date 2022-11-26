@@ -7,7 +7,7 @@ def pre(**kwargs):
 
 
 def passive(benchmark, **kwargs):
-  return 'pgis_pira --heuristic-selection fp_and_mem_ops --cuttoff-selection unique_median'
+  return 'pgis_pira --metacg-format 2 --heuristic-selection fp_and_mem_ops --cuttoff-selection unique_median'
 
 
 def post(**kwargs):

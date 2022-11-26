@@ -1,13 +1,14 @@
 """
 File: RunnerFactoryTest.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to create different Runner objects, depending on the configuration.
 """
 
 from lib.RunnerFactory import PiraRunnerFactory
 from lib.Configuration import PiraConfig, ExtrapConfig, InvocationConfig, PiraConfigII, \
   PiraConfigAdapter, PiraItem, PiraConfigErrorException
-from lib.Runner import LocalRunner, LocalScalingRunner
+from lib.ConfigurationLoader import BatchSystemConfigurationLoader
+from lib.Runner import LocalRunner, LocalScalingRunner, SlurmRunner, SlurmScalingRunner
 from lib.ArgumentMapping import CmdlineLinearArgumentMapper
 import lib.Utility as U
 import unittest
@@ -33,10 +34,14 @@ class TestRunnerFactory(unittest.TestCase):
     item.set_functors_base_path('/functors')
     item.set_mode('ct')
 
-    InvocationConfig.create_from_kwargs({'config' : 'test/gol_config.json'})
+    InvocationConfig.create_from_kwargs({'config' : 'test/gol_config.json', 'slurm-config': '../inputs/configs/batchsystem_config_001.json'})
     run_opts = CmdlineLinearArgumentMapper({'x': [1]})
     item.set_run_options(run_opts)
     self._item = item
+
+    scl = BatchSystemConfigurationLoader(InvocationConfig.get_instance())
+    self.slurm_config = scl.get_config()
+    self.slurm_interface = scl.get_batch_interface()
 
     self._pira_two_cfg.add_item(self._it_dir, item)
     self._pira_two_cfg._empty = False  # This is usually done in ConfigurationLoader
@@ -103,3 +108,47 @@ class TestRunnerFactory(unittest.TestCase):
     runner = prfII.get_scalability_runner(ep_cfg)
     self.assertIsNotNone(runner)
     self.assertTrue(isinstance(runner, LocalScalingRunner))
+
+  def test_get_simple_slurm_runner_empty_config(self):
+    prf = PiraRunnerFactory(PiraConfig())
+    self.assertIsNotNone(prf)
+
+    runner = prf.get_simple_slurm_runner(self.slurm_config, self.slurm_interface)
+    self.assertIsNotNone(runner)
+    self.assertTrue(isinstance(runner, SlurmRunner))
+    self.assertTrue(runner.has_sink())
+
+  def test_get_scalability_slurm_runner_empty_config(self):
+    prf = PiraRunnerFactory(PiraConfig())
+    self.assertIsNotNone(prf)
+
+    ep_cfg = ExtrapConfig('/extrap', 'pre', 'post')
+
+    with self.assertRaises(PiraConfigErrorException):
+      prf.get_scalability_slurm_runner(self.slurm_config, self.slurm_interface, ep_cfg)
+
+    prfII = PiraRunnerFactory(PiraConfigII())
+    self.assertIsNotNone(prfII)
+
+    with self.assertRaises(PiraConfigErrorException):
+      prfII.get_scalability_runner(ep_cfg)
+
+  def test_get_scalability_slurm_runner_nonempty_config(self):
+    prfII = PiraRunnerFactory(self._pira_two_cfg)
+    self.assertIsNotNone(prfII)
+
+    ep_cfg = ExtrapConfig('/extrap', 'pre', 'post')
+
+    runner = prfII.get_scalability_slurm_runner(self.slurm_config, self.slurm_interface, ep_cfg)
+    self.assertIsNotNone(runner)
+    self.assertTrue(isinstance(runner, SlurmScalingRunner))
+
+  def test_get_slurm_scalability_runner_config_adapter(self):
+    prfII = PiraRunnerFactory(self._pira_two_adapter)
+    self.assertIsNotNone(prfII)
+
+    ep_cfg = ExtrapConfig('/extrap', 'pre', 'post')
+
+    runner = prfII.get_scalability_slurm_runner(self.slurm_config, self.slurm_interface, ep_cfg)
+    self.assertIsNotNone(runner)
+    self.assertTrue(isinstance(runner, SlurmScalingRunner))

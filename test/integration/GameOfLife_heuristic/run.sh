@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # File: run.sh
-# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 # Description: Runs the game of life integration test using a manually specified heuristic. Requires MetaCG version 2
 #
 
@@ -34,8 +34,8 @@ mv GameOfLife-PIRA-testing gol
 echo -e "\n----- Build GameOfLife / build call graph -----"
 cd gol/serial_non_template
 bear make gol -j 2>&1 > /dev/null
-cgc main.cpp 2>&1 > /dev/null
-cgc SerialGoL.cpp 2>&1 > /dev/null
+cgc "--metacg-format-version=2 main.cpp" 2>&1 > /dev/null
+cgc "--metacg-format-version=2 SerialGoL.cpp" 2>&1 > /dev/null
 echo "null" > gol.ipcg
 cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
 cp gol.ipcg $PWD/../../../../../extern/install/metacg/bin/gol_ct.mcg
@@ -51,9 +51,8 @@ if [[ -z "${XDG_DATA_HOME}" ]]; then
 else
   pira_dir=$XDG_DATA_HOME/pira
 fi
+export PIRA_DIR=$pira_dir
 echo -e "Using ${pira_dir} for runtime files\n"
-
-sed -i "s|CUBES_FOLDER|${pira_dir}/gol_cubes|g" $testDir/gol_config.json
 
 python3 ../../../../pira.py --config-version 2 --extrap-dir ${pira_dir}/piraII --extrap-prefix t --tape ../gol.tp --analysis-parameters $testDir/parameters.json $testDir/gol_config.json
 pirafailed=$?

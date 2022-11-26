@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # File: run.sh
-# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 # Description: Runs the game of life integration test
 #
 
@@ -51,9 +51,8 @@ if [[ -z "${XDG_DATA_HOME}" ]]; then
 else
   pira_dir=$XDG_DATA_HOME/pira
 fi
+export PIRA_DIR=$pira_dir
 echo -e "Using ${pira_dir} for runtime files\n"
-
-sed -i "s|CUBES_FOLDER|${pira_dir}/gol_cubes|g" $testDir/gol_config.json
 
 python3 ../../../../pira.py --config-version 2 --tape ../gol.tp $testDir/gol_config.json
 
@@ -63,5 +62,7 @@ rm -rf ${pira_dir}/piraII
 rm -rf ${pira_dir}/gol_cubes-*
 cd $testDir
 rm -rf gol
+
+../check.py ../../../extern/install/metacg/bin/out expected_instrumentation.json gol_ct -v || exit 1
 
 exit $pirafailed

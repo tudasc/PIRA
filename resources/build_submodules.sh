@@ -1,8 +1,9 @@
 #! /usr/bin/env bash
 #"""
 # File: build_submodules.sh
-# License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
-# Description: Helper script to build the git submodules useed in PIRA.
+# License: Part of the PIRA project. Licensed under BSD 3 clause license.
+# See LICENSE.txt file at https://github.com/tudasc/pira
+# Description: Script to build / install components required by PIRA
 #"""
 
 scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"
@@ -13,7 +14,7 @@ extinstalldir=$scriptdir/../extern/install
 export CC=gcc
 export CXX=g++
 
-allOutputTo=/dev/null
+allOutputTo=$PWD/buildoutput.log
 
 
 # TODO Make this actually working better!
@@ -63,7 +64,7 @@ function check_directory_or_file_exists {
 }
 
 # Get command line parameters
-while getopts ":e:c:p:h" opt; do
+while getopts ":e:c:p:o:h" opt; do
   case $opt in
     e)
       if [ ! -d $OPTARG ]; then
@@ -84,6 +85,10 @@ while getopts ":e:c:p:h" opt; do
     p)
       parallel_jobs=$OPTARG
       echo "Setting parallel builds to: $parallel_jobs" >&2
+      ;;
+    o)
+      add_flags="$OPTARG"
+      echo "Passing additional flags " ${additional_flags}
       ;;
     h)
       print_usage
@@ -168,6 +173,17 @@ fi
 # Score-P modified version
 scorep_component_name="Score-P 6.0 Modified"
 echo_processing "$scorep_component_name"
+
+check_directory_or_file_exists $extsourcedir/scorep-mod
+if [ $? -ne 0 ]; then
+  cd $extsourcedir || exit 1
+  git clone -b v0.2 --single-branch https://github.com/jplehr/score-p-v6.git scorep-mod
+  if [ $? -ne 0 ]; then
+    echo "[PIRA] Error in downloading Score-P mod"
+    exit 1
+  fi
+fi
+
 cd $extsourcedir/scorep-mod || exit 1
 
 check_directory_or_file_exists $extsourcedir/scorep-mod/scorep-build
@@ -218,6 +234,9 @@ if [ $? -ne 0 ]; then
   scorep_install_dir=$extinstalldir/scorep
 else
   echo_already_built "$scorep_component_name"
+  if [ -z $cube_install_dir ]; then
+    cube_install_dir=$extinstalldir/scorep
+  fi
 fi
 
 #echo "[PIRA] Adding PIRA Score-P to PATH for subsequent tool chain components."
@@ -226,24 +245,27 @@ fi
 # Extra-P (https://www.scalasca.org/software/extra-p/download.html)
 extrap_component_name="Extra-P"
 echo_processing "$extrap_component_name"
-echo "[PIRA] Getting prerequisites ... (requires Qt 5)"
-set MAKEFLAGS=-j$parallel_jobs
-python3 -m pip install --user PyQt5 >${allOutputTo} 2>&1
-if [ $? -ne 0 ]; then
-  echo "[PIRA] Installting Extra-P dependency PyQt5 failed."
-  exit 1
-fi
-
-python3 -m pip install --user matplotlib >${allOutputTo} 2>&1
-if [ $? -ne 0 ]; then
-  echo "[PIRA] Installting Extra-P dependency matplotlib failed."
-  exit 1
-fi
 
 mkdir -p $extsourcedir/extrap
 cd $extsourcedir/extrap || exit 1
 
+# We assume that user has all prerequisites if extra-p install dir given
 if [ -z $extrap_install_dir ]; then
+  # Install the Extra-P prerequisites
+  echo "[PIRA] Getting prerequisites ... (requires Qt 5)"
+  set MAKEFLAGS=-j$parallel_jobs
+  python3 -m pip install --user PyQt5 >${allOutputTo} 2>&1
+  if [ $? -ne 0 ]; then
+    echo "[PIRA] Installting Extra-P dependency PyQt5 failed."
+    exit 1
+  fi
+  
+  python3 -m pip install --user matplotlib >${allOutputTo} 2>&1
+  if [ $? -ne 0 ]; then
+    echo "[PIRA] Installting Extra-P dependency matplotlib failed."
+    exit 1
+  fi
+
   # TODO check if extra-p is already there, if so, no download / no build?
   if [ ! -f "extrap-3.0.tar.gz" ]; then
     echo "[PIRA] Downloading Extra-P"
@@ -318,6 +340,16 @@ fi
 
 metacg_component_name="MetaCG"
 echo_processing "$metacg_component_name"
+cd $extsourcedir || exit 1
+check_directory_or_file_exists $extsourcedir/metacg
+if [ $? -ne 0 ]; then
+  git clone -b v0.4.0 --single-branch https://github.com/tudasc/MetaCG.git metacg
+  if [ $? -ne 0 ]; then
+    echo "[PIRA] Error in downloading MetaCG"
+    exit 1
+  fi
+fi
+
 cd $extsourcedir/metacg || exit 1
 
 check_directory_or_file_exists $extsourcedir/metacg/build
@@ -412,7 +444,7 @@ cd $scriptdir || exit 1
 
 echo -e "\n=== PIRA Installation Summary ==="
 echo -e "Cube installation dir:\t\t$cube_install_dir"
-echo -e "Score-P insitallation dir:\t$scorep_install_dir"
+echo -e "Score-P installation dir:\t$scorep_install_dir"
 echo -e "Extra-P installation dir:\t$extrap_install_dir"
 echo -e "MetaCG installation dir:\t$metacg_install_dir"
 echo -e "mpiwrap installation dir:\t$mpiwrap_install_dir"
@@ -421,8 +453,8 @@ echo "==== ----"
 
 echo "[PIRA] sed'ing paths to setup_paths.sh script"
 sed -i "s|CUBEINSTALLDIR|${cube_install_dir}|g" "./setup_paths.sh"
-sed -i "s|SCOREPINSTALLDIR|${scorep_install_dir}|g" ./setup_paths.sh
+sed -i "s|SCOREPINSTALLDIR|${scorep_install_dir}|g" "./setup_paths.sh"
 sed -i "s|EXTRAPINSTALLDIR|${extrap_install_dir}|g" "./setup_paths.sh"
-sed -i "s|METACGINSTALLDIR|${metacg_install_dir}|g" ./setup_paths.sh
-sed -i "s|MPIWRAPINSTALLDIR|${mpiwrap_install_dir}|g" ./setup_paths.sh
-sed -i "s|BEARINSTALLDIR|${bear_install_dir}|g" ./setup_paths.sh
+sed -i "s|METACGINSTALLDIR|${metacg_install_dir}|g" "./setup_paths.sh"
+sed -i "s|MPIWRAPINSTALLDIR|${mpiwrap_install_dir}|g" "./setup_paths.sh"
+sed -i "s|BEARINSTALLDIR|${bear_install_dir}|g" "./setup_paths.sh"

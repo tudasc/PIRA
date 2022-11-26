@@ -1,6 +1,6 @@
 """
 File: Measurement.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module hosts measurement support infrastructure.
 """
 
@@ -15,6 +15,7 @@ import os
 import re
 import statistics as stat
 
+
 class MeasurementSystemException(PiraException):
   """  This exception is thrown if problems in the runtime occur.  """
 
@@ -27,26 +28,26 @@ class RunResultSeries:
   # rt is runtime, reps is the number of repetitions for one input data set, and num_data_sets is the number of different input data sets.
   # One RunResultSeries object per iteration / phase
   def __init__(self, rt: float = None, reps: int = None, num_data_sets: int = 1):
-      self.rt_values = []
-      self.reps = reps
-      self.num_data_sets = num_data_sets
+    self.rt_values = []
+    self.reps = reps
+    self.num_data_sets = num_data_sets
 
   def is_multi_value(self):
     return False
 
-  def add_values(self, rt: float, reps: int) ->None:
-    assert(reps == self.reps)
+  def add_values(self, rt: float, reps: int) -> None:
+    assert (reps == self.reps)
     self.rt_values.append(rt)
 
   def add_from(self, other) -> None:
-    assert(other.reps == self.reps)
+    assert (other.reps == self.reps)
     for rt in other.rt_values:
       self.rt_values.append(rt)
 
   def get_num_data_sets(self) -> int:
     return self.num_data_sets
 
-  def get_average(self, pos: int = 0, data_set: int = 0) ->float:
+  def get_average(self, pos: int = 0, data_set: int = 0) -> float:
     # 1 data set and three repetitions
     # [ 1 1 1 ]
     # 2 data sets and three repetitions
@@ -55,7 +56,9 @@ class RunResultSeries:
       raise RuntimeError('Trying to access out-of-bounds data set')
     start_idx = pos + data_set * self.reps
     end_idx = start_idx + self.reps
-    L.get_logger().log('Computing mean for values: ' + str(self.rt_values[start_idx:end_idx]) + ' [pos: ' + str(pos) + ' | data_set: ' + str(data_set) + ' => start_idx: ' + str(start_idx) + ' <> ' + str(end_idx))
+    L.get_logger().log('Computing mean for values: ' + str(self.rt_values[start_idx:end_idx]) +
+                       ' [pos: ' + str(pos) + ' | data_set: ' + str(data_set) + ' => start_idx: ' +
+                       str(start_idx) + ' <> ' + str(end_idx))
     return stat.mean(self.rt_values[start_idx:end_idx])
 
   def get_median(self, pos: int = 0, data_set: int = 0) -> float:
@@ -78,7 +81,8 @@ class RunResultSeries:
     L.get_logger().log('Computing overhead in RunResultSeries')
     base_median = base_line.get_median()
     if base_median == .0:
-      L.get_logger().log('Detected 0 seconds baseline. Setting baseline median to 1.0', level='warn')
+      L.get_logger().log('Detected 0 seconds baseline. Setting baseline median to 1.0',
+                         level='warn')
       base_median = 1.0
     return (self.get_median(pos) / base_median) - 1
 
@@ -94,7 +98,7 @@ class RunResultSeries:
     return intermediate_averages
 
   def compute_all_overheads(self) -> typing.List[float]:
-    assert(False)
+    assert (False)
 
   def get_accumulated_runtime(self):
     accu_rt = .0
@@ -109,7 +113,10 @@ class RunResultSeries:
 class RunResult:
   """  Holds the result of a measurement execution with potentially multiple iterations.  """
 
-  def __init__(self, accumulated_runtime: float = None, nr_of_iterations: int = None, rt_trace=None):
+  def __init__(self,
+               accumulated_runtime: float = None,
+               nr_of_iterations: int = None,
+               rt_trace=None):
     """Initializes the class
 
     :accumulated_runtime: TODO
@@ -129,7 +136,6 @@ class RunResult:
       self._rt_trace = [rt_trace]
     else:
       self._rt_trace = []
-
 
   def is_multi_value(self):
     return len(self._accumulated_runtime) > 1
@@ -178,6 +184,7 @@ class RunResult:
   def get_nr_of_iterations(self):
     return self._nr_of_iterations
 
+
 class ScorepSystemHelper:
   """  Takes care of setting necessary environment variables appropriately.  """
 
@@ -193,7 +200,6 @@ class ScorepSystemHelper:
     self._enable_unwinding = 'False'
     self._MPI_filter_so_path = ''
 
-
   def get_data_elem(self, key: str):
     try:
       if key in self.data.keys():
@@ -205,16 +211,18 @@ class ScorepSystemHelper:
     L.get_logger().log('Key ' + key + ' was not found in ScorepSystemHelper')
     return ''
 
-  def set_up(self, target_config: TargetConfig, instrumentation_config: InstrumentConfig) -> None:
+  def set_up(self,
+             target_config: TargetConfig,
+             instrumentation_config: InstrumentConfig,
+             parameter_mapping=None) -> None:
     compile_time_filter = InvocationConfig.get_instance().is_compile_time_filtering()
     if not compile_time_filter:
       scorep_filter_file = self.prepare_scorep_filter_file(target_config.get_instr_file())
       self.set_filter_file(scorep_filter_file)
 
-
     self._set_up(target_config.get_build(), target_config.get_target(), target_config.get_flavor(),
                  instrumentation_config.get_instrumentation_iteration(),
-                 instrumentation_config.is_instrumentation_run())
+                 instrumentation_config.is_instrumentation_run(), parameter_mapping)
 
   def prepare_scorep_filter_file(self, filter_file: str) -> None:
     ''' 
@@ -230,24 +238,32 @@ class ScorepSystemHelper:
 
     else:
       file_content = U.read_file(filter_file)
-      scorep_filter_file_content = self.append_scorep_footer(self.prepend_scorep_header(file_content))
+      scorep_filter_file_content = self.append_scorep_footer(
+          self.prepend_scorep_header(file_content))
       scorep_filter_file_name = file_dir + '/scorep_filter_file.txt'
 
     U.write_file(scorep_filter_file_name, scorep_filter_file_content)
     return scorep_filter_file_name
 
-  def _set_up(self, build, item, flavor, it_nr, is_instr_run) -> None:
-    L.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run), level='debug')
+  def _set_up(self, build, item, flavor, it_nr, is_instr_run, param_mapping=None) -> None:
+    L.get_logger().log('ScorepSystemHelper::_set_up: is_instr_run: ' + str(is_instr_run),
+                       level='debug')
     if not is_instr_run:
       return
 
     exp_dir = self.config.get_analyzer_exp_dir(build, item)
-    L.get_logger().log(
-        'ScorepSystemHelper::_set_up: Retrieved analyzer experiment directory: ' + exp_dir, level='debug')
+    # for batch system scaling experiments: Append parameter mapping to differentiate between jobs
+    if param_mapping is not None:
+      exp_dir = f"{exp_dir}-{param_mapping}"
+
+    L.get_logger().log('ScorepSystemHelper::_set_up: Retrieved analyzer experiment directory: ' +
+                       exp_dir,
+                       level='debug')
     effective_dir = U.get_cube_file_path(exp_dir, flavor, it_nr)
     if not U.check_provided_directory(effective_dir):
       L.get_logger().log(
-          'ScorepSystemHelper::_set_up: Experiment directory does not exist.  \nCreating path: ' + effective_dir,
+          'ScorepSystemHelper::_set_up: Experiment directory does not exist.  \nCreating path: ' +
+          effective_dir,
           level='debug')
       U.create_directory(effective_dir)
 
@@ -259,7 +275,6 @@ class ScorepSystemHelper:
     self.set_profiling_basename(flavor, build, item)
     # TODO WHEN FIXED: FOR NOW LET'S ENABLE UNWINDING
     # self.set_enable_unwinding(self)
-
 
   def set_memory_size(self, mem_str: str) -> None:
     self.cur_mem_size = mem_str
@@ -291,7 +306,8 @@ class ScorepSystemHelper:
     U.set_env('SCOREP_ENABLE_UNWINDING', self._enable_unwinding)
 
   def set_filter_file(self, file_name: str) -> None:
-    L.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' + file_name)
+    L.get_logger().log('ScorepMeasurementSystem::set_filter_file: File for runtime filtering = ' +
+                       file_name)
     if not U.is_valid_file_name(file_name):
       raise MeasurementSystemException('Score-P filter file not valid.')
 
@@ -347,14 +363,14 @@ class ScorepSystemHelper:
     :compile_time_filter: bool: Should compile-time filtering be used (default)
     """
     default_provider = D.BackendDefaults()
-    cxx_str = default_provider.get_default_cpp_compiler_name() + ' ' + cls.get_instrumentation_flags(
-        instr_file)
+    cxx_str = default_provider.get_default_cpp_compiler_name(
+    ) + ' ' + cls.get_instrumentation_flags(instr_file)
     return '\"' + cxx_str + '\"'
 
   @classmethod
   def get_scorep_needed_libs_c(cls) -> str:
-    return '\" scorep.init.o ' + cls.get_config_libs() + ' ' + cls.get_config_ldflags() + ' ' + cls.get_additional_libs(
-    ) + '\"'
+    return '\" scorep.init.o ' + cls.get_config_libs() + ' ' + cls.get_config_ldflags(
+    ) + ' ' + cls.get_additional_libs() + '\"'
 
   @classmethod
   def get_scorep_needed_libs_cxx(cls) -> str:
@@ -364,7 +380,8 @@ class ScorepSystemHelper:
   @classmethod
   def check_build_prerequisites(cls) -> None:
     scorep_init_file_name = 'scorep.init.c'
-    L.get_logger().log('ScorepMeasurementSystem::check_build_prerequisites: global home dir: ' + U.get_home_dir())
+    L.get_logger().log('ScorepMeasurementSystem::check_build_prerequisites: global home dir: ' +
+                       U.get_home_dir())
     pira_scorep_resource = U.get_home_dir() + '/resources/scorep.init.c'
     if not U.is_file(scorep_init_file_name):
       U.copy_file(pira_scorep_resource, U.get_cwd() + '/' + scorep_init_file_name)
@@ -373,8 +390,8 @@ class ScorepSystemHelper:
     if U.is_file(scorep_init_file_name):
       U.shell('gcc -c ' + scorep_init_file_name)
     else:
-      raise MeasurementSystemException('ScorepMeasurementSystem::check_build_prerequisites: Missing ' +
-                                       scorep_init_file_name)
+      raise MeasurementSystemException(
+          'ScorepMeasurementSystem::check_build_prerequisites: Missing ' + scorep_init_file_name)
 
   @classmethod
   def prepare_MPI_filtering(cls, filter_file: str) -> None:
@@ -393,14 +410,8 @@ class ScorepSystemHelper:
     file_content = U.read_file(filter_file).split('\n')
     # We always want to measure some functions to ensure Score-P works correctly
     always_measure = [
-      'MPI_Init',
-      'MPI_Finalize',
-      'MPI_Comm_group',
-      'MPI_Comm_dup',
-      'MPI_Comm_create_group',
-      'MPI_Comm_split',
-      'MPI_Comm_free',
-      'MPI_Group_free'
+        'MPI_Init', 'MPI_Finalize', 'MPI_Comm_group', 'MPI_Comm_dup', 'MPI_Comm_create_group',
+        'MPI_Comm_split', 'MPI_Comm_free', 'MPI_Group_free'
     ]
     file_content.extend(always_measure)
     for l in file_content:
@@ -421,7 +432,8 @@ class ScorepSystemHelper:
           all_MPI_functions.remove(mpi_func_name)
 
     # Generate the .c file using the mpi wrap.py script
-    L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: About to filter ' + str(len(all_MPI_functions)) + ' MPI functions')
+    L.get_logger().log('ScorepSystemHelper::prepare_MPI_filtering: About to filter ' +
+                       str(len(all_MPI_functions)) + ' MPI functions')
     wrap_script = '{{fn PIRA_Filter'
     for mpi_func in all_MPI_functions:
       wrap_script += ' ' + mpi_func
@@ -437,5 +449,6 @@ class ScorepSystemHelper:
     wrap_command = 'wrap.py -o ' + wrap_c_path + ' ' + wrap_file
     U.shell(wrap_command)
     # Compile it to .so file
-    compile_mpi_wrapper_command = 'mpicc -shared -fPIC -o ' + default_provider.get_wrap_so_file() + ' ' + wrap_c_path
+    compile_mpi_wrapper_command = 'mpicc -shared -fPIC -o ' + default_provider.get_wrap_so_file(
+    ) + ' ' + wrap_c_path
     U.shell(compile_mpi_wrapper_command)

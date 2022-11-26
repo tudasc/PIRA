@@ -1,0 +1,28 @@
+{
+  "builds": {
+    "%kripke": {
+      "items": {
+        "kripke": {
+          "analyzer": "../../../extern/install/metacg/bin/",
+          "argmap": {
+            "groups": [
+              128
+            ],
+            "mapper": "Linear"
+          },
+          "cubes": "${PIRA_DIR}/kripke_cubes",
+          "flavors": [
+            "ct"
+          ],
+          "functors": "./functors",
+          "mode": "CT"
+        }
+      }
+    }
+  },
+  "directories": {
+    "kripke": "./Kripke/build"
+  },
+  "glob-flavors": [],
+  "glob-submitter": {}
+}

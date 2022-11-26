@@ -1,10 +1,11 @@
 """
 File: Utility.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: Module to support other tasks.
 """
-
+import re
 import sys
+
 sys.path.append('..')
 
 import lib.Logging as L
@@ -20,11 +21,12 @@ from random import choice
 from string import ascii_uppercase
 from timeit import timeit
 
-queued_job_filename = './queued_job.tmp'
 home_directory = ''
+
 
 def exit(code="1"):
   sys.exit(code)
+
 
 # --- Files / Directories --- #
 
@@ -40,9 +42,24 @@ def get_home_dir() -> str:
 
   return home_directory
 
+
+def get_pira_code_dir() -> str:
+  """
+  Returns the top-level directory of the pira code.
+  This is useful for testing and to reference the BatchSystemTimer file while dispatching.
+  """
+  this_file = os.path.dirname(__file__)
+  this_file = get_absolute_path(this_file)
+  # pira dir is a level up, and cut the file off
+  # .../pira/lib/Utility.py
+  pira_code_dir = "/".join(this_file.split("/")[:-1])
+  return pira_code_dir
+
+
 def set_export_perfomance_models(export: bool) -> None:
   global export_performance_models
   export_performance_models = export
+
 
 def set_export_runtime_only(rt_only: bool) -> None:
   global export_runtime_only
@@ -87,8 +104,10 @@ def lines_in_file(file_name: str) -> int:
     lines = len(content.split('\n'))
     return lines
 
-  L.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines', level='debug')
+  L.get_logger().log('Utility::lines_in_file: No file ' + file_name + ' to read. Return 0 lines',
+                     level='debug')
   return 0
+
 
 def check_provided_directory(path: str) -> bool:
   if os.path.isdir(path):
@@ -120,15 +139,19 @@ def is_absolute_path(path: str) -> bool:
 def create_directory(path: str) -> None:
   os.makedirs(path)
 
+
 def get_tempdir():
   return tempfile.gettempdir()
 
+
 def make_dir(path):
-  if not(check_provided_directory(path)):
+  if not (check_provided_directory(path)):
     os.mkdir(path)
 
+
 def make_dirs(path):
-  os.makedirs(path,0o777,True)
+  os.makedirs(path, 0o777, True)
+
 
 def write_file(file_path: str, file_content: str) -> str:
   L.get_logger().log('Utility::write_file: file_path to write: ' + file_path)
@@ -145,13 +168,14 @@ def is_file(path: str) -> bool:
     return True
   return False
 
+
 def check_file(path: str) -> bool:
   if os.path.exists(path):
     return True
   return False
 
+
 def is_valid_file_name(file_name: str) -> bool:
-  import re
   search = re.compile(r'[^a-zA-z0-9/\._-]').search
   return not bool(search(file_name))
 
@@ -167,6 +191,7 @@ def remove(path: str) -> None:
     for d in dirs:
       shutil.rmtree(os.path.join(root, d))
 
+
 def remove_dir(path: str):
   if os.path.isdir(path):
     shutil.rmtree(path)
@@ -178,6 +203,16 @@ def remove_file(path: str) -> bool:
     return True
   return False
 
+
+def remove_file_with_pattern(path: str, pattern: str):
+  """
+  Removes all files that match the pattern. Patterns are defined by python's re module.
+  """
+  for f in os.listdir(path):
+    if re.search(pattern, f) and re.search(pattern, f).group(0) == f:
+      remove_file(os.path.join(path, f))
+
+
 def get_default_pira_dir() -> str:
   pira_dir = os.path.join(os.path.expanduser('~'), '.local/share/pira')
   if 'XDG_DATA_HOME' in os.environ:
@@ -185,13 +220,21 @@ def get_default_pira_dir() -> str:
       pira_dir = os.path.join(os.environ['XDG_DATA_HOME'], 'pira')
   return pira_dir
 
+
+def get_default_slurm_config_path() -> str:
+  return f"{get_default_pira_dir()}/batchsystem.json"
+
+
 def get_default_config_file() -> str:
   return get_cwd() + '/config.json'
+
 
 def get_default_analysis_parameters_config_file() -> str:
   return get_cwd() + '/parameters.json'
 
+
 # --- File-related utils --- #
+
 
 def json_to_canonic(json_elem):
   if isinstance(json_elem, list):
@@ -211,6 +254,12 @@ def json_to_canonic(json_elem):
       new_dict[key_v] = json_to_canonic(json_elem[key_v])
     return new_dict
 
+  elif isinstance(json_elem, int):
+    return int(json_elem)
+
+  elif isinstance(json_elem, type(None)):
+    return None
+
   else:
     return str(json_elem)
 
@@ -225,11 +274,13 @@ def remove_arrow_lines(file_name: str) -> None:
       lines = f.readlines()
     with open(file_name, "w") as f:
       for line in lines:
-        if '->'  not in line:
+        if '->' not in line:
           f.write(line)
   else:
-    L.get_logger().log('Utility.remove_arrow_lines: Scorep-filter-file does not exist!', level='error')
+    L.get_logger().log('Utility.remove_arrow_lines: Scorep-filter-file does not exist!',
+                       level='error')
     raise Exception('Utility.remove_arrow_lines: Scorep-filter-file does not exist!')
+
 
 def diff_inst_files(file1: str, file2: str) -> bool:
   if (filecmp.cmp(file1, file2)):
@@ -248,6 +299,7 @@ def generate_random_string() -> str:
 
 # --- Shell execution and timing --- #
 
+
 def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
   t1 = os.times()  # start time
   out = subprocess.check_output(command, stderr=stderr_fd, shell=True)
@@ -262,12 +314,15 @@ def timed_invocation(command: str, stderr_fd) -> typing.Tuple[str, float]:
   return out, runtime
 
 
-def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool = False) -> typing.Tuple[str, float]:
+def shell(command: str,
+          silent: bool = True,
+          dry: bool = False,
+          time_invoc: bool = False) -> typing.Tuple[str, float]:
   if dry:
     L.get_logger().log('Utility::shell: DRY RUN SHELL CALL: ' + command, level='debug')
     return '', 1.0
 
-  stderr_fn = os.path.join(get_default_pira_dir(),'stderr-bp-' + generate_random_string())
+  stderr_fn = os.path.join(get_default_pira_dir(), 'stderr-bp-' + generate_random_string())
   stderr_fd = open(stderr_fn, 'w+')
   try:
     L.get_logger().log('Utility::shell: util executing: ' + str(command), level='debug')
@@ -282,7 +337,7 @@ def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool
       return str(out.decode('utf-8')), -1.0
 
   except subprocess.CalledProcessError as e:
-    stderr_fd.seek(0) # jump to beginning of file
+    stderr_fd.seek(0)  # jump to beginning of file
     err_out = ''
     L.get_logger().log('Utility::shell: Attempt to write stderr file', level='debug')
     err_out += stderr_fd.read()
@@ -294,7 +349,8 @@ def shell(command: str, silent: bool = True, dry: bool = False, time_invoc: bool
   finally:
     stderr_fd.close()
     remove_file(stderr_fn)
-    L.get_logger().log('Utility::shell Cleaning up temp files for subprocess communication.', level='debug')
+    L.get_logger().log('Utility::shell Cleaning up temp files for subprocess communication.',
+                       level='debug')
 
 
 def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
@@ -317,6 +373,7 @@ def shell_for_submitter(command: str, silent: bool = True, dry: bool = False):
 
 # --- Functor utilities --- #
 
+
 def load_functor(directory: str, module: str):
   if not check_provided_directory(directory):
     L.get_logger().log('Utility::load_functor: Functor directory invalid', level='warn')
@@ -324,7 +381,8 @@ def load_functor(directory: str, module: str):
     L.get_logger().log('Utility::load_functor: Functor filename invalid', level='warn')
 
   # TODO: Add error if functor path does not exist!!!
-  L.get_logger().log('Utility::load_functor: Appending ' + directory + ' to system path.', level='debug')
+  L.get_logger().log('Utility::load_functor: Appending ' + directory + ' to system path.',
+                     level='debug')
   append_to_sys_path(directory)
   # Adding 'fromList' argument loads exactly the module.
   functor = __import__(module)
@@ -352,7 +410,8 @@ def build_runner_functor_filename(IsForDB: bool, benchmark_name: str, flavor: st
     return 'runner_' + concat_a_b_with_sep(benchmark_name, flavor, '_')
 
 
-def build_builder_functor_filename(IsForDB: bool, IsNoInstr: bool, benchmark_name: str, flavor: str) -> str:
+def build_builder_functor_filename(IsForDB: bool, IsNoInstr: bool, benchmark_name: str,
+                                   flavor: str) -> str:
   if IsForDB:
     return '/' + concat_a_b_with_sep(benchmark_name, flavor, '')
   else:
@@ -377,19 +436,23 @@ def build_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str) -
   return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '.txt'
 
 
-def build_numbered_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str, iteration_number: int) -> str:
-  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '_it-' + str(iteration_number) + '.txt'
+def build_numbered_instr_file_path(analyzer_dir: str, flavor: str, benchmark_name: str,
+                                   iteration_number: int) -> str:
+  return analyzer_dir + "/" + 'out/instrumented-' + benchmark_name + '_' + flavor + '_it-' + str(
+      iteration_number) + '.txt'
 
 
 def get_ipcg_file_name(base_dir: str, b_name: str, flavor: str) -> str:
   return base_dir + "/" + b_name + '_' + flavor + '.mcg'
+
 
 def get_cubex_file(cubex_dir: str, b_name: str, flavor: str) -> str:
   return cubex_dir + '/' + flavor + '-' + b_name + '.cubex'
 
 
 def get_cube_file_path(experiment_dir: str, flavor: str, iter_nr: int) -> str:
-  L.get_logger().log('Utility::get_cube_file_path: ' + experiment_dir + '-' + flavor + '-' + str(iter_nr))
+  L.get_logger().log('Utility::get_cube_file_path: ' + experiment_dir + '-' + flavor + '-' +
+                     str(iter_nr))
   return experiment_dir + '-' + flavor + '-' + str(iter_nr)
 
 
@@ -398,4 +461,5 @@ def build_cube_file_path_for_db(exp_dir: str, flavor: str, iterationNumber: int)
   if is_valid_file_name(fp):
     return fp
 
-  raise Exception('Utility::build_cube_file_path_for_db: Built file path to Cube not valid. fp: ' + fp)
+  raise Exception('Utility::build_cube_file_path_for_db: Built file path to Cube not valid. fp: ' +
+                  fp)

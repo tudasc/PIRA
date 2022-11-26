@@ -1,6 +1,6 @@
 """
 File: TimeTracking.py
-License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/jplehr/pira/LICENSE.txt
+License: Part of the PIRA project. Licensed under BSD 3 clause license. See LICENSE.txt file at https://github.com/tudasc/pira
 Description: This module allows to track timings of the various bits and pieces with convenience functions.
 """
 
@@ -12,6 +12,7 @@ class TimeTracker():
   """
     Lightweight covenience class for time tracking of various components
   """
+
   def __init__(self):
     self._s = os.times()
     self._e = self._s
@@ -51,4 +52,3 @@ class TimeTracker():
     except Exception as e:
       L.get_logger().log('No such attribute', level='error')
       raise e
-    

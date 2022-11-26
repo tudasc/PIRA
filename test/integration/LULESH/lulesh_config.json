@@ -1,0 +1,28 @@
+{
+  "builds": {
+    "%lulesh": {
+      "items": {
+        "lulesh": {
+          "analyzer": "../../../extern/install/metacg/bin/",
+          "argmap": {
+            "X": [
+              30
+            ],
+            "mapper": "Linear"
+          },
+          "cubes": "${PIRA_DIR}/lulesh_cubes",
+          "flavors": [
+            "ct"
+          ],
+          "functors": "./functors",
+          "mode": "CT"
+        }
+      }
+    }
+  },
+  "directories": {
+    "lulesh": "./LULESH"
+  },
+  "glob-flavors": [],
+  "glob-submitter": {}
+}

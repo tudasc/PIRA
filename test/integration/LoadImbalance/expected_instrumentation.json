@@ -1,0 +1,32 @@
+[
+    {
+        "iteration": 0,
+        "expect": ["main"],
+        "may-expect": [],
+        "never-expect": []
+    },
+    {
+        "iteration": 1,
+        "expect": ["main"],
+        "may-expect": ["test", "imbalanced", "balanced", "MPI_Init"],
+        "never-expect": []
+    },
+    {
+        "iteration": 2,
+        "expect": ["main"],
+        "may-expect": ["test", "imbalanced", "balanced",  "MPI_Init"],
+        "never-expect": []
+    },
+    {
+        "iteration": 3,
+        "expect": ["main"],
+        "may-expect": ["test", "imbalanced", "balanced", "MPI_Init"],
+        "never-expect": []
+    },
+    {
+        "iteration": 4,
+        "expect": ["main", "imbalanced"],
+        "may-expect": ["test", "MPI_Init"],
+        "never-expect": ["balanced"]
+    }
+]

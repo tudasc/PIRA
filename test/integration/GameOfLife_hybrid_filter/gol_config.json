@@ -15,7 +15,7 @@
               500
             ]
           },
-          "cubes": "/home/j_lehr/.local/share/pira/gol_cubes",
+          "cubes": "${PIRA_DIR}/gol_cubes",
           "flavors": [
             "ct"
           ],

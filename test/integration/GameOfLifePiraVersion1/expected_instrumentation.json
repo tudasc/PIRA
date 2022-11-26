@@ -1,0 +1,20 @@
+[
+    {
+        "iteration": 0,
+        "expect": ["main", "_ZNK10GameOfLife19getNumLiveNeighborsEii", "_ZN10GameOfLife4tickEv", "_ZN10GameOfLife4tickEv", "_ZN10GameOfLife10applyRulesEiiRSt6vectorIcSaIcEE", "_ZN10GameOfLife4initEv"],
+        "may-expect": [".*basic_string.*", ".*stoa.*", ".*swap.*"],
+        "never-expect": []
+    },
+    {
+        "iteration": 1,
+        "expect": ["main"],
+        "may-expect": [".*basic_string.*", ".*stoa.*", ".*swap.*", ".*vector.*at.*", "_ZN10GameOfLife10applyRulesEiiRSt6vectorIcSaIcEE", "_ZNK10GameOfLife19getNumLiveNeighborsEii", "_ZN10GameOfLife4tickEv"],
+        "never-expect": []
+    },
+    {
+        "iteration": 2,
+        "expect": ["main", "_ZN10GameOfLife10applyRulesEiiRSt6vectorIcSaIcEE", "_ZNK10GameOfLife19getNumLiveNeighborsEii", "_ZN10GameOfLife4tickEv"],
+        "may-expect": [".*vector.*at.*"],
+        "never-expect": []
+    }
+]
