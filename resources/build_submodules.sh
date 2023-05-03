@@ -6,7 +6,10 @@
 # Description: Script to build / install components required by PIRA
 #"""
 
-scriptdir="$( cd "$(dirname "$0")" ; pwd -P )"
+scriptdir="$(
+  cd "$(dirname "$0")"
+  pwd -P
+)"
 extsourcedir=$scriptdir/../extern/src
 extinstalldir=$scriptdir/../extern/install
 
@@ -16,11 +19,12 @@ export CXX=g++
 
 allOutputTo=$PWD/buildoutput.log
 
-
 # TODO Make this actually working better!
 # Allow configure options (here for Score-P, bc I want to build it w/o MPI)
 #add_flags="$2"
 add_flags=""
+# Flags to pass to cmake when building metacg and llvm-instrumentation
+extra_cmake_flags=""
 
 # Which options do we have to provide?
 # - Path to cube library
@@ -32,6 +36,8 @@ function print_usage {
   echo -e "  -e\tPath to Extra-P installation"
   echo -e "  -c\tPath to Cube installation"
   echo -e "  -p\tParallel compile jobs"
+  echo -e "  -o\tAdditional options to build scorep"
+  echo -e "  -f\tAdditional options to pass to cmake"
 }
 
 function echo_configuring {
@@ -64,61 +70,64 @@ function check_directory_or_file_exists {
 }
 
 # Get command line parameters
-while getopts ":e:c:p:o:h" opt; do
+while getopts ":e:c:p:o:f:h" opt; do
   case $opt in
-    e)
-      if [ ! -d $OPTARG ]; then
-        echo "Extra-P installation directory not valid"
-        exit 1
-      fi
-      extrap_install_dir=$OPTARG
-      echo "Setting Extra-P installation to: $extrap_install_dir" >&2
-      ;;
-    c)
-      if [ ! -d $OPTARG ]; then
-        echo "Cube installation directory not valid"
-        exit 1
-      fi
-      cube_install_dir=$OPTARG
-      echo "Setting Cube installation to: $cube_install_dir" >&2
-      ;;
-    p)
-      parallel_jobs=$OPTARG
-      echo "Setting parallel builds to: $parallel_jobs" >&2
-      ;;
-    o)
-      add_flags="$OPTARG"
-      echo "Passing additional flags " ${additional_flags}
-      ;;
-    h)
-      print_usage
-      exit 0
-      ;;
-    \?)
-      echo "Invalid option -$OPTARG" >&2
-      print_usage
+  e)
+    if [ ! -d $OPTARG ]; then
+      echo "Extra-P installation directory not valid"
       exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument" >&2
-      print_usage
+    fi
+    extrap_install_dir=$OPTARG
+    echo "Setting Extra-P installation to: $extrap_install_dir" >&2
+    ;;
+  c)
+    if [ ! -d $OPTARG ]; then
+      echo "Cube installation directory not valid"
       exit 1
-      ;;
+    fi
+    cube_install_dir=$OPTARG
+    echo "Setting Cube installation to: $cube_install_dir" >&2
+    ;;
+  p)
+    parallel_jobs=$OPTARG
+    echo "Setting parallel builds to: $parallel_jobs" >&2
+    ;;
+  o)
+    add_flags="$OPTARG"
+    echo "Passing additional flags: ${add_flags}" >&2
+    ;;
+  f)
+    extra_cmake_flags="$OPTARG"
+    echo "Passing additional cmake flags: ${extra_cmake_flags}" >&2
+    ;;
+  h)
+    print_usage
+    exit 0
+    ;;
+  \?)
+    echo "Invalid option -$OPTARG" >&2
+    print_usage
+    exit 1
+    ;;
+  :)
+    echo "Option -$OPTARG requires an argument" >&2
+    print_usage
+    exit 1
+    ;;
   esac
 done
-
 
 # Some sanity check of things that may go wrong.
 # This most likely just a list of things that I get wrong all the time
 command -v cubelib-config >${allOutputTo} 2>&1
-if [ $? -eq 0 ] && [ -z $cube_install_dir ] ; then
+if [ $? -eq 0 ] && [ -z $cube_install_dir ]; then
   echo "[PIRA]: No cubelib path set (-c) but cubelib-config available in PATH. Please set -c option or strip from PATH."
   echo ""
   exit 1
 fi
 
 command -v extrap >${allOutputTo} 2>&1
-if [ $? -eq 0 ] && [ -z $extrap_install_dir ] ; then
+if [ $? -eq 0 ] && [ -z $extrap_install_dir ]; then
   echo "[PIRA]: No Extra-P path set (-e) but extrap available in PATH. Please set -e option or strip from PATH."
   echo ""
   exit 1
@@ -137,7 +146,6 @@ if [ -z "$clangversion" ]; then
   exit 1
 fi
 
-
 ### ====================
 ## Actual work starts
 ### =====================
@@ -154,7 +162,7 @@ if [ $? -ne 0 ]; then
   rm -rf build
   mkdir build && cd build || exit 1
 
-  cmake .. >${allOutputTo} 2>&1
+  cmake $extra_cmake_flags .. >${allOutputTo} 2>&1
   if [ $? -ne 0 ]; then
     echo "[PIRA] Configuring LLVM-Instrumenter failed."
     exit 1
@@ -191,7 +199,7 @@ if [ $? -ne 0 ]; then
   bash set_instrumenter_directory.sh $extsourcedir/llvm-instrumentation/build/lib >${allOutputTo} 2>&1
 
   # TODO We should check whether a cube / scorep install was found and if so, bail out, to know exactly which scorep/cube we get.
-  aclocalversion=$( aclocal --version | grep 1.16 ) >${allOutputTo} 2>&1
+  aclocalversion=$(aclocal --version | grep 1.16) >${allOutputTo} 2>&1
   if [ -z "$aclocalversion" ]; then
     echo "[PIRA][Score-P] aclocal available in wrong version. Guessing to autoreconf."
     autoreconf -ivf >${allOutputTo} 2>&1
@@ -203,7 +211,7 @@ if [ $? -ne 0 ]; then
     autoreconf -ivf >${allOutputTo} 2>&1
     cd ./build-backend || exit 1 >${allOutputTo} 2>&1
     autoreconf -ivf >${allOutputTo} 2>&1
-    cd ../build-frontend || exit 1  >${allOutputTo} 2>&1
+    cd ../build-frontend || exit 1 >${allOutputTo} 2>&1
     autoreconf -ivf >${allOutputTo} 2>&1
     cd $extsourcedir/scorep-mod || exit 1
   fi
@@ -213,7 +221,7 @@ if [ $? -ne 0 ]; then
   mkdir scorep-build && cd scorep-build
   if [ -z $cube_install_dir ]; then
     #../configure --prefix=$extinstalldir/scorep --enable-shared --disable-static --disable-gcc-plugin --without-shmem "$add_flags"
-    ../configure --prefix=$extinstalldir/scorep --enable-shared --disable-static --disable-gcc-plugin --without-shmem "$add_flags"  >${allOutputTo} 2>&1
+    ../configure --prefix=$extinstalldir/scorep --enable-shared --disable-static --disable-gcc-plugin --without-shmem "$add_flags" >${allOutputTo} 2>&1
     cube_install_dir=$extinstalldir/scorep
   else
     #../configure --prefix=$extinstalldir/scorep --with-cubelib=$cube_install_dir --enable-shared --disable-static --disable-gcc-plugin --without-shmem "$add_flags"
@@ -259,7 +267,7 @@ if [ -z $extrap_install_dir ]; then
     echo "[PIRA] Installting Extra-P dependency PyQt5 failed."
     exit 1
   fi
-  
+
   python3 -m pip install --user matplotlib >${allOutputTo} 2>&1
   if [ $? -ne 0 ]; then
     echo "[PIRA] Installting Extra-P dependency matplotlib failed."
@@ -281,61 +289,56 @@ if [ -z $extrap_install_dir ]; then
     mkdir build && cd build || exit 1
     # On my Ubuntu machine, the locate command is available, on the CentOS machine it wasn't
     # TODO This should be done just a little less fragile
-    command -v locate "/Python.h" >${allOutputTo} 2>&1
-    if [ $? -eq 1 ]; then
-      pythonheader=$(dirname $(which python3))/../include/python3.8
+    pythonheader=$(python3 -c "import sysconfig; print(sysconfig.get_path('include'))")
+    if [ $? -eq 0 ]; then
+      echo "[PIRA] Found Python.h at " $pythonheader
     else
-      pythonlocation=$(locate "/Python.h" | grep "python3.")
-      if [ -z $pythonlocation ]; then
-        pythonheader=$(dirname $(which python))/../include/python3.8
-      else
-        pythonheader=$(dirname $pythonlocation)
-      fi
+      echo "[PIRA] Getting python path failed."
+      exit 1
     fi
-    echo "[PIRA] Found Python.h at " $pythonheader
-  
+
     ../configure --prefix=$extinstalldir/extrap --with-cube=$cube_install_dir CPPFLAGS=-I$pythonheader >${allOutputTo} 2>&1
     #../configure --prefix=$extinstalldir/extrap --with-cube=$cube_install_dir CPPFLAGS=-I$pythonheader
-  
+
     if [ $? -ne 0 ]; then
       echo "[PIRA] Configuring Extra-P failed."
       exit 1
     fi
 
-		echo_building "$extrap_component_name"
-    make -j $parallel_jobs >${allOutputTo} 2>&1  
+    echo_building "$extrap_component_name"
+    make -j $parallel_jobs >${allOutputTo} 2>&1
     if [ $? -ne 0 ]; then
       echo "[PIRA] Building Extra-P failed."
       exit 1
     fi
-    
-		make install >${allOutputTo} 2>&1
+
+    make install >${allOutputTo} 2>&1
     # Manually add the required headers for Extra-P
     cd .. || exit 1
     mkdir -p $extinstalldir/extrap/include
     cp ./include/*.hpp $extinstalldir/extrap/include
-   
-		extrap_install_dir=$extinstalldir/extrap
+
+    extrap_install_dir=$extinstalldir/extrap
   else
+    extrap_install_dir=$extinstalldir/extrap
     echo_already_built "$extrap_component_name"
   fi
 else
   echo "[PIRA] Using $extrap_install_dir"
 fi
 
-
 # CXX Opts
 echo "[PIRA] Getting cxxopts library"
 cd $extsourcedir || exit 1
 if [ ! -d "$extsourcedir/cxxopts" ]; then
-    git clone -b 2_1 --single-branch https://github.com/jarro2783/cxxopts cxxopts >${allOutputTo} 2>&1 
+  git clone -b 2_1 --single-branch https://github.com/jarro2783/cxxopts cxxopts >${allOutputTo} 2>&1
 fi
 
 # JSON library
 echo "[PIRA] Getting json library"
 cd $extsourcedir || exit 1
 if [ ! -d "$extsourcedir/json" ]; then
-    git clone -b v3.9.1 --depth 1 --single-branch https://github.com/nlohmann/json json >${allOutputTo} 2>&1 
+  git clone -b v3.9.1 --depth 1 --single-branch https://github.com/nlohmann/json json >${allOutputTo} 2>&1
 fi
 
 metacg_component_name="MetaCG"
@@ -355,7 +358,7 @@ cd $extsourcedir/metacg || exit 1
 check_directory_or_file_exists $extsourcedir/metacg/build
 if [ $? -ne 0 ]; then
   echo_configuring "$metacg_component_name"
-  cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug \
+  cmake -B build -S . $extra_cmake_flags -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=$extinstalldir/metacg \
     -DCUBE_LIB=$cube_install_dir/lib \
     -DCUBE_INCLUDE=$cube_install_dir/include/cubelib \
@@ -380,7 +383,7 @@ if [ $? -ne 0 ]; then
     mkdir -p ${extinstalldir}/metacg/bin/out >${allOutputTo} 2>&1
   fi
   metacg_install_dir=$extinstalldir/metacg
-else 
+else
   echo_already_built "$metacg_component_name"
   metacg_install_dir=$extinstalldir/metacg
 fi
@@ -412,7 +415,6 @@ else
   mpiwrap_install_dir=$extinstalldir/mpiwrap
 fi
 
-
 cd $extsourcedir || exit 1
 check_directory_or_file_exists $extsourcedir/bear
 if [ $? -ne 0 ]; then
@@ -440,7 +442,6 @@ else
 fi
 
 cd $scriptdir || exit 1
-
 
 echo -e "\n=== PIRA Installation Summary ==="
 echo -e "Cube installation dir:\t\t$cube_install_dir"
