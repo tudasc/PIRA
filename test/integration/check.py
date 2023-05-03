@@ -34,11 +34,9 @@ Description:
 """
 
 import argparse
-from distutils.command.config import config
 import json
 import os
 import re
-from xmlrpc.client import FastMarshaller
 
 
 def prepare_instrumentation_file(lines):
