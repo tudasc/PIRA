@@ -16,6 +16,8 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
 RUN ln -s /usr/bin/clang-10 /usr/bin/clang && \
   ln -s /usr/bin/clang++-10 /usr/bin/clang++
 
+RUN python3 -m pip install -U pip
+
 RUN mkdir pira
 COPY resources pira/resources
 COPY extern pira/extern
