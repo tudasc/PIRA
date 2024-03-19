@@ -41,7 +41,8 @@
             "_ZL16LagrangeElementsR6Domaini",
             "_ZL31ApplyMaterialPropertiesForElemsR6Domain",
             "_ZL16LagrangeLeapFrogR6Domain",
-            "_ZL13CalcQForElemsR6Domain"
+            "_ZL13CalcQForElemsR6Domain",
+            "_ZL13LagrangeNodalR6Domain"
         ],
         "never-expect": []
     },
@@ -59,7 +60,8 @@
             "_ZL22CalcMonotonicQForElemsR6Domain",
             "_ZL17CalcForceForNodesR6Domain",
             "_ZL15EvalEOSForElemsR6DomainPdiPii",
-            "_ZL23CalcVolumeForceForElemsR6Domain"
+            "_ZL23CalcVolumeForceForElemsR6Domain",
+            "_ZL13CalcQForElemsR6Domain"
         ],
         "never-expect": []
     },
@@ -76,7 +78,8 @@
             "_ZL22CalcMonotonicQForElemsR6Domain",
             "_ZL23IntegrateStressForElemsR6DomainPdS1_S1_S1_ii",
             "_ZL28CalcHourglassControlForElemsR6DomainPdd",
-            "_ZL28CalcMonotonicQRegionForElemsR6Domainid"
+            "_ZL28CalcMonotonicQRegionForElemsR6Domainid",
+            "_Z22CalcKinematicsForElemsR6Domaindi"
         ],
         "never-expect": []
     },
