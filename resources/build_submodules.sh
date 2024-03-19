@@ -346,7 +346,7 @@ echo_processing "$metacg_component_name"
 cd $extsourcedir || exit 1
 check_directory_or_file_exists $extsourcedir/metacg
 if [ $? -ne 0 ]; then
-  git clone -b v0.4.0 --single-branch https://github.com/tudasc/MetaCG.git metacg
+  git clone -b v0.6.2 --single-branch https://github.com/tudasc/MetaCG.git metacg
   if [ $? -ne 0 ]; then
     echo "[PIRA] Error in downloading MetaCG"
     exit 1
@@ -365,6 +365,8 @@ if [ $? -ne 0 ]; then
     -DEXTRAP_INCLUDE=$extrap_install_dir/include \
     -DEXTRAP_LIB=$extrap_install_dir/lib \
     -DSPDLOG_BUILD_SHARED=ON \
+    -DMETACG_BUILD_PGIS=ON \
+    -DMETACG_BUILD_CGCOLLECTOR=ON \
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON >${allOutputTo} 2>&1
   if [ $? -ne 0 ]; then
     echo "[PIRA] Configuring MetaCG failed."

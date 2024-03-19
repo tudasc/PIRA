@@ -63,7 +63,7 @@ cp build/compile_commands.json .
 # for f in $(cat build/compile_commands.json | jq  -r 'map(.directory + "/" + .file) | .[]'  | grep '\.cpp'); do
 for f in $(find ./src -type f -iname "*.cpp" ); do
 	echo "Processing $f"
-	cgc $f >/dev/null 2>&1
+	cgc --metacg-format-version=2 $f >/dev/null 2>&1
 done
 
 # Build the full whole-program call-graph
