@@ -152,6 +152,7 @@ In contrast, with runtime filtering, the compiler inserts instrumentation hooks 
 PIRA uses source-code information for constructing an initial instrumentation and deciding which functions to add to an instrumentation during the iterative refinement.
 It provides a Clang-based call-graph tool that collects all required information and outputs the information in a `.json` file.
 You can find the `cgcollector` tool in the subdirectory `./extern/src/metacg/cgcollector`.
+PIRA requires the callgraph file to be in the MetaCG file format in version 2 (MetaCG v2).
 
 More information on the CGCollector and its components can be found in the [MetaCG](https://github.com/tudasc/MetaCG) documentation.
 
@@ -161,7 +162,7 @@ Applying the CGCollector usually happens in two steps.
 
     ~~~{.sh}
     for f in $(find ./src -type f \( -iname  "*.c" -o -iname "*.cpp" \) ); do
-        cgc $f
+        cgc --metacg-format-version=2 $f
     done
     ~~~
 2. The `.ipcg`-files created in step 1 are then merged to a general file using `cgmerge`.
@@ -174,11 +175,11 @@ Applying the CGCollector usually happens in two steps.
     ~~~
 
 The final graph needs to be placed into the directory of the callgraph-analyzer. Since **PGIS** is currently used for the CG analysis, the generated whole program file is copied into the PGIS directory.
-Currently, it is important that the file in the PGIS directory is named following the pattern `item_flavor.ipcg`. An item stands for a target application. More on the terms flavor and item in the next section.
+Currently, it is important that the file in the PGIS directory is named following the pattern `item_flavor.mcg`. An item stands for a target application. More on the terms flavor and item in the next section.
 
 ~~~{.sh}
 # Assuming $PIRA holds the top-level PIRA directory
-$> cp my-app.ipcg $PIRA/extern/install/pgis/bin/item_flavor.ipcg
+$> cp my-app.mcg $PIRA/extern/install/pgis/bin/item_flavor.mcg
 ~~~
 
 #### Configuration
@@ -317,7 +318,8 @@ Additional parameters are required for some analysis modes. Specifically, PIRA L
 ```
 
 ### Load imbalance detection (PIRA LIDe)
-For more details about the load imbalance detection feature, please refer to <a href="#ref-pira-2021">[PI21]</a>. Provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:
+For more details about the load imbalance detection feature, please refer to <a href="#ref-pira-2021">[PI21]</a>. 
+Provide the PIRA invocation with a path to a configuration file using the `--load-imbalance-detection`-parameter. This JSON-file is required to have the following structure:
 
 ```{.json}
 {

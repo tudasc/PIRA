@@ -37,6 +37,7 @@ export PIRA_DIR="$scriptdir/.."
 
 export PATH=$cube_install_dir/bin:$scorep_install_dir/bin:$extrap_install_dir/bin:$metacg_install_dir/bin:$mpiwrap_install_dir:$bear_install_dir/bin:$PATH
 export LD_LIBRARY_PATH=$cube_install_dir/lib:$scorep_install_dir/lib:$extrap_install_dir/lib:$metacg_install_dir/lib:$mpiwrap_install_dir/lib:$bear_install_dir/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$cube_install_dir/lib64:$scorep_install_dir/lib64:$extrap_install_dir/lib64:$metacg_install_dir/lib64:$mpiwrap_install_dir/lib64:$bear_install_dir/lib64:$LD_LIBRARY_PATH
 echo -e "-- PATH --\n" $PATH
 echo -e "\n-- LD_LIBRARY_PATH --\n" $LD_LIBRARY_PATH
 

@@ -34,9 +34,9 @@ bear make clean
 echo -e "\n -> Running bear make"
 bear make CC="OMPI_CC=clang mpicc" imbalance 2>&1 > /dev/null
 echo -e "\n -> Running cgcollector"
-cgc main.c 2>&1 > /dev/null || exit 1
-cgc lib.c 2>&1 > /dev/null || exit 1
-cgc util.h 2>&1 > /dev/null || exit 1
+cgc --metacg-format-version=2 main.c 2>&1 > /dev/null || exit 1
+cgc --metacg-format-version=2 lib.c 2>&1 > /dev/null || exit 1
+cgc --metacg-format-version=2 util.h 2>&1 > /dev/null || exit 1
 echo "null" > imbalance.ipcg
 cgmerge imbalance.ipcg main.ipcg lib.ipcg util.ipcg || exit 1
 cp imbalance.ipcg $PWD/../../../../extern/install/metacg/bin/imbalance_ct.mcg

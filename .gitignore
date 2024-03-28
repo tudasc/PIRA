@@ -159,3 +159,7 @@ extern/install/*
 extern/src/cxxopts
 extern/src/extrap
 extern/src/json
+extern/src/scorep-mod/
+extern/src/bear/
+extern/src/metacg/
+extern/src/mpiwrap/

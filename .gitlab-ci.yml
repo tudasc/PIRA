@@ -28,6 +28,7 @@ stages:
 # GIT_STRATEGY: clone is used to always start with a clean checkout of the repository.
 # GIT_SUBMODULE_STRATEGY: none (default), i.e., git submodules need to be handled manually
 download:
+  resource_group: disable-concurrency
   stage: download-test
   tags:
     - pira-robo
@@ -42,6 +43,7 @@ download:
 # Also uses the GIT_STRATEGY fetch.
 # XXX should this be split into multiple, i.e., 1 job per unit test suite?
 pira:
+  resource_group: disable-concurrency
   stage: unit-test
   tags:
     - pira-robo
@@ -62,6 +64,7 @@ pira:
 
 # Run linting as part of unit-tests (early)
 python-lint:
+  resource_group: disable-concurrency
   stage: unit-test
   tags:
     - pira-robo
@@ -75,6 +78,7 @@ python-lint:
 
       # Run linting as part of unit-tests (early)
 shell-lint:
+  resource_group: disable-concurrency
   stage: unit-test
   tags:
     - pira-robo
@@ -88,6 +92,7 @@ shell-lint:
     - *lb-tear-down
 
 build-reduced-deps:
+  resource_group: disable-concurrency
   stage: dependence-build-test
   tags:
     - pira-robo
@@ -105,6 +110,7 @@ build-reduced-deps:
 
 # Runs the llvm-instrumentation unit tests
 llvm-instrumentation:
+  resource_group: disable-concurrency
   stage: deps-unit-test
   tags:
     - pira-robo
@@ -121,6 +127,7 @@ llvm-instrumentation:
 # XXX we might be able to re-use the still-available software builds from the build-dependencies stage?
 # This would *significantly* reduce the time this stage requires.
 run-prepare-integration:
+  resource_group: disable-concurrency
   stage: prepare-integration-test
   only:
     - merge_requests
@@ -139,6 +146,7 @@ run-prepare-integration:
 
 # Actually run the integration tests
 run-gameoflife-test:
+  resource_group: disable-concurrency
   stage: integration-test
   only:
     - merge_requests
@@ -157,6 +165,7 @@ run-gameoflife-test:
     - *lb-tear-down
 
 run-gameoflife-test-slurm:
+  resource_group: disable-concurrency
   stage: integration-test
   allow_failure: true
   only:
@@ -176,6 +185,7 @@ run-gameoflife-test-slurm:
     - *lb-tear-down
 
 run-amg2013-test:
+  resource_group: disable-concurrency
   stage: integration-test
   only:
     - merge_requests
@@ -194,6 +204,7 @@ run-amg2013-test:
     - *lb-tear-down
 
 run-amg2013-test-slurm:
+  resource_group: disable-concurrency
   stage: integration-test
   allow_failure: true
   only:
@@ -213,6 +224,7 @@ run-amg2013-test-slurm:
     - *lb-tear-down
 
 run-gameoflife-v1-test:
+  resource_group: disable-concurrency
   stage: integration-test
   only:
     - merge_requests
@@ -231,6 +243,7 @@ run-gameoflife-v1-test:
     - *lb-tear-down
 
 run-gameoflife-v1-test-slurm:
+  resource_group: disable-concurrency
   stage: integration-test
   allow_failure: true
   only:
@@ -250,6 +263,7 @@ run-gameoflife-v1-test-slurm:
     - *lb-tear-down
 
 run-gameoflife-hybrid-test:
+  resource_group: disable-concurrency
   stage: integration-test
   only:
     - merge_requests
@@ -268,6 +282,7 @@ run-gameoflife-hybrid-test:
     - *lb-tear-down
 
 run-gameoflife-hybrid-test-slurm:
+  resource_group: disable-concurrency
   stage: integration-test
   allow_failure: true
   only:
@@ -288,6 +303,7 @@ run-gameoflife-hybrid-test-slurm:
 
 # Disabled as it requires MetaCG Version 2
 run-gameoflife-heuristic-test:
+  resource_group: disable-concurrency
   stage: integration-test
   tags:
     - pira-robo
@@ -319,6 +335,7 @@ run-gameoflife-heuristic-test:
 #    - *lb-tear-down
 
 run-load-imbalance-detection-test:
+  resource_group: disable-concurrency
   stage: integration-test
   only:
     - merge_requests
@@ -337,6 +354,7 @@ run-load-imbalance-detection-test:
     - *lb-tear-down
 
 run-load-imbalance-detection-test-slurm:
+  resource_group: disable-concurrency
   stage: integration-test
   allow_failure: true
   only:
@@ -356,6 +374,7 @@ run-load-imbalance-detection-test-slurm:
     - *lb-tear-down
 
 run-lulesh-test:
+  resource_group: disable-concurrency
   stage: integration-test
   only:
     - merge_requests
@@ -372,6 +391,7 @@ run-lulesh-test:
     - *lb-tear-down
 
 run-lulesh-test-slurm:
+  resource_group: disable-concurrency
   stage: integration-test
   allow_failure: true
   only:
@@ -423,6 +443,7 @@ run-lulesh-test-slurm:
 
 # Do a full build of all dependencies via the convenience scripts for merge requests
 build-all-deps:
+  resource_group: disable-concurrency
   stage: full-dependence-test
   only:
     - merge_requests

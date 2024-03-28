@@ -34,8 +34,8 @@ mv GameOfLife-PIRA-testing gol
 echo -e "\n----- Build GameOfLife / build call graph -----"
 cd gol/serial_non_template
 bear make gol -j 2>&1 > /dev/null
-cgc main.cpp 2>&1 > /dev/null
-cgc SerialGoL.cpp 2>&1 > /dev/null
+cgc --metacg-format-version=2 main.cpp 2>&1 > /dev/null
+cgc --metacg-format-version=2 SerialGoL.cpp 2>&1 > /dev/null
 echo "null" > gol.ipcg
 cgmerge gol.ipcg main.ipcg SerialGoL.ipcg 2>&1 > /dev/null
 cp gol.ipcg $PWD/../../../../../extern/install/metacg/bin/gol_ct.mcg

@@ -5,7 +5,7 @@ See LICENSE.txt file at https://github.com/tudasc/pira
 Description: This is PIRA.
 """
 
-__version__ = '0.5.0'
+__version__ = '0.6.0'
 
 import argparse
 import lib.Logging as log

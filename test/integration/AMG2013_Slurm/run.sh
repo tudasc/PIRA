@@ -49,7 +49,7 @@ bear make CC="OMPI_CC=clang mpicc" -j
 # Now cgcollector can read the compile_commands.json file, to retrieve the commands required
 for f in $(cat compile_commands.json | jq  -r 'map(.directory + "/" + .file) | .[]'  | grep '\.c'); do
 	echo "Processing $f"
-	cgc $f >/dev/null 2>&1
+	cgc --metacg-format-version=2 $f >/dev/null 2>&1
 done
 # Build the full whole-program call-graph
 echo "null" > amg.ipcg # create empty json file

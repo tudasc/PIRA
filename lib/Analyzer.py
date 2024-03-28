@@ -139,7 +139,7 @@ class Analyzer:
     analysis_parameters_path = InvocCfg.get_instance().get_analysis_parameters_path()
     export_str = ' '
     if export_performance_models:
-      export_str += ' --export'
+      export_str += ' --export true'
       if export_runtime_only:
         export_str += ' --runtime-only'
 
@@ -158,12 +158,12 @@ class Analyzer:
               'Utility::run_analyzer_command: An analysis parameters file is required for PIRA LIDe!',
               level='error')
 
-        sh_cmd = command + export_str + ' --scorep-out -c ' + cubex_file + ' --lide 1 --parameter-file ' + analysis_parameters_path + ' --debug 1 --export ' + ipcg_file
+        sh_cmd = command + export_str + ' --scorep-out --cube ' + cubex_file + ' --lide true --parameter-file ' + analysis_parameters_path + ' --debug 1 --metacg-format 2 --export true ' + ipcg_file
 
       else:
         # vanilla PIRA version 1 runner
         L.get_logger().log('Utility::run_analyzer_command: using PIRA 1 Analyzer', level='info')
-        sh_cmd = command + export_str + ' --scorep-out ' + ipcg_file + ' -c ' + cubex_file
+        sh_cmd = command + export_str + '--metacg-format 2 --scorep-out ' + ipcg_file + ' --cube ' + cubex_file
 
       L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
       out, _ = U.shell(sh_cmd)
@@ -181,7 +181,7 @@ class Analyzer:
       L.get_logger().log(
           'Utility::run_analyzer_command: An analysis parameters file is required for Extra-P mode!',
           level='error')
-    sh_cmd = command + export_str + ' --scorep-out --debug 1 --parameter-file ' + analysis_parameters_path + ' --extrap ' + extrap_config_file + ' ' + ipcg_file
+    sh_cmd = command + export_str + ' --scorep-out --metacg-format 2 --debug 1 --parameter-file ' + analysis_parameters_path + ' --extrap ' + extrap_config_file + ' ' + ipcg_file
     L.get_logger().log('Utility::run_analyzer_command: INSTR: Run cmd: ' + sh_cmd)
     out, _ = U.shell(sh_cmd)
     L.get_logger().log('Utility::run_analyzer_command: Output of analyzer:\n' + out, level='debug')
@@ -190,11 +190,11 @@ class Analyzer:
   def run_analyzer_command_no_instr(command: str, analyzer_dir: str, flavor: str,
                                     benchmark_name: str) -> None:
     ipcg_file = U.get_ipcg_file_name(analyzer_dir, benchmark_name, flavor)
-    sh_cmd = command + ' --scorep-out --static '
+    sh_cmd = command + ' --metacg-format 2 --scorep-out --static '
 
     # load imbalancee detection mode
     if InvocCfg.get_instance().is_lide_enabled():
-      sh_cmd = sh_cmd + ' --debug 1 --lide 1 ' + InvocCfg.get_instance(
+      sh_cmd = sh_cmd + ' --debug 1 --metacg-format 2 --lide true ' + InvocCfg.get_instance(
       ).get_analysis_parameters_path()
 
     sh_cmd = sh_cmd + ' ' + ipcg_file
